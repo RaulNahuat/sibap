@@ -73,7 +73,7 @@ def check_rate_limit(request: Request, endpoint: str = "/auth/login"):
         attempts_count = len(login_attempts[ip_address])
         
         if attempts_count >= MAX_ATTEMPTS:
-            log_rate_limit_exceeded(ip_address, endpoint)
+            log_rate_limit_exceeded(endpoint)
             raise HTTPException(
                 status_code=429,
                 detail=f"Demasiados intentos. Por favor, espera {WINDOW_MINUTES} minuto(s) antes de intentar nuevamente."

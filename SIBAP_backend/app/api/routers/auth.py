@@ -7,7 +7,7 @@ from app.services.auth_service import register_user, authenticate_user
 from app.core.security import create_access_token
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, COOKIE_NAME, ENVIRONMENT
 from app.db.session import get_db
-from app.middleware.rate_limiter import check_rate_limit, reset_rate_limit, get_client_ip
+from app.middleware.rate_limiter import check_rate_limit, reset_rate_limit
 from app.utils.security_logger import log_login_attempt, log_logout
 from app.utils.dependencies import get_current_user
 from app.models.usuario import Usuario
@@ -51,19 +51,17 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
     # Autenticar usuario
     user = authenticate_user(db, data.email, data.password)
     
-    ip_address = get_client_ip(request)
-
     if not user:
-        log_login_attempt(data.email, success=False, ip_address=ip_address)
+        log_login_attempt(data.email, success=False, user_id=None, db=db)
         raise HTTPException(status_code=401, detail="Credenciales inválidas")
 
     if not user.is_active:
-        log_login_attempt(data.email, success=False, ip_address=ip_address)
+        log_login_attempt(data.email, success=False, user_id=None, db=db)
         raise HTTPException(status_code=400, detail="Usuario inactivo")
 
     # Login exitoso - resetear rate limit
     reset_rate_limit(request)
-    log_login_attempt(data.email, success=True, ip_address=ip_address)
+    log_login_attempt(data.email, success=True, user_id=user.id, db=db)
 
     # Crear token JWT
     token = create_access_token(
@@ -92,17 +90,29 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
 
 
 @router.post("/logout")
-def logout(request: Request, response: Response, current_user: Usuario = Depends(get_current_user)):
+def logout(request: Request, response: Response, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
     """
     Cierra la sesión del usuario eliminando la cookie del token.
     
     Returns:
         dict: Mensaje de confirmación
     """
-    ip_address = get_client_ip(request)
-    log_logout(current_user.email, ip_address)
+    log_logout(current_user.email, current_user.id, db)
     
     # Eliminar cookie
     response.delete_cookie(key=COOKIE_NAME)
     
     return {"message": "Logout exitoso"}
+
+
+@router.get("/me", response_model=UserResponse)
+def get_current_user_info(current_user: Usuario = Depends(get_current_user)):
+    """
+    Obtiene la información del usuario autenticado actual.
+    
+    Requiere autenticación mediante cookie JWT.
+    
+    Returns:
+        UserResponse: Datos del usuario autenticado
+    """
+    return current_user

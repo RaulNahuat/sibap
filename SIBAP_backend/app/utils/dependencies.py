@@ -5,7 +5,6 @@ from app.core.config import SECRET_KEY, ALGORITHM, COOKIE_NAME
 from app.db.session import get_db
 from app.models.usuario import Usuario
 from app.utils.security_logger import log_invalid_token
-from app.middleware.rate_limiter import get_client_ip
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> Usuario:
     """
@@ -37,23 +36,23 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> Usuario
         user_id: str = payload.get("sub")
         
         if user_id is None:
-            log_invalid_token("Token sin user_id", get_client_ip(request))
+            log_invalid_token("Token sin user_id", db)
             raise HTTPException(status_code=401, detail="Token inválido")
             
     except JWTError as e:
-        log_invalid_token(f"Error JWT: {str(e)}", get_client_ip(request))
+        log_invalid_token(f"Error JWT: {str(e)}", db)
         raise HTTPException(status_code=401, detail="Token inválido")
     
     # Validar que el usuario existe en la base de datos
     user = db.query(Usuario).filter(Usuario.id == int(user_id)).first()
     
     if not user:
-        log_invalid_token("Usuario no existe", get_client_ip(request))
+        log_invalid_token("Usuario no existe", db)
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
     
     # Validar que el usuario esté activo
     if not user.is_active:
-        log_invalid_token("Usuario inactivo", get_client_ip(request))
+        log_invalid_token("Usuario inactivo", db)
         raise HTTPException(status_code=401, detail="Usuario inactivo")
     
     return user

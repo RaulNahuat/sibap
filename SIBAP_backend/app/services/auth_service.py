@@ -43,8 +43,8 @@ def register_user(db: Session, name: str, last_name: str, email: str, password: 
     db.commit()
     db.refresh(user)
     
-    # Registrar evento de seguridad
-    log_registration(email)
+    # Registrar evento de seguridad (con user_id y db session)
+    log_registration(email, user.id, db)
     
     # Retornar respuesta segura (sin password_hash)
     return UserResponse.model_validate(user)
