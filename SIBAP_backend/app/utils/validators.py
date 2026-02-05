@@ -23,20 +23,18 @@ def validate_password_strength(password: str) -> str:
     Raises:
         ValueError: Si la contraseña no cumple los requisitos
     """
-    if len(password) < 8:
-        raise ValueError("La contraseña debe tener al menos 8 caracteres")
-    
-    if not re.search(r"[A-Z]", password):
-        raise ValueError("La contraseña debe contener al menos una letra mayúscula")
-    
-    if not re.search(r"[a-z]", password):
-        raise ValueError("La contraseña debe contener al menos una letra minúscula")
-    
-    if not re.search(r"\d", password):
-        raise ValueError("La contraseña debe contener al menos un número")
-    
-    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", password):
-        raise ValueError("La contraseña debe contener al menos un carácter especial (!@#$%^&*(),.?\":{}|<>)")
+
+    rules = [
+        (r".{8,}", "al menos 8 caracteres"),
+        (r"[A-Z]", "al menos una letra mayúscula"),
+        (r"[a-z]", "al menos una letra minúscula"),
+        (r"\d", "al menos un número"),
+        (r"[!@#$%^&*(),.?\":{}|<>]", "al menos un carácter especial")
+    ]
+
+    for pattern, message in rules:
+        if not re.search(pattern, password):
+            raise ValueError(f"La contraseña debe tener {message}")
     
     return password
 
@@ -81,11 +79,16 @@ def validate_name_length(name: str, field_name: str = "nombre") -> str:
         ValueError: Si el nombre es muy corto o muy largo
     """
     name = name.strip()
+
+    if not name:
+        raise ValueError(f"El {field_name} no puede estar vacío")
     
-    if len(name) < 2:
-        raise ValueError(f"El {field_name} debe tener al menos 2 caracteres")
+    if len(name) < 2 or len(name) > 150:
+        raise ValueError(f"El {field_name} debe tener entre 2 y 150 caracteres")
+
+    pattern = r"^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$"
     
-    if len(name) > 150:
-        raise ValueError(f"El {field_name} no puede exceder 150 caracteres")
-    
+    if not re.match(pattern, name):
+        raise ValueError(f"El {field_name} debe contener solo letras")
+
     return name

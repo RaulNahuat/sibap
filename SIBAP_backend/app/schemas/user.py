@@ -27,7 +27,6 @@ class UserCreate(BaseModel):
         """Valida la longitud del apellido"""
         return validate_name_length(v, "apellido")
 
-
 class UserLogin(BaseModel):
     email: EmailStr
     password: str

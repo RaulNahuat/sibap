@@ -6,16 +6,16 @@ from app.models import *  # noqa: F401, F403
 
 app = FastAPI()
 
-# Configurar CORS
+# configuracion de cors
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,  # Orígenes permitidos desde .env
-    allow_credentials=True,  # Permitir cookies
-    allow_methods=["*"],  # Permitir todos los métodos (GET, POST, etc.)
-    allow_headers=["*"],  # Permitir todos los headers
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-# Registrar routers
+# registro de routers
 app.include_router(auth.router)
 
 @app.get("/")

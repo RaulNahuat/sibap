@@ -109,9 +109,7 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db), 
 def get_current_user_info(current_user: Usuario = Depends(get_current_user)):
     """
     Obtiene la información del usuario autenticado actual.
-    
     Requiere autenticación mediante cookie JWT.
-    
     Returns:
         UserResponse: Datos del usuario autenticado
     """
