@@ -67,62 +67,6 @@ export default function LoginPage() {
         </div>
       </header>
 
-
-      {/* LEFT PANEL (DESKTOP) */}
-      <section className="hidden lg:flex w-[58%] bg-gradient-to-br from-[#1a5276] to-[#154360] px-16 py-16 text-white relative overflow-hidden">
-        <div className="absolute w-[600px] h-[600px] bg-white/5 rounded-full -top-24 -right-24" />
-        <div className="absolute w-[300px] h-[300px] bg-white/5 rounded-full bottom-16 -left-16" />
-
-        <div className="relative z-10 flex flex-col justify-between w-full">
-          <div>
-            {/* Logo */}
-            <div className="flex items-center gap-3 text-2xl font-bold">
-              <div className="w-10 h-10 bg-white/15 rounded-lg flex items-center justify-center backdrop-blur">
-                <GraduationCap className="w-6 h-6" />
-              </div>
-              SIBAP
-            </div>
-
-            {/* Hero */}
-            <div className="mt-24 max-w-[520px]">
-              <h1 className="text-[40px] leading-tight font-bold mb-6">
-                Transforma tus materiales en evaluaciones inteligentes
-              </h1>
-              <p className="text-base leading-relaxed text-white/90">
-                Automatiza la creación de bancos de preguntas validados
-                pedagógicamente. Exporta a Moodle y formatos estándar en
-                segundos.
-              </p>
-
-              <ul className="mt-12 space-y-5">
-                <li className="flex gap-4">
-                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                    <Wand2 className="w-4 h-4" />
-                  </div>
-                  Generación asistida por IA contextual
-                </li>
-                <li className="flex gap-4">
-                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                    <FileCheck className="w-4 h-4" />
-                  </div>
-                  Validación de reactivos en tiempo real
-                </li>
-                <li className="flex gap-4">
-                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                    <Download className="w-4 h-4" />
-                  </div>
-                  Formatos compatibles (XML, GIFT)
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          <p className="text-xs text-white/70">
-            © 2026 SIBAP. Plataforma exclusiva para personal docente.
-          </p>
-        </div>
-      </section>
-
       {/* RIGHT PANEL */}
       <section className="w-full lg:w-[42%] flex items-center justify-center px-6 sm:px-8 pt-24 pb-8 lg:pt-0 lg:pb-0">
         <div className="w-full max-w-[420px]">
@@ -233,6 +177,60 @@ export default function LoginPage() {
             >
               Regístrate
             </button>
+          </p>
+        </div>
+      </section>
+      {/* LEFT PANEL (DESKTOP) */}
+      <section className="hidden lg:flex w-[58%] bg-gradient-to-br from-[#1a5276] to-[#154360] px-16 py-16 text-white relative overflow-hidden">
+        <div className="absolute w-[600px] h-[600px] bg-white/5 rounded-full -top-24 -right-24" />
+        <div className="absolute w-[300px] h-[300px] bg-white/5 rounded-full bottom-16 -left-16" />
+
+        <div className="relative z-10 flex flex-col justify-between w-full">
+          <div>
+            {/* Logo */}
+            <div className="flex items-center gap-3 text-2xl font-bold">
+              <div className="w-10 h-10 bg-white/15 rounded-lg flex items-center justify-center backdrop-blur">
+                <GraduationCap className="w-6 h-6" />
+              </div>
+              SIBAP
+            </div>
+
+            {/* Hero */}
+            <div className="mt-24 max-w-[520px]">
+              <h1 className="text-[40px] leading-tight font-bold mb-6">
+                Transforma tus materiales en evaluaciones inteligentes
+              </h1>
+              <p className="text-base leading-relaxed text-white/90">
+                Automatiza la creación de bancos de preguntas validados
+                pedagógicamente. Exporta a Moodle y formatos estándar en
+                segundos.
+              </p>
+
+              <ul className="mt-12 space-y-5">
+                <li className="flex gap-4">
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                    <Wand2 className="w-4 h-4" />
+                  </div>
+                  Generación asistida por IA contextual
+                </li>
+                <li className="flex gap-4">
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                    <FileCheck className="w-4 h-4" />
+                  </div>
+                  Validación de reactivos en tiempo real
+                </li>
+                <li className="flex gap-4">
+                  <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                    <Download className="w-4 h-4" />
+                  </div>
+                  Formatos compatibles (XML, GIFT)
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <p className="text-xs text-white/70">
+            © 2026 SIBAP. Plataforma exclusiva para personal docente.
           </p>
         </div>
       </section>

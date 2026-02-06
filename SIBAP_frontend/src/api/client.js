@@ -37,11 +37,9 @@ apiClient.interceptors.response.use(
 
     const { status, data } = error.response;
 
-    // Log de errores para debugging (incluye el mensaje del backend si existe)
     const backendMessage = data?.detail || data?.message;
     console.error(`[API Error ${status}]:`, backendMessage || 'Sin mensaje del backend');
 
-    // Redirección automática en 401 (solo si no estamos en rutas públicas)
     if (status === 401) {
       const publicRoutes = ['/login', '/register'];
       const currentPath = history.location.pathname;
