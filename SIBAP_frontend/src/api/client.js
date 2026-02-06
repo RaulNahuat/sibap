@@ -1,16 +1,19 @@
 import axios from 'axios';
+import { createBrowserHistory } from 'history';
+
+export const history = createBrowserHistory();
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  withCredentials: true, // Important: enables cookies for JWT
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor
+
 apiClient.interceptors.request.use(
   (config) => {
     return config;
@@ -20,33 +23,35 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor
+/**
+ * Interceptor de respuesta
+ * Manejo global de errores HTTP
+ */
 apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
-    if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          // Unauthorized - redirect to login
-          if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-          }
-          break;
-        case 403:
-          console.error('Access forbidden');
-          break;
-        case 404:
-          console.error('Resource not found');
-          break;
-        case 500:
-          console.error('Server error');
-          break;
-        default:
-          break;
+    if (!error.response) {
+      console.error('[API] No se pudo conectar con el servidor');
+      return Promise.reject(error);
+    }
+
+    const { status, data } = error.response;
+
+    // Log de errores para debugging (incluye el mensaje del backend si existe)
+    const backendMessage = data?.detail || data?.message;
+    console.error(`[API Error ${status}]:`, backendMessage || 'Sin mensaje del backend');
+
+    // Redirección automática en 401 (solo si no estamos en rutas públicas)
+    if (status === 401) {
+      const publicRoutes = ['/login', '/register'];
+      const currentPath = history.location.pathname;
+
+      if (!publicRoutes.includes(currentPath)) {
+        console.warn('[API] Sesión expirada o no autenticado. Redirigiendo a login...');
+        history.push('/login');
       }
     }
+
     return Promise.reject(error);
   }
 );

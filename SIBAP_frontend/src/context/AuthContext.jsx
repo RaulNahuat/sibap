@@ -1,9 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-// import { getCurrentUser } from '../api/auth';
+import { getCurrentUser } from '../api/auth';
 
 /**
- * Authentication Context
- * Manages user authentication state globally
+ * Contexto de autenticación
+ * Administra el estado global de autenticación del usuario
  */
 
 const AuthContext = createContext(null);
@@ -13,20 +13,18 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // Check if user is authenticated on mount
+    // Verifica si el usuario está autenticado al montar
     useEffect(() => {
         checkAuth();
     }, []);
 
     const checkAuth = async () => {
         try {
-            // Verify authentication with backend
-            const { getCurrentUser } = await import('../api/auth');
             const userData = await getCurrentUser();
             setUser(userData);
             setIsAuthenticated(true);
         } catch (error) {
-            // Not authenticated or session expired
+            // No autenticado o sesión expirada
             setUser(null);
             setIsAuthenticated(false);
         } finally {
@@ -44,23 +42,27 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(false);
     };
 
-    const value = {
-        user,
-        loading,
-        isAuthenticated,
-        login,
-        logout,
-        checkAuth,
-    };
-
-    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+    return (
+        <AuthContext.Provider
+            value={{
+                user,
+                isAuthenticated,
+                loading,
+                login,
+                logout,
+                checkAuth,
+            }}
+        >
+            {children}
+        </AuthContext.Provider>
+    );
 };
 
 // Custom hook to use auth context
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {
-        throw new Error('useAuth must be used within an AuthProvider');
+        throw new Error('useAuth debe usarse dentro de un AuthProvider');
     }
     return context;
 };

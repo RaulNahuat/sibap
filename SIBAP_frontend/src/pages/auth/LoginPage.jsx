@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { login as loginApi } from '../../api/auth';
+import { getErrorMessage } from '../../utils/errorHandler';
 import {
   Wand2,
   FileCheck,
@@ -14,12 +16,14 @@ import {
 } from 'lucide-react';
 
 export default function LoginPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -31,10 +35,13 @@ export default function LoginPage() {
 
     try {
       const response = await loginApi(formData);
-      login(response);
-      window.location.href = '/dashboard';
-    } catch {
-      setError('Credenciales incorrectas');
+
+      login(response.user ?? response);
+      navigate('/dashboard', { replace: true });
+
+    } catch (err) {
+      // Usa el manejador centralizado que prioriza mensajes del backend
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -54,7 +61,7 @@ export default function LoginPage() {
               SIBAP
             </span>
             <span className="text-[11px] text-gray-500">
-            Transforma tus materiales en evaluaciones inteligentes
+              Transforma tus materiales en evaluaciones inteligentes
             </span>
           </div>
         </div>
@@ -150,7 +157,7 @@ export default function LoginPage() {
                   required
                   onChange={handleChange}
                   className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#e9f5f8] focus:border-[#1a5276]"
-                  placeholder="ej. nombre@gmail.com"
+                  placeholder="correo@dominio.com"
                 />
                 <Mail className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
@@ -186,6 +193,7 @@ export default function LoginPage() {
 
             {/* Actions */}
             <div className="flex justify-between items-center text-sm text-gray-500">
+              {/*}
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
@@ -194,6 +202,7 @@ export default function LoginPage() {
                 />
                 Recordarme
               </label>
+              */}
               <a href="#" className="text-[#1a5276] hover:underline">
                 ¿Olvidaste tu contraseña?
               </a>
@@ -217,9 +226,13 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-gray-500">
             ¿Aún no tienes cuenta?{' '}
-            <a href="/register" className="text-[#1a5276] font-medium">
+            <button
+              type="button"
+              onClick={() => navigate('/register')}
+              className="text-[#1a5276] font-medium"
+            >
               Regístrate
-            </a>
+            </button>
           </p>
         </div>
       </section>

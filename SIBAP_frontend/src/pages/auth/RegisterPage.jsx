@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { register as registerApi } from '../../api/auth';
+import { getErrorMessage } from '../../utils/errorHandler';
 import {
   GraduationCap,
   User,
@@ -10,6 +12,9 @@ import {
 } from 'lucide-react';
 
 export default function RegisterPage() {
+  const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [formData, setFormData] = useState({
     name: '',
     last_name: '',
@@ -17,10 +22,10 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: '',
   });
+
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,19 +34,41 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
+    // Validación frontend mínima (UX)
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
       return;
     }
 
     setLoading(true);
+
     try {
       const { confirmPassword, ...payload } = formData;
+
+      /**
+       * POST /auth/register
+       * Backend:
+       * - valida datos
+       * - crea usuario
+       * - retorna UserResponse
+       */
       const response = await registerApi(payload);
+
+      /**
+       * 🔐 IMPORTANTE:
+       * Solo llamamos login(response) si tu backend
+       * TAMBIÉN crea la cookie JWT en /register.
+       *
+       * Si NO lo hace (lo normal):
+       * → redirigimos a /login
+       */
       login(response);
-      window.location.href = '/dashboard';
-    } catch {
-      setError('Error al crear la cuenta');
+
+      navigate('/dashboard', { replace: true });
+
+    } catch (err) {
+      // Usa el manejador centralizado que prioriza mensajes del backend
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
@@ -50,22 +77,22 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex bg-white font-sans">
       {/* MOBILE HEADER */}
-<header className="lg:hidden fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/70">
-  <div className="flex items-center gap-3 h-14 px-5">
-    <div className="w-9 h-9 bg-[#1a5276] rounded-xl flex items-center justify-center shadow-sm">
-      <GraduationCap className="w-5 h-5 text-white" />
-    </div>
+      <header className="lg:hidden fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/70">
+        <div className="flex items-center gap-3 h-14 px-5">
+          <div className="w-9 h-9 bg-[#1a5276] rounded-xl flex items-center justify-center shadow-sm">
+            <GraduationCap className="w-5 h-5 text-white" />
+          </div>
 
-    <div className="flex flex-col leading-tight">
-      <span className="text-base font-semibold text-[#1a5276]">
-        SIBAP
-      </span>
-      <span className="text-[11px] text-gray-500">
-        Plataforma docente
-      </span>
-    </div>
-  </div>
-</header>
+          <div className="flex flex-col leading-tight">
+            <span className="text-base font-semibold text-[#1a5276]">
+              SIBAP
+            </span>
+            <span className="text-[11px] text-gray-500">
+              Transforma tus materiales en evaluaciones inteligentes
+            </span>
+          </div>
+        </div>
+      </header>
 
 
       {/* LEFT PANEL */}
@@ -179,7 +206,7 @@ export default function RegisterPage() {
             {/* Email */}
             <div>
               <label className="block text-sm font-medium mb-2">
-                Correo institucional
+                Correo
               </label>
               <input
                 type="email"
@@ -187,7 +214,7 @@ export default function RegisterPage() {
                 required
                 onChange={handleChange}
                 className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#e9f5f8] focus:border-[#1a5276]"
-                placeholder="docente@universidad.edu.mx"
+                placeholder="correo@dominio.com"
               />
             </div>
 
@@ -247,9 +274,13 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-gray-500 mt-6">
             ¿Ya tienes cuenta?{' '}
-            <a href="/login" className="text-[#1a5276] font-medium">
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="text-[#1a5276] font-medium"
+            >
               Inicia sesión
-            </a>
+            </button>
           </p>
         </div>
       </section>

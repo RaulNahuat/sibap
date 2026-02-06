@@ -53,7 +53,7 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
     
     if not user:
         log_login_attempt(data.email, success=False, user_id=None, db=db)
-        raise HTTPException(status_code=401, detail="Credenciales inválidas")
+        raise HTTPException(status_code=401, detail="Usuario o contraseña incorrectos")
 
     if not user.is_active:
         log_login_attempt(data.email, success=False, user_id=None, db=db)
