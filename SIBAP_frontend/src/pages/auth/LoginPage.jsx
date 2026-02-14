@@ -34,7 +34,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      await loginApi(formData);
+      await loginApi({ ...formData, remember_me: rememberMe });
 
       // El login del contexto ahora se encarga de hacer fetch del usuario
       await login();
@@ -138,16 +138,15 @@ export default function LoginPage() {
 
             {/* Actions */}
             <div className="flex justify-between items-center text-sm text-gray-500">
-              {/*}
-              <label className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-[#1a5276] focus:ring-[#1a5276]"
                 />
-                Recordarme
+                <span className="text-gray-600">Recuérdame</span>
               </label>
-              */}
               <a href="#" className="text-[#1a5276] hover:underline">
                 ¿Olvidaste tu contraseña?
               </a>

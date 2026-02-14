@@ -21,5 +21,9 @@ ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 COOKIE_NAME = settings.COOKIE_NAME
 ENVIRONMENT = settings.ENVIRONMENT
 
+# Refresh token configuration
+REFRESH_TOKEN_EXPIRE_DAYS = 30
+REFRESH_COOKIE_NAME = "refresh_token"
+
 # Convertir CORS_ORIGINS de string a lista
 CORS_ORIGINS: List[str] = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]

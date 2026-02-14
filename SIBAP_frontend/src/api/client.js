@@ -26,11 +26,11 @@ apiClient.interceptors.request.use(
 
 /**
  * Interceptor de respuesta
- * Manejo global de errores HTTP
+ * Manejo global de errores HTTP y auto-refresh de tokens
  */
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (!error.response) {
       console.error('[API] No se pudo conectar con el servidor');
       return Promise.reject(error);
@@ -39,22 +39,33 @@ apiClient.interceptors.response.use(
     const { status, data, config } = error.response;
     const backendMessage = data?.detail || data?.message;
 
-    // No loguear error 401 si es la verificación inicial de usuario (/auth/me)
+    if (status === 401 && !config._retry) {
+      const isRefreshEndpoint = config.url?.includes('/auth/refresh');
+      const isInitialAuthCheck = config.url?.includes('/auth/me');
+
+      if (!isRefreshEndpoint && !isInitialAuthCheck) {
+        config._retry = true;
+
+        try {
+          await apiClient.post('/auth/refresh');
+
+          return apiClient(config);
+        } catch (refreshError) {
+          const publicRoutes = ['/login', '/register'];
+          if (!publicRoutes.includes(window.location.pathname)) {
+            console.log('[API] Sesión expirada, redirigiendo a login...');
+            window.location.href = '/login';
+          }
+          return Promise.reject(refreshError);
+        }
+      }
+    }
+
     if (status === 401 && config.url?.includes('/auth/me')) {
       return Promise.reject(error);
     }
 
     console.error(`[API Error ${status}]:`, backendMessage || 'Sin mensaje del backend');
-
-    if (status === 401) {
-      const publicRoutes = ['/login', '/register'];
-      const currentPath = history.location.pathname; // Nota: esto podría necesitar corrección si history no está actualizado
-
-      if (!publicRoutes.includes(window.location.pathname)) {
-        // Redirigir solo si no estamos ya en login/register
-        // window.location.href = '/login'; // O usar history.push si funciona
-      }
-    }
 
     return Promise.reject(error);
   }

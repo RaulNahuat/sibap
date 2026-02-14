@@ -4,8 +4,8 @@ from datetime import timedelta
 
 from app.schemas.user import UserCreate, UserLogin, UserLoginResponse
 from app.services.auth_service import register_user, authenticate_user
-from app.core.security import create_access_token
-from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, COOKIE_NAME, ENVIRONMENT
+from app.core.security import create_access_token, create_refresh_token, verify_token
+from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, COOKIE_NAME, ENVIRONMENT, REFRESH_TOKEN_EXPIRE_DAYS, REFRESH_COOKIE_NAME
 from app.db.session import get_db
 from app.middleware.rate_limiter import check_rate_limit, reset_rate_limit
 from app.utils.security_logger import log_login_attempt, log_logout
@@ -87,9 +87,7 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
 
-    # Configurar cookie segura
-    # En producción (HTTPS), secure=True
-    # En desarrollo (HTTP), secure=False
+
     is_production = ENVIRONMENT == "production"
     
     response.set_cookie(
@@ -100,6 +98,21 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
         samesite="lax",  
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60  
     )
+
+    if data.remember_me:
+        refresh_token = create_refresh_token(
+            data={"sub": str(user.id)},
+            expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        )
+        
+        response.set_cookie(
+            key=REFRESH_COOKIE_NAME,
+            value=refresh_token,
+            httponly=True,
+            secure=is_production,
+            samesite="lax",
+            max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
+        )
 
     return {
         "message": "Login exitoso"
@@ -116,10 +129,63 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db), 
     """
     log_logout(current_user.email, current_user.id, db)
     
-    # Eliminar cookie
     response.delete_cookie(key=COOKIE_NAME)
+    response.delete_cookie(key=REFRESH_COOKIE_NAME)
     
     return {"message": "Logout exitoso"}
+
+
+@router.post("/refresh")
+def refresh_token(request: Request, response: Response, db: Session = Depends(get_db)):
+    """
+    Renueva el access token usando el refresh token.
+    
+    Returns:
+        dict: Mensaje de éxito
+    """
+    refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
+    
+    if not refresh_token:
+        raise HTTPException(status_code=401, detail="No hay refresh token")
+    
+    # Verificar refresh token
+    payload = verify_token(refresh_token)
+    
+    if not payload:
+        raise HTTPException(status_code=401, detail="Refresh token inválido o expirado")
+    
+    # Verificar que sea un refresh token
+    if payload.get("type") != "refresh":
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Token inválido")
+    
+    # Verificar que el usuario existe y está activo
+    user = db.query(Usuario).filter(Usuario.id == int(user_id)).first()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=401, detail="Usuario no válido")
+    
+    # Crear nuevo access token
+    new_access_token = create_access_token(
+        data={"sub": str(user.id)},
+        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+    
+    # Actualizar cookie de access token
+    is_production = ENVIRONMENT == "production"
+    
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=new_access_token,
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60
+    )
+    
+    return {"message": "Token renovado exitosamente"}
 
 
 @router.get("/me", response_model=UserLoginResponse)

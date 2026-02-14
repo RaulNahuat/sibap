@@ -42,6 +42,7 @@ class UserCreate(NameValidationMixin, PasswordValidationMixin):
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+    remember_me: bool = False
 
 class UserUpdate(NameValidationMixin):
     name: Optional[str] = None

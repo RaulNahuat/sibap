@@ -34,3 +34,11 @@ export const getCurrentUser = async () => {
     const response = await apiClient.get('/auth/me');
     return response.data;
 };
+
+/**
+ * Renueva el access token usando el refresh token
+ */
+export const refreshToken = async () => {
+    const response = await apiClient.post('/auth/refresh');
+    return response.data;
+};
