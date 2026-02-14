@@ -83,3 +83,25 @@ class UserUpdatePassword(PasswordValidationMixin):
     def validate_new_password(cls, v: str) -> str:
         from app.utils.validators import validate_password_strength
         return validate_password_strength(v)
+
+"""
+Schemas de recuperación de contraseña
+"""
+class PasswordResetRequest(BaseModel):
+    """Schema para solicitar reset de contraseña"""
+    email: EmailStr
+
+class PasswordResetVerify(BaseModel):
+    """Schema para verificar token de reset"""
+    token: str
+
+class PasswordResetComplete(PasswordValidationMixin):
+    """Schema para completar el reset de contraseña"""
+    token: str
+    new_password: str
+    
+    @field_validator('new_password', check_fields=False)
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        from app.utils.validators import validate_password_strength
+        return validate_password_strength(v)

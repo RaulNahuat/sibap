@@ -147,9 +147,13 @@ export default function LoginPage() {
                 />
                 <span className="text-gray-600">Recuérdame</span>
               </label>
-              <a href="#" className="text-[#1a5276] hover:underline">
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-[#1a5276] hover:underline"
+              >
                 ¿Olvidaste tu contraseña?
-              </a>
+              </button>
             </div>
 
             <button
