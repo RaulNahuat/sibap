@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Response, HTTPException, Request
 from sqlalchemy.orm import Session
 from datetime import timedelta
 
-from app.schemas.user import UserCreate, UserLogin, UserResponse
+from app.schemas.user import UserCreate, UserLogin, UserLoginResponse
 from app.services.auth_service import register_user, authenticate_user
 from app.core.security import create_access_token
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, COOKIE_NAME, ENVIRONMENT
@@ -14,8 +14,8 @@ from app.models.usuario import Usuario
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-@router.post("/register", response_model=UserResponse)
-def register(data: UserCreate, request: Request, db: Session = Depends(get_db)):
+@router.post("/register")
+def register(data: UserCreate, request: Request, response: Response, db: Session = Depends(get_db)):
     """
     Registra un nuevo usuario.
     
@@ -25,11 +25,29 @@ def register(data: UserCreate, request: Request, db: Session = Depends(get_db)):
     - Nombres con longitud adecuada (2-150 caracteres)
     
     Returns:
-        UserResponse: Datos del usuario creado (sin password_hash)
+        dict: Mensaje de éxito
     """
     try:
         user = register_user(db, data.name, data.last_name, data.email, data.password)
-        return user
+        
+        # Auto-login: Crear token JWT y setear cookie
+        token = create_access_token(
+            data={"sub": str(user.id)},
+            expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
+
+        is_production = ENVIRONMENT == "production"
+        
+        response.set_cookie(
+            key=COOKIE_NAME,
+            value=token, 
+            httponly=True, 
+            secure=is_production,  
+            samesite="lax",  
+            max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60  
+        )
+        
+        return {"message": "Usuario registrado exitosamente"}
     except ValueError as e:
         # Errores de validación de contraseña o nombres
         raise HTTPException(status_code=400, detail=str(e))
@@ -84,8 +102,7 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
     )
 
     return {
-        "message": "Login exitoso",
-        "user": UserResponse.model_validate(user)
+        "message": "Login exitoso"
     }
 
 
@@ -105,12 +122,13 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db), 
     return {"message": "Logout exitoso"}
 
 
-@router.get("/me", response_model=UserResponse)
+@router.get("/me", response_model=UserLoginResponse)
 def get_current_user_info(current_user: Usuario = Depends(get_current_user)):
     """
     Obtiene la información del usuario autenticado actual.
     Requiere autenticación mediante cookie JWT.
+    
     Returns:
-        UserResponse: Datos del usuario autenticado
+        UserLoginResponse: Datos del usuario autenticado (sin metadatos como created_at)
     """
     return current_user

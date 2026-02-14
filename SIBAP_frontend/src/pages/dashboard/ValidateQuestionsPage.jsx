@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import QuestionCard from '../../components/questions/QuestionCard';
 import EditQuestionModal from '../../components/questions/EditQuestionModal';
 import ConfirmModal from '../../components/ui/ConfirmModal';
@@ -11,8 +11,18 @@ import {
     CheckCircle,
 } from 'lucide-react';
 
-export default function ValidateQuestionsPage({ bankData, onBack }) {
+export default function ValidateQuestionsPage() {
     const navigate = useNavigate();
+    const location = useLocation();
+    const bankData = location.state;
+
+    // Redirect if no data provided
+    useEffect(() => {
+        if (!bankData) {
+            navigate('/dashboard/banks');
+        }
+    }, [bankData, navigate]);
+
     const bankId = bankData?.name || 'default-bank';
     const storageKey = `sibap_validation_${bankId.replace(/\s+/g, '_')}`;
 
@@ -106,7 +116,7 @@ export default function ValidateQuestionsPage({ bankData, onBack }) {
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-[#64748b] mb-6">
                 <button
-                    onClick={onBack}
+                    onClick={() => navigate('/dashboard/banks')}
                     className="hover:text-[#1a5276] transition-colors"
                 >
                     Mis Bancos

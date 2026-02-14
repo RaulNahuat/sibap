@@ -20,5 +20,7 @@ class Usuario(Base):
     documentos: Mapped[list["Documento"]] = relationship(
         "Documento", back_populates="usuario", cascade="all, delete-orphan"
     )
-    exportaciones: Mapped[list["Exportacion"]] = relationship("Exportacion", back_populates="usuario")
+    exportaciones: Mapped[list["Exportacion"]] = relationship(
+        "Exportacion", back_populates="usuario", cascade="all, delete-orphan"
+    )
     logs: Mapped[list["Log"]] = relationship("Log", back_populates="usuario")

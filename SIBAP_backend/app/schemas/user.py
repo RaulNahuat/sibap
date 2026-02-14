@@ -1,36 +1,51 @@
 from pydantic import BaseModel, EmailStr, field_validator
-from app.utils.validators import validate_password_strength, validate_name_length
 from datetime import datetime
 from typing import Optional
 
-class UserCreate(BaseModel):
+
+from app.utils.validators import (
+    validate_password_strength, 
+    validate_name_length,
+
+)
+
+"""
+Mixins de validaciones
+"""
+class NameValidationMixin(BaseModel):
+    @field_validator('name', check_fields=False)
+    @classmethod
+    def validate_name(cls, v: str) -> str:
+        return validate_name_length(v, "nombre")
+    
+    @field_validator('last_name', check_fields=False)
+    @classmethod
+    def validate_last_name(cls, v: str) -> str:
+        return validate_name_length(v, "apellido")
+
+
+class PasswordValidationMixin(BaseModel):
+    @field_validator('password', check_fields=False)
+    @classmethod
+    def validate_password(cls, v:str) -> str:
+        return validate_password_strength(v)
+
+"""
+Schemas de usuario
+"""
+class UserCreate(NameValidationMixin, PasswordValidationMixin):
     name: str
     last_name: str
     email: EmailStr
     password: str
-    
-    @field_validator('password')
-    @classmethod
-    def validate_password(cls, v: str) -> str:
-        """Valida que la contraseña sea fuerte"""
-        return validate_password_strength(v)
-    
-    @field_validator('name')
-    @classmethod
-    def validate_name(cls, v: str) -> str:
-        """Valida la longitud del nombre"""
-        return validate_name_length(v, "nombre")
-    
-    @field_validator('last_name')
-    @classmethod
-    def validate_last_name(cls, v: str) -> str:
-        """Valida la longitud del apellido"""
-        return validate_name_length(v, "apellido")
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
 
+class UserUpdate(NameValidationMixin):
+    name: Optional[str] = None
+    last_name: Optional[str] = None
 
 class UserResponse(BaseModel):
     id: int
@@ -43,3 +58,27 @@ class UserResponse(BaseModel):
     
     class Config:
         from_attributes = True  # Permite crear desde modelos SQLAlchemy
+
+class UserLoginResponse(BaseModel):
+    id: int
+    name: str
+    last_name: str
+    email: str
+    #is_active: bool
+
+    class Config:
+        from_attributes = True
+
+
+class UserDeleteRequest(PasswordValidationMixin):
+    password: str
+
+class UserUpdatePassword(PasswordValidationMixin):
+    password: str
+    new_password: str
+
+    @field_validator('new_password', check_fields=False)
+    @classmethod
+    def validate_new_password(cls, v: str) -> str:
+        from app.utils.validators import validate_password_strength
+        return validate_password_strength(v)

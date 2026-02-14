@@ -17,35 +17,40 @@ export const getErrorMessage = (error) => {
 
     // Manejo especial para errores de validación 422 de FastAPI/Pydantic
     // FastAPI devuelve un array de objetos con formato: [{type, loc, msg, input, ctx}]
-    if (status === 422 && Array.isArray(data?.detail)) {
-        const validationErrors = data.detail.map(err => {
-            const field = err.loc?.[err.loc.length - 1] || 'campo';
-            let message = err.msg || 'inválido';
+    if (status === 422) {
+        if (Array.isArray(data?.detail)) {
+            const validationErrors = data.detail.map(err => {
+                const field = err.loc?.[err.loc.length - 1] || 'campo';
+                let message = err.msg || 'inválido';
 
-            message = message.replace(/^Value error,\s*/i, '');
-            message = message.replace(/^Assertion error,\s*/i, '');
+                message = message.replace(/^Value error,\s*/i, '');
+                message = message.replace(/^Assertion error,\s*/i, '');
 
-            const fieldTranslations = {
-                'email': 'Correo',
-                'password': 'Contraseña',
-                'name': 'Nombre',
-                'last_name': 'Apellido',
-            };
+                const fieldTranslations = {
+                    'email': 'Correo',
+                    'password': 'Contraseña',
+                    'new_password': 'Nueva contraseña',
+                    'confirm_password': 'Confirmar contraseña',
+                    'name': 'Nombre',
+                    'last_name': 'Apellido',
+                };
 
-            const translatedField = fieldTranslations[field] || field;
+                const translatedField = fieldTranslations[field] || field;
 
-            const lowerMessage = message.toLowerCase();
-            const lowerField = field.toLowerCase();
+                const lowerMessage = message.toLowerCase();
+                const lowerField = field.toLowerCase();
 
-            if (lowerMessage.includes(lowerField) ||
-                lowerMessage.includes(translatedField.toLowerCase())) {
-                return message;
-            }
+                if (lowerMessage.includes(lowerField) ||
+                    lowerMessage.includes(translatedField.toLowerCase())) {
+                    return message;
+                }
 
-            return `${translatedField}: ${message}`;
-        });
+                return `${translatedField}: ${message}`;
+            });
 
-        return validationErrors.join('. ');
+            return validationErrors.join('. ');
+        }
+        return data?.detail || 'Error de validación. Verifica los datos ingresados.';
     }
 
     const backendMessage = data?.detail || data?.message;

@@ -32,9 +32,20 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const login = (userData) => {
+    const login = async () => {
+        try {
+            const userData = await getCurrentUser();
+            setUser(userData);
+            setIsAuthenticated(true);
+            return true;
+        } catch (error) {
+            console.error("Error al obtener usuario tras login:", error);
+            return false;
+        }
+    };
+
+    const update = (userData) => {
         setUser(userData);
-        setIsAuthenticated(true);
     };
 
     const logout = () => {
@@ -49,6 +60,7 @@ export const AuthProvider = ({ children }) => {
                 isAuthenticated,
                 loading,
                 login,
+                update,
                 logout,
                 checkAuth,
             }}

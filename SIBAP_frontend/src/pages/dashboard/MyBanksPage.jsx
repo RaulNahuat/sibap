@@ -11,8 +11,10 @@ import {
     FolderOpen,
 } from 'lucide-react';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import { useNavigate } from 'react-router-dom';
 
-export default function MyBanksPage({ onOpenBank }) {
+export default function MyBanksPage() {
+    const navigate = useNavigate();
     const [banks, setBanks] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all'); // all, completed, inProgress
@@ -59,6 +61,18 @@ export default function MyBanksPage({ onOpenBank }) {
         // Sort by last modified (newest first)
         allBanks.sort((a, b) => b.lastModified - a.lastModified);
         setBanks(allBanks);
+    };
+
+    const handleOpenBank = (bank) => {
+        // Reconstruct bank data in the format ValidateQuestionsPage expects
+        const bankData = {
+            name: bank.name,
+            subject: bank.subject,
+            difficulty: bank.difficulty,
+            questions: bank.questions,
+            // Add other properties if needed
+        };
+        navigate('/dashboard/validate', { state: bankData });
     };
 
     const handleDeleteBank = (bank) => {
@@ -247,7 +261,7 @@ export default function MyBanksPage({ onOpenBank }) {
                                         </button>
                                     )}
                                     <button
-                                        onClick={() => onOpenBank(bank)}
+                                        onClick={() => handleOpenBank(bank)}
                                         className="p-2 rounded-md text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1a5276] transition-colors"
                                         title="Editar"
                                     >
@@ -286,7 +300,7 @@ export default function MyBanksPage({ onOpenBank }) {
                             {!bank.isCompleted && (
                                 <div className="mt-4 pt-4 border-t border-[#e2e8f0]">
                                     <button
-                                        onClick={() => onOpenBank(bank)}
+                                        onClick={() => handleOpenBank(bank)}
                                         className="w-full bg-[#1a5276] text-white px-4 py-2.5 rounded-md font-semibold text-sm hover:bg-[#154360] transition-all"
                                     >
                                         Continuar validación

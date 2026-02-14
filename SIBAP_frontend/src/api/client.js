@@ -10,6 +10,7 @@ const apiClient = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
+    'X-CSRF-Token': '1', // Header simple para protección CSRF básica
   },
 });
 
@@ -35,18 +36,23 @@ apiClient.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const { status, data } = error.response;
-
+    const { status, data, config } = error.response;
     const backendMessage = data?.detail || data?.message;
+
+    // No loguear error 401 si es la verificación inicial de usuario (/auth/me)
+    if (status === 401 && config.url?.includes('/auth/me')) {
+      return Promise.reject(error);
+    }
+
     console.error(`[API Error ${status}]:`, backendMessage || 'Sin mensaje del backend');
 
     if (status === 401) {
       const publicRoutes = ['/login', '/register'];
-      const currentPath = history.location.pathname;
+      const currentPath = history.location.pathname; // Nota: esto podría necesitar corrección si history no está actualizado
 
-      if (!publicRoutes.includes(currentPath)) {
-        console.warn('[API] Sesión expirada o no autenticado. Redirigiendo a login...');
-        history.push('/login');
+      if (!publicRoutes.includes(window.location.pathname)) {
+        // Redirigir solo si no estamos ya en login/register
+        // window.location.href = '/login'; // O usar history.push si funciona
       }
     }
 

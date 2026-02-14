@@ -34,9 +34,10 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const response = await loginApi(formData);
+      await loginApi(formData);
 
-      login(response.user ?? response);
+      // El login del contexto ahora se encarga de hacer fetch del usuario
+      await login();
       navigate('/dashboard', { replace: true });
 
     } catch (err) {

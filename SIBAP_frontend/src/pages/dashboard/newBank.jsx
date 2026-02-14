@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     UploadCloud,
     FileText,
@@ -10,17 +11,23 @@ import {
     X,
 } from 'lucide-react';
 
-export default function NewBankPage({ onNavigateToValidation }) {
+export default function NewBankPage() {
+    const navigate = useNavigate();
     const [selectedQuestionType, setSelectedQuestionType] = useState('multiple');
     const [uploadedFiles, setUploadedFiles] = useState([]);
     const [isGenerating, setIsGenerating] = useState(false);
     const [formData, setFormData] = useState({
         program: '',
+        semester: '',
         subject: '',
         topic: '',
         subtopic: '',
         difficulty: 'Intermedio',
         questionCount: 10,
+        wrongOptionCount: 3,
+        plausibleDistractors: false,
+        avoidAmbiguity: true,
+        externalReferences: '',
     });
 
     const handleGenerate = async () => {
@@ -39,13 +46,20 @@ export default function NewBankPage({ onNavigateToValidation }) {
             // Generate mock questions
             const mockQuestions = generateMockQuestions(formData, selectedQuestionType);
 
-            // Navigate to validation page with data
-            onNavigateToValidation({
-                name: `${formData.subject} - ${formData.topic}`,
-                subject: formData.subject,
-                topic: formData.topic,
-                difficulty: formData.difficulty,
-                questions: mockQuestions,
+            navigate('/dashboard/validate', {
+                state: {
+                    name: `${formData.subject} - ${formData.topic}`,
+                    subject: formData.subject,
+                    topic: formData.topic,
+                    difficulty: formData.difficulty,
+                    program: formData.program,
+                    semester: formData.semester,
+                    wrongOptionCount: formData.wrongOptionCount,
+                    plausibleDistractors: formData.plausibleDistractors,
+                    avoidAmbiguity: formData.avoidAmbiguity,
+                    externalReferences: formData.externalReferences,
+                    questions: mockQuestions,
+                }
             });
         }, 2000);
     };
@@ -53,20 +67,31 @@ export default function NewBankPage({ onNavigateToValidation }) {
     const generateMockQuestions = (data, type) => {
         const questions = [];
         for (let i = 0; i < data.questionCount; i++) {
+            const answers = [
+                { id: `a1_${i}`, text: 'Opción correcta sobre ' + data.topic, isCorrect: true },
+            ];
+
+            const wrongCount = data.wrongOptionCount || 3;
+            for (let j = 0; j < wrongCount; j++) {
+                answers.push({
+                    id: `a${j + 2}_${i}`,
+                    text: `Opción incorrecta ${j + 1}`
+                });
+            }
+
+            // Shuffle answers mainly for display if needed, or keep as is.
+            // For now, simple push.
+
             questions.push({
                 id: `q_${i + 1}`,
                 questionText: `¿Cuál fue el principal evento de ${data.topic} en el contexto de ${data.subject}?`,
-                answers: [
-                    { id: `a1_${i}`, text: 'Opción correcta sobre ' + data.topic },
-                    { id: `a2_${i}`, text: 'Opción incorrecta 1' },
-                    { id: `a3_${i}`, text: 'Opción incorrecta 2' },
-                    { id: `a4_${i}`, text: 'Opción incorrecta 3' },
-                ],
+                answers: answers,
                 correctAnswerId: `a1_${i}`,
                 validationStatus: 'pending',
                 metadata: {
                     difficulty: data.difficulty,
                     topic: data.topic,
+                    semester: data.semester,
                     generatedAt: new Date(),
                 },
             });
@@ -144,6 +169,20 @@ export default function NewBankPage({ onNavigateToValidation }) {
                         </div>
                     )}
                 </div>
+
+                {/* Referencias Externas */}
+                <div className="mt-6">
+                    <label className="block text-sm font-medium text-[#102129] mb-2">
+                        Referencias Externas (Opcional)
+                    </label>
+                    <textarea
+                        className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                        rows="3"
+                        placeholder="Pega aquí URLs o bibliografía adicional..."
+                        value={formData.externalReferences}
+                        onChange={(e) => setFormData({ ...formData, externalReferences: e.target.value })}
+                    />
+                </div>
             </div>
 
             {/* Step 2: Parámetros Académicos */}
@@ -169,11 +208,25 @@ export default function NewBankPage({ onNavigateToValidation }) {
                             onChange={(e) => setFormData({ ...formData, program: e.target.value })}
                         >
                             <option value="">Seleccionar programa...</option>
-                            <option>Secundaria</option>
-                            <option>Bachillerato</option>
-                            <option>Universidad</option>
-                            <option>Posgrado</option>
+                            <option>Licenciatura en Ingeniería de Software</option>
+                            <option>Licenciatura en Contaduría</option>
+                            <option>Licenciatura en Educación</option>
+                            <option>Licenciatura en Enfermería</option>
                         </select>
+                    </div>
+
+                    {/* Semestre */}
+                    <div>
+                        <label className="block text-sm font-medium text-[#102129] mb-2">
+                            Semestre / Grado
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="Ej. 5to Semestre"
+                            value={formData.semester}
+                            onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                        />
                     </div>
 
                     {/* Materia / Asignatura */}
@@ -247,6 +300,53 @@ export default function NewBankPage({ onNavigateToValidation }) {
                             onChange={(e) => setFormData({ ...formData, questionCount: parseInt(e.target.value) })}
                             className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
                         />
+                    </div>
+
+                    {/* Número de Opciones Incorrectas */}
+                    <div>
+                        <label className="block text-sm font-medium text-[#102129] mb-2">
+                            Opciones Incorrectas por Pregunta
+                        </label>
+                        <input
+                            type="number"
+                            min="1"
+                            max="5"
+                            value={formData.wrongOptionCount}
+                            onChange={(e) => setFormData({ ...formData, wrongOptionCount: parseInt(e.target.value) })}
+                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                        />
+                    </div>
+                </div>
+
+                {/* Restricciones Pedagógicas */}
+                <div className="mt-8 border-t border-[#e2e8f0] pt-6">
+                    <h3 className="text-sm font-semibold text-[#102129] mb-4">
+                        Restricciones Pedagógicas
+                    </h3>
+                    <div className="flex flex-col gap-3">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={formData.plausibleDistractors}
+                                onChange={(e) => setFormData({ ...formData, plausibleDistractors: e.target.checked })}
+                                className="w-4 h-4 text-[#1a5276] border-gray-300 rounded focus:ring-[#1a5276]"
+                            />
+                            <span className="text-sm text-[#475569]">
+                                Generar distractores plausibles (evitar opciones obvias)
+                            </span>
+                        </label>
+
+                        <label className="flex items-center gap-3 cursor-pointer">
+                            <input
+                                type="checkbox"
+                                checked={formData.avoidAmbiguity}
+                                onChange={(e) => setFormData({ ...formData, avoidAmbiguity: e.target.checked })}
+                                className="w-4 h-4 text-[#1a5276] border-gray-300 rounded focus:ring-[#1a5276]"
+                            />
+                            <span className="text-sm text-[#475569]">
+                                Verificar y evitar ambigüedades en los enunciados
+                            </span>
+                        </label>
                     </div>
                 </div>
             </div>

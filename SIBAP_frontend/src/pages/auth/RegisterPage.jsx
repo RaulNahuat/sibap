@@ -34,7 +34,6 @@ export default function RegisterPage() {
     e.preventDefault();
     setError('');
 
-    // Validación frontend mínima (UX)
     if (formData.password !== formData.confirmPassword) {
       setError('Las contraseñas no coinciden');
       return;
@@ -44,25 +43,10 @@ export default function RegisterPage() {
 
     try {
       const { confirmPassword, ...payload } = formData;
+      await registerApi(payload);
 
-      /**
-       * POST /auth/register
-       * Backend:
-       * - valida datos
-       * - crea usuario
-       * - retorna UserResponse
-       */
-      const response = await registerApi(payload);
-
-      /**
-       * 🔐 IMPORTANTE:
-       * Solo llamamos login(response) si tu backend
-       * TAMBIÉN crea la cookie JWT en /register.
-       *
-       * Si NO lo hace (lo normal):
-       * → redirigimos a /login
-       */
-      login(response);
+      // Auto-login: Fetch del usuario recién creado
+      await login();
 
       navigate('/dashboard', { replace: true });
 
