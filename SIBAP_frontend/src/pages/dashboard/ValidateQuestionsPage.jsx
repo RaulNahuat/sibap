@@ -10,6 +10,7 @@ import {
     Sparkles,
     CheckCircle,
 } from 'lucide-react';
+import { useLocalStorage } from '../../hooks';
 
 export default function ValidateQuestionsPage() {
     const navigate = useNavigate();
@@ -26,28 +27,8 @@ export default function ValidateQuestionsPage() {
     const bankId = bankData?.name || 'default-bank';
     const storageKey = `sibap_validation_${bankId.replace(/\s+/g, '_')}`;
 
-    // Load saved state from localStorage or use initial data
-    const [questions, setQuestions] = useState(() => {
-        const saved = localStorage.getItem(storageKey);
-        if (saved) {
-            try {
-                return JSON.parse(saved);
-            } catch (e) {
-                console.error('Error loading saved questions:', e);
-            }
-        }
-        return bankData?.questions || [];
-    });
-
-    const [editingQuestion, setEditingQuestion] = useState(null);
-    const [deletingQuestion, setDeletingQuestion] = useState(null);
-
-    // Save to localStorage whenever questions change
-    useEffect(() => {
-        if (questions.length > 0) {
-            localStorage.setItem(storageKey, JSON.stringify(questions));
-        }
-    }, [questions, storageKey]);
+    // Load saved state from localStorage or use initial data using the hook
+    const [questions, setQuestions, clearQuestions] = useLocalStorage(storageKey, bankData?.questions || []);
 
     // Calculate progress
     const validatedCount = questions.filter(
@@ -98,7 +79,7 @@ export default function ValidateQuestionsPage() {
     const handleExport = (format) => {
         // Clear saved progress after successful export
         if (window.confirm(`¿Exportar en formato ${format}? Esto limpiará el progreso guardado.`)) {
-            localStorage.removeItem(storageKey);
+            clearQuestions();
             alert(`Exportando en formato ${format}...`);
             // TODO: Implement actual export logic
         }
@@ -106,8 +87,7 @@ export default function ValidateQuestionsPage() {
 
     const handleClearProgress = () => {
         if (window.confirm('¿Estás seguro de que deseas limpiar todo el progreso guardado?')) {
-            localStorage.removeItem(storageKey);
-            setQuestions(bankData?.questions || []);
+            clearQuestions();
         }
     };
 

@@ -1,2 +1,1 @@
-// Placeholder for custom hooks
-export { };
+export { default as useLocalStorage } from './useLocalStorage';
