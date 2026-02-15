@@ -3,6 +3,8 @@
 
 /* Tailwind CSS Configuration */
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
 
 html,
 body,

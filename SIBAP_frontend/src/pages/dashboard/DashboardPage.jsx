@@ -12,6 +12,7 @@ import {
   LogOut,
   User,
   GraduationCap,
+  FileText,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -35,7 +36,7 @@ export default function DashboardPage() {
     { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, title: 'Dashboard General', end: true },
     { path: '/dashboard/new-bank', label: 'Nuevo Banco', icon: PlusCircle, title: 'Nuevo Banco de Preguntas' },
     { path: '/dashboard/banks', label: 'Mis Bancos', icon: FolderOpen, title: 'Mis Bancos' },
-    { path: '/dashboard/documents', label: 'Mis documentos', icon: FolderOpen, title: 'Mis Documentos' },
+    { path: '/dashboard/documents', label: 'Mis documentos', icon: FileText, title: 'Mis Documentos' },
     { path: '/dashboard/settings', label: 'Configuración', icon: Settings, title: 'Configuración' },
     { path: '/dashboard/profile', label: 'Mi perfil', icon: User, title: 'Mi perfil' },
   ];

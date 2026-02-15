@@ -11,6 +11,8 @@ import NewBankPage from './pages/dashboard/newBank';
 import MyBanksPage from './pages/dashboard/MyBanksPage';
 import MyProfile from './pages/dashboard/MyProfile';
 import ValidateQuestionsPage from './pages/dashboard/ValidateQuestionsPage';
+import DocumentProcessorPage from './pages/documents/DocumentProcessorPage';
+import DocumentViewerPage from './pages/documents/DocumentViewerPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -36,10 +38,12 @@ function App() {
               <Route path="banks" element={<MyBanksPage />} />
               <Route path="profile" element={<MyProfile />} />
               <Route path="validate" element={<ValidateQuestionsPage />} />
-              <Route path="documents" element={<div className="p-8">Sección en construcción</div>} />
+              <Route path="documents" element={<DocumentProcessorPage />} />
+              <Route path="documents/:id" element={<DocumentViewerPage />} />
               <Route path="settings" element={<div className="p-8">Sección en construcción</div>} />
             </Route>
             <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
         </BrowserRouter>
       </ToastProvider>

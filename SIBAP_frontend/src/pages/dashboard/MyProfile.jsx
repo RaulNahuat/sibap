@@ -86,7 +86,8 @@ export default function MyProfile() {
             showToast('Perfil actualizado correctamente', 'success');
         } catch (error) {
             console.error('Error al actualizar el perfil:', error);
-            showToast(error.response?.data?.detail || 'Error al actualizar el perfil', 'error');
+            const errorMessage = getErrorMessage(error);
+            showToast(errorMessage, 'error');
         }
     };
 
@@ -156,7 +157,8 @@ export default function MyProfile() {
             navigate('/login', { replace: true });
         } catch (error) {
             console.error('Error al eliminar la cuenta:', error);
-            showToast(error.response?.data?.detail || 'Error al eliminar la cuenta', 'error');
+            const errorMessage = getErrorMessage(error);
+            showToast(errorMessage, 'error');
         } finally {
             setDeletePassword('');
             setShowDeleteModal(false);

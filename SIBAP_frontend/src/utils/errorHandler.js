@@ -50,6 +50,11 @@ export const getErrorMessage = (error) => {
 
             return validationErrors.join('. ');
         }
+
+        if (typeof data?.detail === 'object' && data?.detail !== null) {
+            return JSON.stringify(data.detail);
+        }
+
         return data?.detail || 'Error de validación. Verifica los datos ingresados.';
     }
 
