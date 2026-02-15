@@ -11,7 +11,11 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             # which prevents simple form-based CSRF attacks from browsers.
             
             # Allow public auth endpoints
-            if request.url.path in ["/auth/login", "/auth/register", "/auth/logout"]:
+            if request.url.path in [
+                "/auth/login", 
+                "/auth/register", 
+                "/auth/logout"
+            ]:
                 return await call_next(request)
 
             # Check for strict header presence

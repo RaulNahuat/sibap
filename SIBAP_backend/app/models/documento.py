@@ -10,6 +10,12 @@ class FileType(enum.Enum):
     DOCX = "DOCX"
     TXT = "TXT"
 
+class ProcessingStatus(enum.Enum):
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
 class Documento(Base):
     __tablename__ = "documents"
 
@@ -18,9 +24,16 @@ class Documento(Base):
     
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     file_type: Mapped[FileType] = mapped_column(Enum(FileType), nullable=False)
-    file_path: Mapped[str] = mapped_column(String(500), nullable=False)
-    content_text: Mapped[str] = mapped_column(Text, nullable=False)
+    file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    content_text: Mapped[str] = mapped_column(Text(4294967295), nullable=True) # Text can be null initially
     
+    status: Mapped[ProcessingStatus] = mapped_column(
+        Enum(ProcessingStatus), 
+        default=ProcessingStatus.PENDING,
+        nullable=False
+    )
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     usuario: Mapped["Usuario"] = relationship("Usuario", back_populates="documentos")
