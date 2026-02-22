@@ -35,13 +35,10 @@ export default function LoginPage() {
 
     try {
       await loginApi({ ...formData, remember_me: rememberMe });
-
-      // El login del contexto ahora se encarga de hacer fetch del usuario
       await login();
       navigate('/dashboard', { replace: true });
 
     } catch (err) {
-      // Usa el manejador centralizado que prioriza mensajes del backend
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);

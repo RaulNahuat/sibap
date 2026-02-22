@@ -9,7 +9,6 @@ ALLOWED_EXTENSIONS = [
     ".txt"
 ]
 
-# Response cuando se extrae texto
 class DocumentExtractionResponse(BaseModel):
     id: int
     filename: str
@@ -18,11 +17,9 @@ class DocumentExtractionResponse(BaseModel):
     content_text: str
     uploaded_at: datetime
 
-# Response de error
 class DocumentErrorResponse(BaseModel):
     detail: str
 
-# Para listar documentos
 class DocumentListResponse(BaseModel):
     id: int
     filename: str

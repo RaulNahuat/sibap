@@ -6,7 +6,7 @@ from fastapi import UploadFile
 import pymupdf4llm
 import pypandoc
 import mammoth
-import fitz  # PyMuPDF
+import fitz
 from PIL import Image
 import pytesseract
 import re
@@ -111,7 +111,6 @@ def fix_spaced_words(text: str) -> str:
 def clean_pdf_text(text: str) -> str:
     """
     Limpieza profunda específica para PDFs (diapositivas, libros, papers).
-    Ataca ligaduras, basura de slides y palabras fragmentadas.
     """
     ligatures = {
         "ﬁ": "fi", "ﬂ": "fl", "ﬀ": "ff", "ﬃ": "ffi", "ﬄ": "ffl",
@@ -137,7 +136,6 @@ import re
 def extract_pdf(temp_path: str) -> str:
     """
     Extrae texto de PDF con detección robusta de columnas y orden de lectura natural.
-    Diseñado para manejar diapositivas académicas y layouts complejos sin fallar.
     """
     try:
         doc = fitz.open(temp_path)

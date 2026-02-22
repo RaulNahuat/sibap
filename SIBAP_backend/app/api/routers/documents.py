@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, BackgroundTasks, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
+import math
 
 from app.services.document_processor import process_document
 from app.services import document_service
@@ -29,26 +30,20 @@ def process_document_background(
 ):
     """Tarea en segundo plano para procesar el documento."""
     try:
-        # Actualizar estado a PROCESSING
         document_service.update_document_status(
             db=db,
             document_id=document_id,
             status=ProcessingStatus.PROCESSING
         )
         
-        # Procesar (ahora corremos en threadpool porque no es async def)
         result = process_document(file_content, filename)
         
-        # Actualizar a COMPLETED
         document_service.update_document_status(
             db=db,
             document_id=document_id,
             status=ProcessingStatus.COMPLETED,
             content_text=result["text"]
         )
-        
-
-        
     except Exception as e:
         print(f"Error processing document {document_id}: {e}")
         document_service.update_document_status(
@@ -73,7 +68,6 @@ async def extract_text(
     Subir documento para extracción de texto en segundo plano.
     Requiere autenticación.
     """
-    # 1. Verificar duplicados
     if document_service.check_duplicate_document(db, current_user.id, file.filename):
         raise HTTPException(
             status_code=400, 
@@ -81,12 +75,7 @@ async def extract_text(
         )
         
     try:
-        # 2. Leer contenido para pasar a background task
-        # Nota: Leer en memoria puede ser costoso para archivos muy grandes,
-        # idealmente guardar en disco temporalmente.
         content = await file.read()
-        
-        # 3. Crear registro inicial PENDING
         filename = file.filename
         file_ext = "." + filename.split(".")[-1] if "." in filename else ""
         
@@ -98,7 +87,6 @@ async def extract_text(
             status=ProcessingStatus.PENDING
         )
         
-        # 4. Enviar a background task
         background_tasks.add_task(
             process_document_background,
             content,
@@ -112,7 +100,7 @@ async def extract_text(
             filename=documento.filename,
             file_type=documento.file_type.value,
             characters=0,
-            content_text="", # Vacío inicialmente
+            content_text="",
             uploaded_at=documento.uploaded_at
         )
     
@@ -145,9 +133,7 @@ def list_documents(
         skip=skip,
         limit=limit
     )
-    
-    # Calcular metadatos de paginación
-    import math
+
     pages = math.ceil(total / limit) if limit > 0 else 0
     current_page = (skip // limit) + 1
     

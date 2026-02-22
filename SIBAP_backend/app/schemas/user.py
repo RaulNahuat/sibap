@@ -58,14 +58,13 @@ class UserResponse(BaseModel):
     deleted_at: Optional[datetime] = None
     
     class Config:
-        from_attributes = True  # Permite crear desde modelos SQLAlchemy
+        from_attributes = True
 
 class UserLoginResponse(BaseModel):
     id: int
     name: str
     last_name: str
     email: str
-    #is_active: bool
 
     class Config:
         from_attributes = True

@@ -15,14 +15,24 @@ import {
 } from 'lucide-react';
 import DocumentSelectionModal from '../../components/documents/DocumentSelectionModal';
 import { uploadDocument, getDocument } from '../../api/documents';
+import { generateQuestions } from '../../api/questions';
 import { getErrorMessage } from '../../utils/errorHandler';
+import { useToast } from '../../context/ToastContext';
 import { useLocalStorage } from '../../hooks';
+import { useAuth } from '../../context/AuthContext';
 
 export default function NewBankPage() {
     const navigate = useNavigate();
-    const [selectedQuestionType, setSelectedQuestionType] = useLocalStorage('sibap_newbank_type', 'multiple');
-    const [uploadedFiles, setUploadedFiles] = useLocalStorage('sibap_newbank_files', []);
-    const [formData, setFormData] = useLocalStorage('sibap_newbank_form', {
+    const { showToast } = useToast();
+    const { user } = useAuth();
+
+    const typeKey = user?.id ? `sibap_newbank_type_${user.id}` : 'sibap_newbank_type';
+    const filesKey = user?.id ? `sibap_newbank_files_${user.id}` : 'sibap_newbank_files';
+    const formKey = user?.id ? `sibap_newbank_form_${user.id}` : 'sibap_newbank_form';
+
+    const [selectedQuestionType, setSelectedQuestionType, clearQuestionType] = useLocalStorage(typeKey, 'multiple');
+    const [uploadedFiles, setUploadedFiles, clearUploadedFiles] = useLocalStorage(filesKey, []);
+    const [formData, setFormData, clearFormData] = useLocalStorage(formKey, {
         program: '',
         semester: '',
         subject: '',
@@ -34,6 +44,7 @@ export default function NewBankPage() {
         plausibleDistractors: false,
         avoidAmbiguity: true,
         externalReferences: '',
+        aiModel: 'gemini-2.0-flash',
     });
 
     const [isGenerating, setIsGenerating] = useState(false);
@@ -42,7 +53,6 @@ export default function NewBankPage() {
     const [error, setError] = useState('');
 
     const handleGenerate = async () => {
-        // Validate form
         if (!formData.subject || !formData.topic) {
             setError('Por favor completa al menos la materia y el tema principal');
             return;
@@ -56,12 +66,55 @@ export default function NewBankPage() {
         setIsGenerating(true);
         setError('');
 
-        // Simulate API call
-        setTimeout(() => {
-            setIsGenerating(false);
+        try {
+            const typeMapping = {
+                'multiple': 'MCQ',
+                'trueFalse': 'TF',
+                'open': 'OPEN'
+            };
 
-            // Generate mock questions
-            const mockQuestions = generateMockQuestions(formData, selectedQuestionType);
+            const difficultyMapping = {
+                'Básico': 'EASY',
+                'Intermedio': 'MEDIUM',
+                'Avanzado': 'HARD'
+            };
+
+            const requestData = {
+                document_ids: uploadedFiles.map(f => f.id),
+                program: formData.program,
+                semester: formData.semester,
+                subject: formData.subject,
+                topic: formData.topic,
+                subtopic: formData.subtopic || null,
+                question_type: typeMapping[selectedQuestionType] || 'MCQ',
+                difficulty: difficultyMapping[formData.difficulty] || 'MEDIUM',
+                num_questions: formData.questionCount,
+                model_name: formData.aiModel,
+                wrong_option_count: formData.wrongOptionCount,
+                plausible_distractors: formData.plausibleDistractors,
+                avoid_ambiguity: formData.avoidAmbiguity,
+                external_references: formData.externalReferences || null
+            };
+
+            const response = await generateQuestions(requestData);
+
+            const mappedQuestions = response.questions.map((q, idx) => ({
+                id: q.id,
+                questionText: q.question_text,
+                answers: q.opciones.map(opt => ({
+                    id: opt.id,
+                    text: opt.option_text,
+                    isCorrect: opt.is_correct
+                })),
+                correctAnswerId: q.opciones.find(opt => opt.is_correct)?.id,
+                validationStatus: 'pending',
+                metadata: {
+                    difficulty: formData.difficulty,
+                    topic: formData.topic,
+                    semester: formData.semester,
+                    generatedAt: q.created_at,
+                },
+            }));
 
             navigate('/dashboard/validate', {
                 state: {
@@ -75,11 +128,18 @@ export default function NewBankPage() {
                     plausibleDistractors: formData.plausibleDistractors,
                     avoidAmbiguity: formData.avoidAmbiguity,
                     externalReferences: formData.externalReferences,
-                    questions: mockQuestions,
-                    sourceDocuments: uploadedFiles.map(f => f.id)
+                    questions: mappedQuestions,
+                    sourceDocuments: requestData.document_ids,
+                    configId: response.config_id
                 }
             });
-        }, 2000);
+        } catch (err) {
+            const msg = getErrorMessage(err);
+            setError(msg);
+            showToast(msg, 'error', 6000);
+        } finally {
+            setIsGenerating(false);
+        }
     };
 
     const handleFileUpload = async (e) => {
@@ -93,15 +153,15 @@ export default function NewBankPage() {
             const uploadPromises = files.map(file => uploadDocument(file));
             const results = await Promise.all(uploadPromises);
 
-            // results contain {id, filename, file_type, ...}
             setUploadedFiles(prev => {
-                // Avoid duplicates
                 const existingIds = new Set(prev.map(f => f.id));
                 const newFiles = results.filter(r => !existingIds.has(r.id));
                 return [...prev, ...newFiles];
             });
         } catch (err) {
-            setError(getErrorMessage(err));
+            const msg = getErrorMessage(err);
+            setError(msg);
+            showToast(msg, 'error', 4000);
         } finally {
             setIsUploading(false);
         }
@@ -110,19 +170,19 @@ export default function NewBankPage() {
     const handleLibrarySelect = async (selectedIds) => {
         setIsUploading(true);
         try {
-            // Fetch full details for the selected IDs that we don't already have
             const existingIds = new Set(uploadedFiles.map(f => f.id));
             const idsToFetch = selectedIds.filter(id => !existingIds.has(id));
 
             const fetchedDocs = await Promise.all(idsToFetch.map(id => getDocument(id)));
 
             setUploadedFiles(prev => {
-                // Keep already uploaded ones that are still in selectedIds
                 const filtered = prev.filter(f => selectedIds.includes(f.id));
                 return [...filtered, ...fetchedDocs];
             });
         } catch (err) {
-            setError('Error al cargar documentos seleccionados');
+            const msg = 'Error al cargar documentos seleccionados';
+            setError(msg);
+            showToast(msg, 'error', 4000);
         } finally {
             setIsUploading(false);
         }
@@ -146,9 +206,6 @@ export default function NewBankPage() {
                     text: `Opción incorrecta ${j + 1}`
                 });
             }
-
-            // Shuffle answers mainly for display if needed, or keep as is.
-            // For now, simple push.
 
             questions.push({
                 id: `q_${i + 1}`,
@@ -187,21 +244,9 @@ export default function NewBankPage() {
 
     const handleClearAll = () => {
         if (window.confirm('¿Estás seguro de que deseas limpiar todos los campos y archivos?')) {
-            setFormData({
-                program: '',
-                semester: '',
-                subject: '',
-                topic: '',
-                subtopic: '',
-                difficulty: 'Intermedio',
-                questionCount: 10,
-                wrongOptionCount: 3,
-                plausibleDistractors: false,
-                avoidAmbiguity: true,
-                externalReferences: '',
-            });
-            setUploadedFiles([]);
-            setSelectedQuestionType('multiple');
+            clearFormData();
+            clearUploadedFiles();
+            clearQuestionType();
         }
     };
 
@@ -352,12 +397,22 @@ export default function NewBankPage() {
                     </div>
 
                     {error && (
-                        <div className="mt-4 p-3 bg-red-50 border border-red-100 rounded-lg flex items-center justify-between text-red-700 text-xs">
-                            <span className="flex items-center gap-2">
-                                <RotateCcw className="w-3 h-3" />
+                        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-xl flex flex-col gap-2">
+                            <div className="flex items-center justify-between text-red-800 text-sm font-semibold">
+                                <span className="flex items-center gap-2">
+                                    <RotateCcw className="w-4 h-4" />
+                                    Ocurrió un error
+                                </span>
+                                <button onClick={() => setError('')} className="p-1 hover:bg-red-100 rounded-lg transition-colors">✕</button>
+                            </div>
+                            <p className="text-xs text-red-600 leading-relaxed font-medium">
                                 {error}
-                            </span>
-                            <button onClick={() => setError('')} className="font-bold">✕</button>
+                            </p>
+                            {error.includes("cuota") && (
+                                <div className="mt-1 text-[10px] text-red-500 italic bg-white/50 p-2 rounded border border-red-100">
+                                    Sugerencia: Prueba cambiando el modelo a "Gemini Flash (Estable)" o espera 60 segundos antes de reintentar.
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -538,6 +593,37 @@ export default function NewBankPage() {
                     <h2 className="text-lg font-semibold text-[#102129]">
                         Configuración de IA
                     </h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div>
+                        <label className="block text-sm font-medium text-[#102129] mb-2 flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-amber-500" />
+                            Modelo de Inteligencia Artificial
+                        </label>
+                        <select
+                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent transition-all"
+                            value={formData.aiModel}
+                            onChange={(e) => setFormData({ ...formData, aiModel: e.target.value })}
+                        >
+                            <option value="gemini-flash-latest">Gemini Flash (Estable - Recomendado)</option>
+                            <option value="gemma-3-27b-it">Gemma 3 27B (Modelo Abierto)</option>
+                            <option value="gemini-3-flash-preview">Gemini 3 Flash (Vista Previa)</option>
+
+                        </select>
+                        <p className="mt-1.5 text-[11px] text-[#64748b]">
+                            Seleccione el modelo según sus necesidades de rapidez o complejidad.
+                        </p>
+                    </div>
+                    <div className="flex items-end flex-1">
+                        <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, aiModel: 'gemini-flash-latest' })}
+                            className="text-[10px] text-[#1a5276] hover:underline font-medium"
+                        >
+                            ¿Problemas con el modelo? Restablecer por defecto
+                        </button>
+                    </div>
                 </div>
 
                 {/* Tipo de Reactivo Principal */}

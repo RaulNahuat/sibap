@@ -53,7 +53,6 @@ const DocumentSelectionModal = ({ isOpen, onClose, onSelect, selectedIds = [] })
         setError('');
         try {
             const result = await uploadDocument(file);
-            // After upload, refresh list and select the new doc
             await loadDocuments();
             setLocalSelectedIds(prev => [...prev, result.id]);
         } catch (err) {

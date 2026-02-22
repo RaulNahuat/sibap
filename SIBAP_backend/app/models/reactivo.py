@@ -3,8 +3,6 @@ from typing import List, Optional
 from sqlalchemy import Text, Enum, Boolean, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
-# Importamos los Enums definidos en el modelo de configuración
-# from app.models.configuracion import QuestionType, DifficultyLevel 
 
 class Reactivo(Base):
     __tablename__ = "items"
@@ -14,7 +12,7 @@ class Reactivo(Base):
     
     question_text: Mapped[str] = mapped_column(Text, nullable=False)
     
-    item_type: Mapped[str] = mapped_column(Text, nullable=False) # O el Enum definido antes
+    item_type: Mapped[str] = mapped_column(Text, nullable=False)
     difficulty: Mapped[str] = mapped_column(Text, nullable=False)
     
     is_validated: Mapped[bool] = mapped_column(Boolean, default=False)

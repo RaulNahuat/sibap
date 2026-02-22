@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 
 /**
- * Custom hook to sync state with localStorage
- * @param {string} key - The key to store in localStorage
- * @param {any} initialValue - The initial value if nothing is found in localStorage
- * @returns {[any, Function, Function]} - Returns state, setter, and clearer
+ * Custom hook para sincronizar el estado con localStorage
+ * @param {string} key - La clave para almacenar en localStorage
+ * @param {any} initialValue - El valor inicial si no se encuentra en localStorage
+ * @returns {[any, Function, Function]} - Retorna el estado, el setter y el clearer
  */
 export default function useLocalStorage(key, initialValue) {
-    // Get stored value from localStorage or use initialValue
+    // Obtiene el valor almacenado en localStorage o usa el valor inicial
     const [storedValue, setStoredValue] = useState(() => {
         try {
             const item = window.localStorage.getItem(key);
@@ -18,7 +18,7 @@ export default function useLocalStorage(key, initialValue) {
         }
     });
 
-    // Update localStorage when state changes
+    // Actualiza localStorage cuando el estado cambia
     useEffect(() => {
         try {
             if (storedValue === undefined) {

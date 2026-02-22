@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // Verifica si el usuario está autenticado al montar
+    // Verifica si el usuario está autenticado
     useEffect(() => {
         checkAuth();
     }, []);
@@ -51,6 +51,11 @@ export const AuthProvider = ({ children }) => {
     const logout = () => {
         setUser(null);
         setIsAuthenticated(false);
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sibap_')) {
+                localStorage.removeItem(key);
+            }
+        });
     };
 
     return (
@@ -70,7 +75,6 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-// Custom hook to use auth context
 export const useAuth = () => {
     const context = useContext(AuthContext);
     if (!context) {

@@ -25,12 +25,17 @@ class Settings(BaseSettings):
     
     # Password reset token configuration
     RESET_TOKEN_EXPIRE_MINUTES: int = 60
+    
+    # AI Configuration
+    GOOGLE_API_KEY: str = ""
+    GOOGLE_AI_MODEL: str = "gemini"
 
     class Config:
         env_file = ".env"
 
 settings = Settings()
 
+# JWT and Core Configuration
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
@@ -40,6 +45,13 @@ ENVIRONMENT = settings.ENVIRONMENT
 # Refresh token configuration
 REFRESH_TOKEN_EXPIRE_DAYS = 30
 REFRESH_COOKIE_NAME = "refresh_token"
+
+# Password reset token configuration
+RESET_TOKEN_EXPIRE_MINUTES = settings.RESET_TOKEN_EXPIRE_MINUTES
+
+# AI Configuration
+GOOGLE_API_KEY = settings.GOOGLE_API_KEY
+GOOGLE_AI_MODEL = settings.GOOGLE_AI_MODEL
 
 # Email configuration
 EMAIL_HOST = settings.EMAIL_HOST
@@ -51,11 +63,6 @@ EMAIL_FROM_NAME = settings.EMAIL_FROM_NAME
 EMAIL_USE_TLS = settings.EMAIL_USE_TLS
 EMAIL_CONSOLE_MODE = settings.EMAIL_CONSOLE_MODE
 
-# Frontend URL
+# Frontend and CORS
 FRONTEND_URL = settings.FRONTEND_URL
-
-# Password reset token configuration
-RESET_TOKEN_EXPIRE_MINUTES = settings.RESET_TOKEN_EXPIRE_MINUTES
-
-# Convertir CORS_ORIGINS de string a lista
 CORS_ORIGINS: List[str] = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]

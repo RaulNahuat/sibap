@@ -14,6 +14,7 @@ export default function QuestionCard({
     onDelete,
     onValidate,
     onRegenerate,
+    isRegenerating,
 }) {
     const [isExpanded, setIsExpanded] = useState(true);
 
@@ -84,10 +85,12 @@ export default function QuestionCard({
                     {question.validationStatus !== 'validated' && onRegenerate && (
                         <button
                             onClick={() => onRegenerate(question)}
-                            className="p-2 rounded-md text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#1a5276] transition-colors"
+                            disabled={isRegenerating}
+                            className={`p-2 rounded-md text-[#64748b] transition-colors ${isRegenerating ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#f1f5f9] hover:text-[#1a5276]'
+                                }`}
                             title="Regenerar"
                         >
-                            <RefreshCw className="w-4 h-4" />
+                            <RefreshCw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
                         </button>
                     )}
                     <button
@@ -122,14 +125,14 @@ export default function QuestionCard({
                             <div
                                 key={answer.id}
                                 className={`flex items-center gap-3 p-3 rounded-md border transition-all ${isCorrect
-                                        ? 'bg-green-50 border-green-200'
-                                        : 'bg-[#f8fafc] border-[#e2e8f0]'
+                                    ? 'bg-green-50 border-green-200'
+                                    : 'bg-[#f8fafc] border-[#e2e8f0]'
                                     }`}
                             >
                                 <div
                                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isCorrect
-                                            ? 'border-green-600 bg-green-600'
-                                            : 'border-[#cbd5e1]'
+                                        ? 'border-green-600 bg-green-600'
+                                        : 'border-[#cbd5e1]'
                                         }`}
                                 >
                                     {isCorrect && (
@@ -138,8 +141,8 @@ export default function QuestionCard({
                                 </div>
                                 <span
                                     className={`text-sm ${isCorrect
-                                            ? 'text-green-900 font-medium'
-                                            : 'text-[#475569]'
+                                        ? 'text-green-900 font-medium'
+                                        : 'text-[#475569]'
                                         }`}
                                 >
                                     {answer.text}

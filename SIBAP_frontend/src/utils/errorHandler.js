@@ -10,13 +10,11 @@
  */
 export const getErrorMessage = (error) => {
     if (!error.response) {
-        return 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+        return 'No se pudo conectar con el servidor o al base de datos. Verifica tu conexión a internet.';
     }
 
     const { status, data } = error.response;
-
-    // Manejo especial para errores de validación 422 de FastAPI/Pydantic
-    // FastAPI devuelve un array de objetos con formato: [{type, loc, msg, input, ctx}]
+    
     if (status === 422) {
         if (Array.isArray(data?.detail)) {
             const validationErrors = data.detail.map(err => {

@@ -38,9 +38,8 @@ const DocumentProcessorPage = () => {
 
     useEffect(() => {
         loadDocuments();
-    }, [page]); // Recargar cuando cambia la página
+    }, [page]);
 
-    // Polling para actualizar estado de documentos en proceso
     useEffect(() => {
         const hasPendingDocs = documents.some(doc =>
             doc.status === 'PROCESSING' || doc.status === 'PENDING'
@@ -59,7 +58,6 @@ const DocumentProcessorPage = () => {
         if (!isBackground) setLoading(true);
         try {
             const response = await getDocuments(page, limit);
-            // La respuesta ahora es { items: [], total: 0, page: 1, size: 10, pages: 0 }
             setDocuments(response.items || []);
             setTotalPages(response.pages || 1);
             setTotalDocs(response.total || 0);

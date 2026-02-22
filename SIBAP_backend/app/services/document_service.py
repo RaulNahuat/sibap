@@ -14,7 +14,6 @@ def create_document(
 ) -> Documento:
     """Crear un nuevo documento en la base de datos."""
     
-    # Convertir extensión a FileType enum
     file_type_map = {
         ".pdf": FileType.PDF,
         ".docx": FileType.DOCX,

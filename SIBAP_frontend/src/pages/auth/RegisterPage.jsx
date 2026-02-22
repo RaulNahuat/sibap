@@ -45,13 +45,11 @@ export default function RegisterPage() {
       const { confirmPassword, ...payload } = formData;
       await registerApi(payload);
 
-      // Auto-login: Fetch del usuario recién creado
       await login();
 
       navigate('/dashboard', { replace: true });
 
     } catch (err) {
-      // Usa el manejador centralizado que prioriza mensajes del backend
       setError(getErrorMessage(err));
     } finally {
       setLoading(false);

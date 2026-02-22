@@ -15,24 +15,20 @@ const FileUploader = ({
 
     const maxSizeBytes = maxSizeMB * 1024 * 1024;
 
-    // Validar archivo
     const validateFile = (file) => {
         setError('');
 
-        // Validar extensión
         const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
         if (!acceptedFormats.includes(fileExtension)) {
             setError(`Formato no permitido. Use: ${acceptedFormats.join(', ')}`);
             return false;
         }
 
-        // Validar tamaño
         if (file.size > maxSizeBytes) {
             setError(`El archivo excede el tamaño máximo de ${maxSizeMB} MB`);
             return false;
         }
 
-        // Validar que no esté vacío
         if (file.size === 0) {
             setError('El archivo está vacío');
             return false;
@@ -41,7 +37,6 @@ const FileUploader = ({
         return true;
     };
 
-    // Manejar selección de archivo
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file && validateFile(file)) {
@@ -52,7 +47,6 @@ const FileUploader = ({
         }
     };
 
-    // Manejar drag & drop
     const handleDragEnter = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -84,7 +78,6 @@ const FileUploader = ({
         }
     };
 
-    // Manejar upload
     const handleUpload = async () => {
         if (!selectedFile) return;
 
@@ -93,7 +86,6 @@ const FileUploader = ({
 
         try {
             await onUpload(selectedFile);
-            // No limpiar el archivo aquí, dejar que el componente padre lo maneje
         } catch (err) {
             setError(err.message || 'Error al subir el archivo');
         } finally {
@@ -101,7 +93,6 @@ const FileUploader = ({
         }
     };
 
-    // Limpiar selección
     const handleClear = () => {
         setSelectedFile(null);
         setError('');
@@ -110,7 +101,6 @@ const FileUploader = ({
         }
     };
 
-    // Formatear tamaño de archivo
     const formatFileSize = (bytes) => {
         if (bytes < 1024) return bytes + ' B';
         if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';

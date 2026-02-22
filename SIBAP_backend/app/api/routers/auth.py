@@ -22,16 +22,14 @@ def register(data: UserCreate, request: Request, response: Response, db: Session
     
     Validaciones automáticas (en schema):
     - Email válido y único
-    - Contraseña fuerte (min 8 chars, mayúsculas, minúsculas, números, especiales)
-    - Nombres con longitud adecuada (2-150 caracteres)
+    - Contraseña fuerte (min 8 characteres, mayúsculas, minúsculas, números, especiales)
+    - Nombres con longitud adecuada (2-150 characteres)
     
     Returns:
         dict: Mensaje de éxito
     """
     try:
         user = register_user(db, data.name, data.last_name, data.email, data.password)
-        
-        # Auto-login: Crear token JWT y setear cookie
         token = create_access_token(
             data={"sub": str(user.id)},
             expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -50,7 +48,6 @@ def register(data: UserCreate, request: Request, response: Response, db: Session
         
         return {"message": "Usuario registrado exitosamente"}
     except ValueError as e:
-        # Errores de validación de contraseña o nombres
         raise HTTPException(status_code=400, detail=str(e))
 
 
@@ -64,10 +61,8 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
     Returns:
         dict: Mensaje de éxito y datos del usuario
     """
-    # Verificar rate limiting
     check_rate_limit(request, "/auth/login")
     
-    # Autenticar usuario
     user = authenticate_user(db, data.email, data.password)
     
     if not user:
@@ -78,11 +73,9 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
         log_login_attempt(data.email, success=False, user_id=None, db=db)
         raise HTTPException(status_code=400, detail="Usuario inactivo")
 
-    # Login exitoso - resetear rate limit
     reset_rate_limit(request)
     log_login_attempt(data.email, success=True, user_id=user.id, db=db)
 
-    # Crear token JWT
     token = create_access_token(
         data={"sub": str(user.id)},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -149,13 +142,11 @@ def refresh_token(request: Request, response: Response, db: Session = Depends(ge
     if not refresh_token:
         raise HTTPException(status_code=401, detail="No hay refresh token")
     
-    # Verificar refresh token
     payload = verify_token(refresh_token)
     
     if not payload:
         raise HTTPException(status_code=401, detail="Refresh token inválido o expirado")
     
-    # Verificar que sea un refresh token
     if payload.get("type") != "refresh":
         raise HTTPException(status_code=401, detail="Token inválido")
     
@@ -163,18 +154,15 @@ def refresh_token(request: Request, response: Response, db: Session = Depends(ge
     if not user_id:
         raise HTTPException(status_code=401, detail="Token inválido")
     
-    # Verificar que el usuario existe y está activo
     user = db.query(Usuario).filter(Usuario.id == int(user_id)).first()
     if not user or not user.is_active:
         raise HTTPException(status_code=401, detail="Usuario no válido")
     
-    # Crear nuevo access token
     new_access_token = create_access_token(
         data={"sub": str(user.id)},
         expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     )
     
-    # Actualizar cookie de access token
     is_production = ENVIRONMENT == "production"
     
     response.set_cookie(
@@ -203,8 +191,6 @@ def get_current_user_info(current_user: Usuario = Depends(get_current_user)):
 
 # ========================================
 # Password Reset Endpoints
-# ========================================
-
 @router.post("/password-reset/request")
 def request_password_reset(
     data: schemas.PasswordResetRequest,

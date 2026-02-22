@@ -3,15 +3,12 @@ from datetime import datetime
 from typing import Optional
 from sqlalchemy.orm import Session
 
-# Configurar logger específico para eventos de seguridad (consola)
 security_logger = logging.getLogger("security")
 security_logger.setLevel(logging.INFO)
 
-# Handler para consola con formato personalizado
 console_handler = logging.StreamHandler()
 console_handler.setLevel(logging.INFO)
 
-# Formato: [TIMESTAMP] [SECURITY] [LEVEL] - Message
 formatter = logging.Formatter(
     '[%(asctime)s] [SECURITY] [%(levelname)s] - %(message)s',
     datefmt='%Y-%m-%d %H:%M:%S'
@@ -19,7 +16,6 @@ formatter = logging.Formatter(
 console_handler.setFormatter(formatter)
 security_logger.addHandler(console_handler)
 
-# Evitar duplicación de logs
 security_logger.propagate = False
 
 

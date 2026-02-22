@@ -1,10 +1,8 @@
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.routers import auth, user
+from app.api.routers import auth, user, documents, questions, dashboard
 from app.core.config import CORS_ORIGINS
 from app.models import *  # noqa: F401, F403
-from app.api.routers import documents
 
 app = FastAPI()
 
@@ -24,6 +22,8 @@ app.add_middleware(CSRFMiddleware)
 app.include_router(auth.router)
 app.include_router(user.router)
 app.include_router(documents.router)
+app.include_router(questions.router)
+app.include_router(dashboard.router)
 
 @app.get("/")
 def read_root():

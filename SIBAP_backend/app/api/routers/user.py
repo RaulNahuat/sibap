@@ -97,7 +97,6 @@ def delete_account(
     if not user:
         raise HTTPException(status_code=400, detail="Contraseña incorrecta")
     
-    # Eliminar cookie de sesión para evitar errores 401 posteriores
     response.delete_cookie(key=COOKIE_NAME)
     
     return {"message": "Cuenta eliminada exitosamente"}

@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useNavigate } from 'react-router-dom';
+import { getUserBanks, deleteUserBank } from '../../api/dashboard';
+import { toast } from 'react-hot-toast';
 
 export default function MyBanksPage() {
     const navigate = useNavigate();
@@ -19,71 +21,50 @@ export default function MyBanksPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all'); // all, completed, inProgress
     const [deletingBank, setDeletingBank] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    // Load all banks from localStorage
     useEffect(() => {
         loadBanks();
     }, []);
 
-    const loadBanks = () => {
-        const allBanks = [];
-        const keys = Object.keys(localStorage);
-
-        keys.forEach(key => {
-            if (key.startsWith('sibap_validation_')) {
-                try {
-                    const questions = JSON.parse(localStorage.getItem(key));
-                    if (questions && questions.length > 0) {
-                        const bankName = key.replace('sibap_validation_', '').replace(/_/g, ' ');
-                        const validatedCount = questions.filter(q => q.validationStatus === 'validated').length;
-                        const totalCount = questions.length;
-                        const progressPercentage = (validatedCount / totalCount) * 100;
-
-                        allBanks.push({
-                            id: key,
-                            name: bankName,
-                            subject: questions[0]?.metadata?.topic || 'Sin materia',
-                            difficulty: questions[0]?.metadata?.difficulty || 'Intermedio',
-                            totalQuestions: totalCount,
-                            validatedQuestions: validatedCount,
-                            progressPercentage,
-                            isCompleted: validatedCount === totalCount,
-                            lastModified: new Date(questions[0]?.metadata?.generatedAt || Date.now()),
-                            questions,
-                        });
-                    }
-                } catch (e) {
-                    console.error('Error loading bank:', key, e);
-                }
+    const loadBanks = async () => {
+        setLoading(true);
+        try {
+            const data = await getUserBanks();
+            if (data) {
+                const mappedBanks = data.map(b => ({
+                    ...b,
+                    lastModified: new Date(b.created_at)
+                }));
+                setBanks(mappedBanks);
             }
-        });
-
-        // Sort by last modified (newest first)
-        allBanks.sort((a, b) => b.lastModified - a.lastModified);
-        setBanks(allBanks);
+        } catch (error) {
+            console.error("Error al cargar bancos:", error);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleOpenBank = (bank) => {
-        // Reconstruct bank data in the format ValidateQuestionsPage expects
-        const bankData = {
-            name: bank.name,
-            subject: bank.subject,
-            difficulty: bank.difficulty,
-            questions: bank.questions,
-            // Add other properties if needed
-        };
-        navigate('/dashboard/validate', { state: bankData });
+        navigate('/dashboard/validate', { state: { configId: bank.id, name: bank.name, subject: bank.subject } });
     };
 
     const handleDeleteBank = (bank) => {
         setDeletingBank(bank);
     };
 
-    const confirmDelete = () => {
+    const confirmDelete = async () => {
         if (deletingBank) {
-            localStorage.removeItem(deletingBank.id);
-            loadBanks();
-            setDeletingBank(null);
+            try {
+                await deleteUserBank(deletingBank.id);
+                setBanks(banks.filter(b => b.id !== deletingBank.id));
+                toast.success('Banco eliminado correctamente');
+            } catch (error) {
+                console.error("Error al eliminar banco:", error);
+                toast.error('No se pudo eliminar el banco');
+            } finally {
+                setDeletingBank(null);
+            }
         }
     };
 
@@ -98,13 +79,14 @@ export default function MyBanksPage() {
             bank.subject.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesFilter = filterStatus === 'all' ||
-            (filterStatus === 'completed' && bank.isCompleted) ||
-            (filterStatus === 'inProgress' && !bank.isCompleted);
+            (filterStatus === 'completed' && bank.is_completed) ||
+            (filterStatus === 'inProgress' && !bank.is_completed);
 
         return matchesSearch && matchesFilter;
     });
 
     const formatDate = (date) => {
+        if (!date) return '';
         const now = new Date();
         const diff = now - date;
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));

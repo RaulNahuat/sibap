@@ -10,7 +10,7 @@ const apiClient = axios.create({
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
-    'X-CSRF-Token': '1', // Header simple para protección CSRF básica
+    'X-CSRF-Token': '1',
   },
 });
 
@@ -43,7 +43,9 @@ apiClient.interceptors.response.use(
       const isRefreshEndpoint = config.url?.includes('/auth/refresh');
       const isInitialAuthCheck = config.url?.includes('/auth/me');
 
-      if (!isRefreshEndpoint && !isInitialAuthCheck) {
+      const isLoginEndpoint = config.url?.includes('/auth/login');
+
+      if (!isRefreshEndpoint && !isLoginEndpoint) {
         config._retry = true;
 
         try {
@@ -52,7 +54,8 @@ apiClient.interceptors.response.use(
           return apiClient(config);
         } catch (refreshError) {
           const publicRoutes = ['/login', '/register'];
-          if (!publicRoutes.includes(window.location.pathname)) {
+
+          if (!isInitialAuthCheck && !publicRoutes.includes(window.location.pathname)) {
             console.log('[API] Sesión expirada, redirigiendo a login...');
             window.location.href = '/login';
           }
@@ -62,6 +65,10 @@ apiClient.interceptors.response.use(
     }
 
     if (status === 401 && config.url?.includes('/auth/me')) {
+      return Promise.reject(error);
+    }
+
+    if (status === 401 && config.url?.includes('/auth/refresh')) {
       return Promise.reject(error);
     }
 

@@ -17,7 +17,6 @@ class Usuario(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     deleted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     
-    # Password reset fields
     reset_token: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     reset_token_expires: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
@@ -27,4 +26,4 @@ class Usuario(Base):
     exportaciones: Mapped[list["Exportacion"]] = relationship(
         "Exportacion", back_populates="usuario", cascade="all, delete-orphan"
     )
-    logs: Mapped[list["Log"]] = relationship("Log", back_populates="usuario")
+    logs: Mapped[list["Log"]] = relationship("Log", back_populates="usuario", cascade="all, delete-orphan")

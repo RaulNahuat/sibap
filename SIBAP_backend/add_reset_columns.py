@@ -9,7 +9,6 @@ def add_reset_columns():
     
     with engine.connect() as conn:
         try:
-            # Intentar agregar reset_token
             conn.execute(text("ALTER TABLE users ADD COLUMN reset_token VARCHAR(255) NULL"))
             print("Columna reset_token agregada")
         except Exception as e:
@@ -19,9 +18,8 @@ def add_reset_columns():
                 print(f"Error agregando reset_token: {e}")
         
         try:
-            # Intentar agregar reset_token_expires
             conn.execute(text("ALTER TABLE users ADD COLUMN reset_token_expires DATETIME NULL"))
-            print("✓ Columna reset_token_expires agregada")
+            print("Columna reset_token_expires agregada")
         except Exception as e:
             if "Duplicate column name" in str(e):
                 print("Columna reset_token_expires ya existe")

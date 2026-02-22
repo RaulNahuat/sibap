@@ -28,10 +28,8 @@ def register_user(db: Session, name: str, last_name: str, email: str, password: 
     Raises:
         HTTPException: Si el email ya está registrado
     """
-    # Validar que el email no exista
     validate_email_not_exists(email, db)
     
-    # Crear usuario
     user = Usuario(
         name=name,
         last_name=last_name,
@@ -43,10 +41,8 @@ def register_user(db: Session, name: str, last_name: str, email: str, password: 
     db.commit()
     db.refresh(user)
     
-    # Registrar evento de seguridad (con user_id y db session)
     log_registration(email, user.id, db)
     
-    # Retornar respuesta segura (sin password_hash)
     return UserResponse.model_validate(user)
 
 

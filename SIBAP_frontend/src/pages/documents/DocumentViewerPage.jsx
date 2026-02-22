@@ -25,12 +25,10 @@ const DocumentViewerPage = () => {
     const [error, setError] = useState('');
     const [extractedText, setExtractedText] = useState('');
 
-    // Pagination state
     const [currentPage, setCurrentPage] = useState(1);
     const [paginatedContent, setPaginatedContent] = useState('');
     const [totalPages, setTotalPages] = useState(1);
 
-    // Ref for scrolling to top of content
     const contentTopRef = useRef(null);
 
     useEffect(() => {
@@ -42,12 +40,11 @@ const DocumentViewerPage = () => {
                 const text = doc.content_text || 'El documento no contiene texto extraíble.';
                 setExtractedText(text);
 
-                // Initialize pagination
                 const total = Math.ceil(text.length / ITEMS_PER_PAGE);
                 setTotalPages(Math.max(1, total));
                 setCurrentPage(1);
             } catch (err) {
-                console.error('Error fetching document:', err);
+                console.error('Error al obtener documento:', err);
                 setError(getErrorMessage(err));
             } finally {
                 setLoading(false);
@@ -59,29 +56,22 @@ const DocumentViewerPage = () => {
         }
     }, [id]);
 
-    // Update displayed content when page or text changes
     useEffect(() => {
         if (!extractedText) return;
 
-        // Simple slicing strategy (can be improved to split by newlines)
         const start = (currentPage - 1) * ITEMS_PER_PAGE;
         let end = start + ITEMS_PER_PAGE;
-
-        // Try to find a newline near the cut to avoid breaking markdown syntax
         if (end < extractedText.length) {
             const lookAhead = extractedText.indexOf('\n', end);
             if (lookAhead !== -1 && lookAhead - end < 500) {
-                end = lookAhead; // Extend to next newline if close
+                end = lookAhead;
             }
         }
 
         setPaginatedContent(extractedText.slice(start, end));
 
-        // Scroll to top of content when page changes
-        // Using a small timeout to ensure render cycle is complete
         setTimeout(() => {
             contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            // Fallback for window scroll just in case
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 100);
     }, [currentPage, extractedText]);
@@ -188,7 +178,6 @@ const DocumentViewerPage = () => {
                                 title="Copiar texto"
                                 onClick={() => {
                                     navigator.clipboard.writeText(extractedText);
-                                    // Optional toast could go here
                                 }}
                             >
                                 <Copy className="w-4 h-4" />
@@ -249,7 +238,6 @@ const DocumentViewerPage = () => {
                                     remarkPlugins={[remarkGfm]}
                                     rehypePlugins={[rehypeRaw]}
                                     components={{
-                                        // Fix for whitespace in table tags that causes hydration/validation warnings
                                         table: ({ node, children, ...props }) => (
                                             <table {...props}>{Children.toArray(children).filter(child => typeof child !== 'string' || child.trim().length > 0)}</table>
                                         ),

@@ -3,13 +3,10 @@ from datetime import datetime, timedelta
 from typing import Dict, List
 from app.utils.security_logger import log_rate_limit_exceeded
 
-# Almacenamiento en memoria de intentos por IP
-# Estructura: {ip_address: [timestamp1, timestamp2, ...]}
 login_attempts: Dict[str, List[datetime]] = {}
 
-# Configuración
 MAX_ATTEMPTS = 5
-WINDOW_MINUTES = 1  # Ventana de tiempo en minutos
+WINDOW_MINUTES = 1
 
 
 def get_client_ip(request: Request) -> str:
@@ -22,12 +19,10 @@ def get_client_ip(request: Request) -> str:
     Returns:
         str: Dirección IP del cliente
     """
-    # Intenta obtener la IP real si está detrás de un proxy
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
         return forwarded.split(",")[0].strip()
     
-    # Si no hay proxy, usa la IP directa
     return request.client.host if request.client else "unknown"
 
 
@@ -47,7 +42,6 @@ def clean_old_attempts(ip_address: str):
         if attempt > cutoff_time
     ]
     
-    # Si no quedan intentos, eliminar la entrada
     if not login_attempts[ip_address]:
         del login_attempts[ip_address]
 
@@ -65,10 +59,8 @@ def check_rate_limit(request: Request, endpoint: str = "/auth/login"):
     """
     ip_address = get_client_ip(request)
     
-    # Limpiar intentos antiguos
     clean_old_attempts(ip_address)
     
-    # Verificar intentos actuales
     if ip_address in login_attempts:
         attempts_count = len(login_attempts[ip_address])
         
@@ -79,7 +71,6 @@ def check_rate_limit(request: Request, endpoint: str = "/auth/login"):
                 detail=f"Demasiados intentos. Por favor, espera {WINDOW_MINUTES} minuto(s) antes de intentar nuevamente."
             )
     
-    # Registrar este intento
     if ip_address not in login_attempts:
         login_attempts[ip_address] = []
     

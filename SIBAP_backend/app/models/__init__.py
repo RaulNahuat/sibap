@@ -1,4 +1,3 @@
-# Importar todos los modelos para que SQLAlchemy los reconozca
 from app.db.base import Base
 from app.models.usuario import Usuario
 from app.models.documento import Documento

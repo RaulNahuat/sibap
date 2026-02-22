@@ -43,14 +43,12 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> Usuario
         log_invalid_token(f"Error JWT: {str(e)}", db)
         raise HTTPException(status_code=401, detail="Token inválido")
     
-    # Validar que el usuario existe en la base de datos
     user = db.query(Usuario).filter(Usuario.id == int(user_id)).first()
     
     if not user:
         log_invalid_token("Usuario no existe", db)
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
     
-    # Validar que el usuario esté activo
     if not user.is_active:
         log_invalid_token("Usuario inactivo", db)
         raise HTTPException(status_code=401, detail="Usuario inactivo")

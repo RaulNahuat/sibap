@@ -104,7 +104,6 @@ export default function MyProfile() {
 
             await updatePasswordApi(payload);
 
-            // Solo limpiar si fue exitoso
             setFormData(prev => ({
                 ...prev,
                 currentPassword: '',
@@ -132,9 +131,7 @@ export default function MyProfile() {
             return;
         }
 
-        console.log('Abriendo modal de contraseña...');
         setShowPasswordModal(true);
-        console.log('showPasswordModal debería ser true ahora');
     };
 
     const handleDeleteAccount = async () => {

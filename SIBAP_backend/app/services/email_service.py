@@ -62,16 +62,13 @@ def send_email(
             msg['From'] = f"{EMAIL_FROM_NAME} <{EMAIL_FROM}>"
             msg['To'] = to_email
             
-            # Agregar contenido de texto plano si se proporciona
             if text_content:
                 part1 = MIMEText(text_content, 'plain')
                 msg.attach(part1)
             
-            # Agregar contenido HTML
             part2 = MIMEText(html_content, 'html')
             msg.attach(part2)
             
-            # Conectar y enviar
             with smtplib.SMTP(EMAIL_HOST, EMAIL_PORT) as server:
                 if EMAIL_USE_TLS:
                     server.starttls()
@@ -100,8 +97,7 @@ def send_password_reset_email(email: str, reset_token: str) -> bool:
     reset_url = f"{FRONTEND_URL}/reset-password?token={reset_token}"
     
     subject = "Recuperación de Contraseña - SIBAP"
-    
-    # Contenido HTML del correo
+
     html_content = f"""
     <!DOCTYPE html>
     <html>
