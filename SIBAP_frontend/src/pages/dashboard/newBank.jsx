@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     UploadCloud,
@@ -16,6 +16,7 @@ import {
 import DocumentSelectionModal from '../../components/documents/DocumentSelectionModal';
 import { uploadDocument, getDocument } from '../../api/documents';
 import { generateQuestions } from '../../api/questions';
+import { getCurriculumSemesters, getCurriculumSubjects } from '../../api/curriculum';
 import { getErrorMessage } from '../../utils/errorHandler';
 import { useToast } from '../../context/ToastContext';
 import { useLocalStorage } from '../../hooks';
@@ -51,6 +52,45 @@ export default function NewBankPage() {
     const [isUploading, setIsUploading] = useState(false);
     const [showLibraryModal, setShowLibraryModal] = useState(false);
     const [error, setError] = useState('');
+
+    // Curriculum cascading state
+    const IS_PROGRAM = 'Licenciatura en Ingeniería de Software';
+    const isISProgram = formData.program === IS_PROGRAM;
+    const [availableSemesters, setAvailableSemesters] = useState([]);
+    const [availableSubjects, setAvailableSubjects] = useState([]);
+    const [selectedSemesterNum, setSelectedSemesterNum] = useState('');
+    const [isLoadingSemesters, setIsLoadingSemesters] = useState(false);
+    const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
+
+    // Load semesters when IS program is selected
+    useEffect(() => {
+        if (isISProgram) {
+            setIsLoadingSemesters(true);
+            getCurriculumSemesters(IS_PROGRAM)
+                .then(sems => setAvailableSemesters(sems))
+                .catch(() => setAvailableSemesters([]))
+                .finally(() => setIsLoadingSemesters(false));
+        } else {
+            setAvailableSemesters([]);
+            setAvailableSubjects([]);
+            setSelectedSemesterNum('');
+        }
+    }, [formData.program]);
+
+    // Load subjects when semester changes (IS program)
+    useEffect(() => {
+        if (isISProgram && selectedSemesterNum !== '') {
+            setIsLoadingSubjects(true);
+            getCurriculumSubjects(IS_PROGRAM, Number(selectedSemesterNum))
+                .then(subjects => {
+                    setAvailableSubjects(subjects);
+                    // Clear subject when semester changes
+                    setFormData(prev => ({ ...prev, subject: '' }));
+                })
+                .catch(() => setAvailableSubjects([]))
+                .finally(() => setIsLoadingSubjects(false));
+        }
+    }, [selectedSemesterNum]);
 
     const handleGenerate = async () => {
         if (!formData.subject || !formData.topic) {
@@ -115,6 +155,11 @@ export default function NewBankPage() {
                     generatedAt: q.created_at,
                 },
             }));
+
+            // Limpiar el caché del formulario antes de navegar
+            clearFormData();
+            clearUploadedFiles();
+            clearQuestionType();
 
             navigate('/dashboard/validate', {
                 state: {
@@ -453,13 +498,31 @@ export default function NewBankPage() {
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Semestre / Grado
                         </label>
-                        <input
-                            type="text"
-                            placeholder="Ej. 5to Semestre"
-                            value={formData.semester}
-                            onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
-                        />
+                        {isISProgram ? (
+                            <select
+                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                                value={selectedSemesterNum}
+                                onChange={(e) => {
+                                    const sem = e.target.value;
+                                    setSelectedSemesterNum(sem);
+                                    setFormData(prev => ({ ...prev, semester: sem ? `${sem}° Semestre` : '' }));
+                                }}
+                                disabled={isLoadingSemesters}
+                            >
+                                <option value="">{isLoadingSemesters ? 'Cargando...' : 'Seleccionar semestre...'}</option>
+                                {availableSemesters.map(s => (
+                                    <option key={s} value={s}>{s}° Semestre</option>
+                                ))}
+                            </select>
+                        ) : (
+                            <input
+                                type="text"
+                                placeholder="Ej. 5to Semestre"
+                                value={formData.semester}
+                                onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                            />
+                        )}
                     </div>
 
                     {/* Materia / Asignatura */}
@@ -467,13 +530,33 @@ export default function NewBankPage() {
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Materia / Asignatura
                         </label>
-                        <input
-                            type="text"
-                            placeholder="Ej. Historia Universal"
-                            value={formData.subject}
-                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
-                        />
+                        {isISProgram ? (
+                            <select
+                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                                value={formData.subject}
+                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                disabled={!selectedSemesterNum || isLoadingSubjects}
+                            >
+                                <option value="">
+                                    {!selectedSemesterNum
+                                        ? 'Primero selecciona un semestre'
+                                        : isLoadingSubjects
+                                            ? 'Cargando materias...'
+                                            : 'Seleccionar materia...'}
+                                </option>
+                                {availableSubjects.map(s => (
+                                    <option key={s.id} value={s.nombre}>{s.clave} — {s.nombre}</option>
+                                ))}
+                            </select>
+                        ) : (
+                            <input
+                                type="text"
+                                placeholder="Ej. Historia Universal"
+                                value={formData.subject}
+                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                            />
+                        )}
                     </div>
 
                     {/* Tema Principal */}

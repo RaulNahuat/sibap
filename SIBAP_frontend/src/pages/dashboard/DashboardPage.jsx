@@ -110,10 +110,10 @@ export default function DashboardPage() {
                 {user.name + ' ' + user.last_name}
               </div>
               <div
-                className={`text-xs font-medium ${user.is_active ? 'text-green-500' : 'text-red-500'
+                className={`text-xs font-medium ${user.is_active ? 'text-red-500' : 'text-green-500'
                   }`}
               >
-                Estado: {user.is_active ? 'Activo' : 'Inactivo'}
+                Estado: {user.is_active ? 'Inactivo' : 'Activo'}
               </div>
             </div>
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1a5276] to-[#154360] flex items-center justify-center border-2 border-[#e2e8f0] text-white font-semibold text-sm">

@@ -13,7 +13,8 @@ from app.schemas.question import (
     QuestionGenerationResponse, 
     QuestionResponse,
     QuestionUpdateRequest,
-    BatchUpdateResponse
+    BatchUpdateResponse,
+    ManualQuestionRequest,
 )
 from app.services import question_service
 
@@ -150,3 +151,52 @@ def get_questions_by_bank(
         
     questions = db.query(Reactivo).filter(Reactivo.config_id == config_id).all()
     return questions
+
+@router.post(
+    "/bank/{config_id}/add",
+    response_model=QuestionResponse,
+    status_code=status.HTTP_201_CREATED
+)
+def add_manual_question(
+    config_id: int,
+    request: ManualQuestionRequest,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Agrega una pregunta manual al banco (ya validada por el usuario).
+    """
+    # Verify the bank belongs to this user
+    config = db.query(ConfiguracionGeneracion).join(Documento).filter(
+        ConfiguracionGeneracion.id == config_id,
+        Documento.user_id == current_user.id
+    ).first()
+
+    if not config:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Banco de preguntas no encontrado o no autorizado"
+        )
+
+    reactivo = Reactivo(
+        config_id=config_id,
+        question_text=request.question_text,
+        item_type=config.question_type.value,
+        difficulty=config.difficulty.value,
+        is_validated=True  # Manual questions are pre-validated
+    )
+    db.add(reactivo)
+    db.commit()
+    db.refresh(reactivo)
+
+    from app.models.opcion import Opcion
+    for opt in request.options:
+        db.add(Opcion(
+            item_id=reactivo.id,
+            option_text=opt.text,
+            is_correct=opt.is_correct
+        ))
+    db.commit()
+    db.refresh(reactivo)
+
+    return reactivo

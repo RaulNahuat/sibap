@@ -7,13 +7,14 @@ import {
     Download,
     FileText,
     ChevronRight,
-    Sparkles,
     CheckCircle,
+    Plus,
 } from 'lucide-react';
 import { useLocalStorage } from '../../hooks';
 import { useAuth } from '../../context/AuthContext';
-import { getBankQuestions, regenerateQuestion, updateBank } from '../../api/questions';
+import { getBankQuestions, regenerateQuestion, updateBank, addManualQuestion } from '../../api/questions';
 import RegenerateDialog from '../../components/questions/RegenerateDialog';
+import { toast } from 'react-hot-toast';
 
 export default function ValidateQuestionsPage() {
     const navigate = useNavigate();
@@ -76,6 +77,7 @@ export default function ValidateQuestionsPage() {
     const [deletingQuestion, setDeletingQuestion] = useState(null);
     const [regeneratingIds, setRegeneratingIds] = useState(new Set());
     const [regenerateDialogState, setRegenerateDialogState] = useState({ isOpen: false, question: null });
+    const [isAddingQuestion, setIsAddingQuestion] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
     const validatedCount = questions.filter(
@@ -85,12 +87,22 @@ export default function ValidateQuestionsPage() {
     const progressPercentage = totalCount > 0 ? (validatedCount / totalCount) * 100 : 0;
     const isValidated = validatedCount === totalCount && totalCount > 0;
 
-    const handleValidate = (question) => {
-        setQuestions(
-            questions.map((q) =>
-                q.id === question.id ? { ...q, validationStatus: 'validated' } : q
-            )
-        );
+    const handleValidate = async (question) => {
+        const updatedQuestion = { ...question, validationStatus: 'validated' };
+        setQuestions(questions.map((q) => q.id === question.id ? updatedQuestion : q));
+
+        // Auto-guardar en el backend de inmediato
+        try {
+            await updateBank([{
+                id: question.id,
+                validationStatus: 'validated',
+                questionText: question.questionText,
+                answers: question.answers
+            }]);
+        } catch (error) {
+            console.error('Error al guardar la validación:', error);
+            toast.error('No se pudo guardar la validación. Intenta de nuevo.');
+        }
     };
 
     const handleEdit = (question) => {
@@ -164,21 +176,53 @@ export default function ValidateQuestionsPage() {
             }));
 
             await updateBank(updates);
-            alert("Progreso guardado correctamente.");
+            toast.success(`Validación guardada: ${validatedCount}/${totalCount} preguntas validadas.`);
         } catch (error) {
             console.error("Error saving progress", error);
-            alert("Error al guardar el progreso.");
+            toast.error("Error al guardar la validación. Intenta de nuevo.");
         } finally {
             setIsSaving(false);
         }
     };
 
-    const handleExport = (format) => {
-        if (window.confirm(`¿Exportar en formato ${format}? Esto limpiará el progreso guardado.`)) {
-            clearQuestions();
-            alert(`Exportando en formato ${format}...`);
-            // TODO: Implement actual export logic
+    const handleAddQuestion = async (newQuestionData) => {
+        try {
+            const payload = {
+                question_text: newQuestionData.questionText,
+                options: newQuestionData.answers.map(ans => ({
+                    text: ans.text,
+                    is_correct: ans.id === newQuestionData.correctAnswerId,
+                }))
+            };
+            const created = await addManualQuestion(bankData.configId, payload);
+            const mapped = {
+                id: created.id,
+                questionText: created.question_text,
+                answers: created.opciones.map(opt => ({
+                    id: opt.id,
+                    text: opt.option_text,
+                    isCorrect: opt.is_correct,
+                })),
+                correctAnswerId: created.opciones.find(o => o.is_correct)?.id,
+                validationStatus: 'validated',
+                metadata: {
+                    difficulty: bankData.difficulty,
+                    topic: bankData.topic,
+                    generatedAt: created.created_at,
+                },
+            };
+            setQuestions(prev => [...prev, mapped]);
+            toast.success('Pregunta agregada y validada correctamente.');
+        } catch (error) {
+            console.error('Error al agregar la pregunta:', error);
+            toast.error('No se pudo agregar la pregunta. Intenta de nuevo.');
         }
+    };
+
+    const handleExport = (format) => {
+        clearQuestions();
+        toast.success(`Exportando en formato ${format}...`);
+        // TODO: Implement actual export logic
     };
 
     const handleClearProgress = () => {
@@ -204,27 +248,13 @@ export default function ValidateQuestionsPage() {
             </div>
 
             {/* Header */}
-            <div className="flex items-start justify-between mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-[#102129] mb-2">
-                        Validación de Reactivos
-                    </h1>
-                    <p className="text-[15px] text-[#64748b]">
-                        Revise y edite las preguntas generadas antes de exportar.
-                    </p>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center gap-3">
-                    <button
-                        onClick={handleSaveProgress}
-                        disabled={isSaving}
-                        className="px-4 py-2 bg-white border border-[#e2e8f0] text-[#1a5276] rounded-lg hover:bg-[#f1f5f9] font-medium transition-colors flex items-center gap-2"
-                    >
-                        {isSaving ? <div className="w-4 h-4 border-2 border-[#1a5276] border-t-transparent rounded-full animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                        Guardar Progreso
-                    </button>
-                </div>
+            <div className="mb-8">
+                <h1 className="text-2xl font-bold text-[#102129] mb-2">
+                    Validación de Reactivos
+                </h1>
+                <p className="text-[15px] text-[#64748b]">
+                    Revise y edite las preguntas generadas antes de exportar.
+                </p>
             </div>
 
             {/* Bank Info Card - Sticky */}
@@ -294,42 +324,55 @@ export default function ValidateQuestionsPage() {
                 ))}
             </div>
 
+            {/* Add Question Button */}
+            <button
+                onClick={() => setIsAddingQuestion(true)}
+                className="w-full mt-2 py-3 border-2 border-dashed border-[#e2e8f0] rounded-xl text-sm font-medium text-[#64748b] hover:border-[#1a5276] hover:text-[#1a5276] hover:bg-[#f8fafc] transition-all flex items-center justify-center gap-2"
+            >
+                <Plus className="w-4 h-4" />
+                Agregar pregunta manual
+            </button>
+
             {/* Export Section at the Bottom */}
-            <div className={`mt-8 p-6 rounded-xl border-2 ${isValidated ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'} flex items-center justify-between transition-all`}>
-                <div>
-                    <h3 className={`font-bold text-lg ${isValidated ? 'text-green-800' : 'text-gray-700'}`}>
-                        {isValidated ? '¡Banco de Preguntas Validado!' : 'Validación en Progreso'}
-                    </h3>
-                    <p className={`text-sm ${isValidated ? 'text-green-700' : 'text-gray-500'}`}>
-                        {isValidated
-                            ? 'Todas las preguntas han sido revisadas. Ya puedes exportar tu examen.'
-                            : `Aún tienes preguntas pendientes. Completa la revisión para habilitar la exportación (${Math.round(progressPercentage)}%).`
-                        }
-                    </p>
-                </div>
-                <div className="flex gap-3">
-                    <button
-                        onClick={() => handleExport('XML')}
-                        disabled={!isValidated}
-                        className={`flex items-center gap-2 px-5 py-3 rounded-md border font-medium transition-all ${isValidated
-                            ? 'border-[#e2e8f0] text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#102129] hover:border-[#cbd5e1]'
-                            : 'border-gray-200 text-gray-300 cursor-not-allowed bg-gray-50'
-                            }`}
-                    >
-                        <FileText className="w-5 h-5" />
-                        Exportar XML
-                    </button>
-                    <button
-                        onClick={() => handleExport('GIFT')}
-                        disabled={!isValidated}
-                        className={`flex items-center gap-2 px-5 py-3 rounded-md text-white font-semibold transition-all shadow-sm ${isValidated
-                            ? 'bg-[#1a5276] hover:bg-[#154360] hover:shadow'
-                            : 'bg-gray-300 cursor-not-allowed'
-                            }`}
-                    >
-                        <Download className="w-5 h-5" />
-                        Exportar a Moodle (GIFT)
-                    </button>
+            <div className={`mt-8 p-5 rounded-xl border-2 ${isValidated ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'} transition-all`}>
+                <div className="flex items-center justify-between gap-6">
+                    {/* Left: status text */}
+                    <div className="min-w-0">
+                        <h3 className={`font-bold text-base ${isValidated ? 'text-green-800' : 'text-gray-700'}`}>
+                            {isValidated ? '¡Banco de Preguntas Validado!' : 'Validación en Progreso'}
+                        </h3>
+                        <p className={`text-sm mt-0.5 ${isValidated ? 'text-green-700' : 'text-gray-500'}`}>
+                            {isValidated
+                                ? 'Todas las preguntas se guardaron automáticamente. Ya puedes exportar tu examen.'
+                                : `Valida las preguntas para habilitar la exportación — ${validatedCount}/${totalCount} completadas.`
+                            }
+                        </p>
+                    </div>
+                    {/* Right: export buttons */}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                        <button
+                            onClick={() => handleExport('XML')}
+                            disabled={!isValidated}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-md border font-medium text-sm transition-all ${isValidated
+                                ? 'border-[#e2e8f0] text-[#64748b] hover:bg-white hover:text-[#102129] hover:border-[#cbd5e1]'
+                                : 'border-gray-200 text-gray-300 cursor-not-allowed bg-transparent'
+                                }`}
+                        >
+                            <FileText className="w-4 h-4" />
+                            Exportar XML
+                        </button>
+                        <button
+                            onClick={() => handleExport('GIFT')}
+                            disabled={!isValidated}
+                            className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-white font-semibold text-sm transition-all shadow-sm ${isValidated
+                                ? 'bg-[#1a5276] hover:bg-[#154360] hover:shadow'
+                                : 'bg-gray-300 cursor-not-allowed'
+                                }`}
+                        >
+                            <Download className="w-4 h-4" />
+                            Exportar a Moodle (GIFT)
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -346,12 +389,22 @@ export default function ValidateQuestionsPage() {
             {/* Edit Modal */}
             {editingQuestion && (
                 <EditQuestionModal
+                    key={editingQuestion.id}
                     isOpen={!!editingQuestion}
                     onClose={() => setEditingQuestion(null)}
                     question={editingQuestion}
                     onSave={handleSaveEdit}
                 />
             )}
+
+            {/* Add Question Modal (create mode) */}
+            <EditQuestionModal
+                key={isAddingQuestion ? 'adding' : 'closed'}
+                isOpen={isAddingQuestion}
+                onClose={() => setIsAddingQuestion(false)}
+                question={null}
+                onSave={handleAddQuestion}
+            />
 
             {/* Delete Confirmation */}
             {deletingQuestion && (

@@ -141,6 +141,8 @@ def get_user_banks(
             isCompleted=is_completed,
             progressPercentage=progress
         ))
+    
+    return banks
 
 @router.delete("/banks/{config_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user_bank(

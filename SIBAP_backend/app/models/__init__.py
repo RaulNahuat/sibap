@@ -6,6 +6,8 @@ from app.models.log import Log
 from app.models.reactivo import Reactivo
 from app.models.opcion import Opcion
 from app.models.configuracion_generacion import ConfiguracionGeneracion
+from app.models.materia import Materia
+from app.models.programa import Programa
 
 __all__ = [
     "Base",
@@ -15,5 +17,7 @@ __all__ = [
     "Log",
     "Reactivo",
     "Opcion",
-    "ConfiguracionGeneracion"
+    "ConfiguracionGeneracion",
+    "Materia",
+    "Programa"
 ]

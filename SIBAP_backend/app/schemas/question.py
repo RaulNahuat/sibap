@@ -49,6 +49,14 @@ class QuestionUpdateRequest(BaseModel):
     validationStatus: Optional[str] = None
     answers: Optional[List[dict]] = None 
 
+class ManualOptionRequest(BaseModel):
+    text: str
+    is_correct: bool
+
+class ManualQuestionRequest(BaseModel):
+    question_text: str
+    options: List[ManualOptionRequest]
+
 class BatchUpdateResponse(BaseModel):
     updated_count: int
     message: str

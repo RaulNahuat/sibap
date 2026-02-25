@@ -7,6 +7,11 @@ from google import genai
 from google.genai import types
 
 from app.core.config import GOOGLE_API_KEY, GOOGLE_AI_MODEL
+from app.models.documento import Documento
+from app.models.configuracion_generacion import ConfiguracionGeneracion
+from app.models.reactivo import Reactivo
+from app.models.opcion import Opcion
+from app.schemas.question import QuestionGenerationRequest
 import re
 
 logger = logging.getLogger(__name__)

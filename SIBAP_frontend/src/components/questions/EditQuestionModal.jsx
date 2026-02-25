@@ -1,16 +1,28 @@
 import { useState } from 'react';
 import Modal from '../ui/Modal';
 import { Plus, X } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+
+const DEFAULT_ANSWERS = () => [
+    { id: `a_${Date.now()}_1`, text: '', isCorrect: false },
+    { id: `a_${Date.now()}_2`, text: '', isCorrect: false },
+    { id: `a_${Date.now()}_3`, text: '', isCorrect: false },
+    { id: `a_${Date.now()}_4`, text: '', isCorrect: false },
+];
 
 export default function EditQuestionModal({
     isOpen,
     onClose,
-    question,
+    question,     // null = create mode, object = edit mode
     onSave,
 }) {
+    const isCreateMode = !question;
+
     const [editedQuestion, setEditedQuestion] = useState({
         questionText: question?.questionText || '',
-        answers: question?.answers || [],
+        answers: question?.answers?.length
+            ? question.answers
+            : DEFAULT_ANSWERS(),
         correctAnswerId: question?.correctAnswerId || '',
     });
 
@@ -24,10 +36,7 @@ export default function EditQuestionModal({
     };
 
     const handleAddAnswer = () => {
-        const newAnswer = {
-            id: `answer_${Date.now()}`,
-            text: '',
-        };
+        const newAnswer = { id: `answer_${Date.now()}`, text: '', isCorrect: false };
         setEditedQuestion({
             ...editedQuestion,
             answers: [...editedQuestion.answers, newAnswer],
@@ -36,7 +45,7 @@ export default function EditQuestionModal({
 
     const handleRemoveAnswer = (answerId) => {
         if (editedQuestion.answers.length <= 2) {
-            alert('Debe haber al menos 2 respuestas');
+            toast.error('Debe haber al menos 2 respuestas');
             return;
         }
         setEditedQuestion({
@@ -51,25 +60,23 @@ export default function EditQuestionModal({
 
     const handleSave = () => {
         if (!editedQuestion.questionText.trim()) {
-            alert('La pregunta no puede estar vacía');
+            toast.error('La pregunta no puede estar vacía');
             return;
         }
         if (editedQuestion.answers.some((ans) => !ans.text.trim())) {
-            alert('Todas las respuestas deben tener texto');
+            toast.error('Todas las respuestas deben tener texto');
             return;
         }
         if (!editedQuestion.correctAnswerId) {
-            alert('Debe seleccionar una respuesta correcta');
+            toast.error('Debe seleccionar una respuesta correcta');
             return;
         }
         onSave({ ...question, ...editedQuestion });
         onClose();
     };
 
-    if (!question) return null;
-
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Editar Pregunta">
+        <Modal isOpen={isOpen} onClose={onClose} title={isCreateMode ? 'Nueva Pregunta' : 'Editar Pregunta'}>
             <div className="space-y-6">
                 {/* Question Text */}
                 <div>
@@ -93,7 +100,7 @@ export default function EditQuestionModal({
                 {/* Answers */}
                 <div>
                     <label className="block text-sm font-medium text-[#102129] mb-3">
-                        Respuestas
+                        Respuestas <span className="text-[#64748b] font-normal">(selecciona la correcta)</span>
                     </label>
                     <div className="space-y-3">
                         {editedQuestion.answers.map((answer, index) => (
@@ -160,7 +167,7 @@ export default function EditQuestionModal({
                         onClick={handleSave}
                         className="bg-[#1a5276] text-white px-5 py-2.5 rounded-md font-semibold text-sm hover:bg-[#154360] transition-all shadow-sm hover:shadow"
                     >
-                        Guardar Cambios
+                        {isCreateMode ? 'Agregar Pregunta' : 'Guardar Cambios'}
                     </button>
                 </div>
             </div>
