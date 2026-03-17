@@ -2,28 +2,12 @@ import re
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.models.usuario import Usuario
+import logging
+from pathlib import Path
+
+
 
 def validate_password_strength(password: str) -> str:
-    """
-    Valida que la contraseña cumpla con los requisitos de seguridad.
-    
-    Requisitos:
-    - Mínimo 8 caracteres
-    - Al menos una letra mayúscula
-    - Al menos una letra minúscula
-    - Al menos un número
-    - Al menos un carácter especial (!@#$%^&*(),.?":{}|<>)
-    
-    Args:
-        password: La contraseña a validar
-        
-    Returns:
-        str: La contraseña si es válida
-        
-    Raises:
-        ValueError: Si la contraseña no cumple los requisitos
-    """
-
     rules = [
         (r".{8,}", "al menos 8 caracteres"),
         (r"[A-Z]", "al menos una letra mayúscula"),
@@ -40,19 +24,6 @@ def validate_password_strength(password: str) -> str:
 
 
 def validate_email_not_exists(email: str, db: Session) -> str:
-    """
-    Valida que el email no esté registrado en la base de datos.
-    
-    Args:
-        email: El email a validar
-        db: Sesión de base de datos
-        
-    Returns:
-        str: El email si no existe
-        
-    Raises:
-        HTTPException: Si el email ya está registrado
-    """
     existing_user = db.query(Usuario).filter(Usuario.email == email).first()
     
     if existing_user:
@@ -65,19 +36,6 @@ def validate_email_not_exists(email: str, db: Session) -> str:
 
 
 def validate_name_length(name: str, field_name: str = "nombre") -> str:
-    """
-    Valida que el nombre tenga una longitud adecuada.
-    
-    Args:
-        name: El nombre a validar
-        field_name: Nombre del campo para mensajes de error
-        
-    Returns:
-        str: El nombre si es válido
-        
-    Raises:
-        ValueError: Si el nombre es muy corto o muy largo
-    """
     name = name.strip()
 
     if not name:
@@ -92,3 +50,17 @@ def validate_name_length(name: str, field_name: str = "nombre") -> str:
         raise ValueError(f"El {field_name} debe contener solo letras")
 
     return name
+
+
+MAX_FILE_SIZE = 10 * 1024 * 1024
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
+
+def validate_file(filename: str, content: bytes) -> str:
+    ext = Path(filename).suffix.lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise ValueError(f"Extensión {ext} no permitida.")
+    if not content:
+        raise ValueError("Archivo vacío.")
+    if len(content) > MAX_FILE_SIZE:
+        raise ValueError("El archivo excede el límite de 10MB.")
+    return ext

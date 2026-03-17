@@ -1,6 +1,10 @@
+from typing import List, TYPE_CHECKING
 from sqlalchemy import String, Integer, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
+
+if TYPE_CHECKING:
+    from app.models.tema import Tema
 
 
 class Materia(Base):
@@ -13,3 +17,4 @@ class Materia(Base):
     nombre: Mapped[str] = mapped_column(String(200), nullable=False)
 
     programa_rel: Mapped["Programa"] = relationship("Programa", back_populates="materias")
+    temas: Mapped[List["Tema"]] = relationship("Tema", back_populates="materia_rel", cascade="all, delete-orphan")

@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 
-export default function Modal({ isOpen, onClose, title, children }) {
+export default function Modal({ isOpen, onClose, title, children, maxWidth = 'max-w-md' }) {
     if (!isOpen) return null;
 
     return (
@@ -12,7 +12,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
             />
 
             {/* Modal */}
-            <div className='relative bg-white rounded-xl shadow-2xl w-full max-w-md transform transition-all scale-100 animate-fadeIn'>
+            <div className={`relative bg-white rounded-xl shadow-2xl w-full ${maxWidth} transform transition-all scale-100 animate-fadeIn`}>
                 {/* Header */}
                 <div className='flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0]'>
                     <h3 className='text-lg font-semibold text-[#1a5276]'>
@@ -27,7 +27,7 @@ export default function Modal({ isOpen, onClose, title, children }) {
                 </div>
 
                 {/* Content */}
-                <div className='px-6 py-5'>
+                <div className='px-6 py-5 overflow-y-auto max-h-[80vh]'>
                     {children}
                 </div>
             </div>

@@ -6,15 +6,70 @@ from sqlalchemy.orm import Session
 from google import genai
 from google.genai import types
 
-from app.core.config import GOOGLE_API_KEY, GOOGLE_AI_MODEL
+from app.core.config import GOOGLE_API_KEY, GOOGLE_AI_MODEL, EMBEDDING_MODEL
 from app.models.documento import Documento
 from app.models.configuracion_generacion import ConfiguracionGeneracion
 from app.models.reactivo import Reactivo
 from app.models.opcion import Opcion
+from app.models.programa import Programa
+from app.models.materia import Materia
+from app.models.tema import Tema
 from app.schemas.question import QuestionGenerationRequest
+from app.services import vector_service
 import re
 
 logger = logging.getLogger(__name__)
+
+
+def _get_rag_context(
+    query: str,
+    document_ids: List[int],
+    fallback_text: str,
+    top_k: int = 5,
+) -> str:
+    """
+    Obtiene contexto semántico via RAG para una consulta dada.
+
+    Flujo:
+      1. Busca en ChromaDB los top_k chunks más relevantes para `query`.
+      2. Si ChromaDB devuelve resultados, los usa como contexto.
+      3. Si no hay chunks (documento pre-migración o error), usa `fallback_text`.
+
+    Args:
+        query:         Cadena de búsqueda semántica (tema + subtema).
+        document_ids:  IDs de documentos sobre los que buscar.
+        fallback_text: Texto de respaldo (truncado) si RAG no tiene chunks.
+        top_k:         Número de chunks a recuperar.
+
+    Returns:
+        String de contexto listo para inyectar en el prompt del LLM.
+    """
+    try:
+        context = vector_service.search_similar(
+            query=query,
+            document_ids=document_ids,
+            top_k=top_k,
+            model_name=EMBEDDING_MODEL,
+        )
+        if context:
+            # Estimar tokens del contexto recuperado (~4 chars/token)
+            estimated_tokens = len(context) // 4
+            logger.info(
+                f"RAG: contexto semántico recuperado (~{estimated_tokens} tokens) "
+                f"para query: '{query[:60]}...'"
+            )
+            return context
+    except Exception as e:
+        logger.warning(f"RAG: búsqueda semántica falló, usando fallback: {e}")
+
+    # Fallback: texto truncado (compatibilidad con documentos pre-migración)
+    truncated = fallback_text[:8000]
+    estimated_tokens = len(truncated) // 4
+    logger.warning(
+        f"RAG: usando fallback de texto truncado (~{estimated_tokens} tokens). "
+        "Re-sube el documento para activar RAG completo."
+    )
+    return truncated
 
 def _extract_json(text: str):
     """
@@ -47,10 +102,24 @@ async def generate_questions(db: Session, request: QuestionGenerationRequest, us
     documents = db.query(Documento).filter(Documento.id.in_(request.document_ids)).all()
     if not documents:
         raise ValueError("No se encontraron los documentos seleccionados.")
-    
+
     full_text = "\n\n".join([doc.content_text for doc in documents if doc.content_text])
     if not full_text.strip():
         raise ValueError("Los documentos seleccionados no contienen texto procesable.")
+
+    # ── Resolución de IDs de Currículo (Normalización On-the-fly) ─────────────
+    prog_id, sub_id, top_id = _resolve_curriculum_ids(db, request)
+    # ──────────────────────────────────────────────────────────────────────────
+
+    # ── Recuperación semántica RAG ─────────────────────────────────────────────
+    rag_query = f"{request.topic or ''} {request.subtopic or ''}".strip()
+    context = _get_rag_context(
+        query=rag_query,
+        document_ids=request.document_ids,
+        fallback_text=full_text,
+        top_k=5,
+    )
+    # ──────────────────────────────────────────────────────────────────────────
 
     if not GOOGLE_API_KEY:
         logger.warning("GOOGLE_API_KEY no configurada. Usando generación simulada.")
@@ -74,9 +143,9 @@ async def generate_questions(db: Session, request: QuestionGenerationRequest, us
         Basado en el siguiente contenido, genera exactamente {count} reactivos de tipo {request.question_type.value}.
         
         CONTEXTO ACADÉMICO:
-        - Programa: {request.program}
-        - Materia: {request.subject}
-        - Tema: {request.topic}
+        - Programa: {request.program or "No especificado"}
+        - Materia: {request.subject or "No especificada"}
+        - Tema: {request.topic or "No especificado"}
         - Nivel de dificultad: {request.difficulty.value}
         
         RESTRICCIONES:
@@ -93,16 +162,27 @@ async def generate_questions(db: Session, request: QuestionGenerationRequest, us
         4. Validez de Contenido: Evaluar estrictamente el contenido proporcionado.
         
         CONTENIDO DE REFERENCIA:
-        {full_text[:30000]} 
+        {context}
         
         DEVOLVER ÚNICAMENTE UN JSON CON LA SIGUIENTE ESTRUCTURA:
         {{
             "questions": [
                 {{
-                    "text": "Texto de la pregunta",
+                    "name": "Nombre corto y descriptivo de la pregunta (ej: Geometría_Analítica_P1)",
+                    "text": "Texto de la pregunta (puedes usar HTML básico)",
+                    "feedback_correct": "Mensaje general si el alumno acierta la pregunta",
+                    "feedback_incorrect": "Mensaje general si el alumno falla la pregunta",
                     "options": [
-                        {{ "text": "Opción 1", "is_correct": true }},
-                        {{ "text": "Opción 2", "is_correct": false }}
+                        {{ 
+                            "text": "Opción 1", 
+                            "is_correct": true,
+                            "feedback": "Explicación de por qué esta respuesta es correcta o incorrecta"
+                        }},
+                        {{ 
+                            "text": "Opción 2", 
+                            "is_correct": false,
+                            "feedback": "Explicación de por qué esta respuesta es incorrecta"
+                        }}
                     ]
                 }}
             ]
@@ -144,10 +224,9 @@ async def generate_questions(db: Session, request: QuestionGenerationRequest, us
 
         config = ConfiguracionGeneracion(
             document_id=documents[0].id,
-            program=request.program,
-            semester=request.semester,
-            subject=request.subject,
-            topic=request.topic,
+            program_id=prog_id,
+            subject_id=sub_id,
+            topic_id=top_id,
             subtopic=request.subtopic,
             question_type=request.question_type,
             difficulty=request.difficulty,
@@ -162,8 +241,9 @@ async def generate_questions(db: Session, request: QuestionGenerationRequest, us
             reactivo = Reactivo(
                 config_id=config.id,
                 question_text=q_data["text"],
-                item_type=request.question_type.value,
-                difficulty=request.difficulty.value,
+                name=q_data.get("name"),
+                feedback_correct=q_data.get("feedback_correct"),
+                feedback_incorrect=q_data.get("feedback_incorrect"),
                 is_validated=False
             )
             db.add(reactivo)
@@ -174,7 +254,8 @@ async def generate_questions(db: Session, request: QuestionGenerationRequest, us
                 opcion = Opcion(
                     item_id=reactivo.id,
                     option_text=opt_data["text"],
-                    is_correct=opt_data["is_correct"]
+                    is_correct=opt_data["is_correct"],
+                    feedback=opt_data.get("feedback")
                 )
                 db.add(opcion)
             
@@ -193,12 +274,12 @@ async def generate_questions(db: Session, request: QuestionGenerationRequest, us
         raise ValueError(f"Error en la generación con IA: {error_msg}")
 
 def _simulate_generation(db: Session, request: QuestionGenerationRequest, doc_id: int):
+    prog_id, sub_id, top_id = _resolve_curriculum_ids(db, request)
     config = ConfiguracionGeneracion(
         document_id=doc_id,
-        program=request.program,
-        semester=request.semester,
-        subject=request.subject,
-        topic=request.topic,
+        program_id=prog_id,
+        subject_id=sub_id,
+        topic_id=top_id,
         subtopic=request.subtopic,
         question_type=request.question_type,
         difficulty=request.difficulty,
@@ -212,9 +293,7 @@ def _simulate_generation(db: Session, request: QuestionGenerationRequest, doc_id
     for i in range(request.num_questions):
         reactivo = Reactivo(
             config_id=config.id,
-            question_text=f"[SIMULADO] Pregunta #{i+1} sobre {request.topic}",
-            item_type=request.question_type.value,
-            difficulty=request.difficulty.value,
+            question_text=f"[SIMULADO] Pregunta #{i+1} sobre {request.topic or 'tema'}",
             is_validated=False
         )
         db.add(reactivo)
@@ -230,6 +309,71 @@ def _simulate_generation(db: Session, request: QuestionGenerationRequest, doc_id
         generated_questions.append(reactivo)
 
     return config, generated_questions
+
+def _resolve_curriculum_ids(db: Session, request: QuestionGenerationRequest):
+    """
+    Resuelve o crea los IDs de programa, materia y tema para asegurar 3NF.
+    """
+    # 1. Resolver Programa
+    prog_id = request.program_id
+    if not prog_id and request.program:
+        prog = db.query(Programa).filter(Programa.nombre == request.program).first()
+        if not prog:
+            prog = Programa(nombre=request.program)
+            db.add(prog)
+            db.commit()
+            db.refresh(prog)
+        prog_id = prog.id
+    
+    # 2. Resolver Materia
+    sub_id = request.subject_id
+    if not sub_id and request.subject:
+        # Se requiere programa para la materia
+        if not prog_id:
+            # Fallback a un programa genérico para evitar fallos si no hay nada
+            prog_id = _resolve_curriculum_ids(db, QuestionGenerationRequest(program="General", document_ids=[], question_type=request.question_type, difficulty=request.difficulty))[0]
+            
+        materia = db.query(Materia).filter(
+            Materia.nombre == request.subject,
+            Materia.program_id == prog_id
+        ).first()
+        if not materia:
+            materia = Materia(
+                nombre=request.subject,
+                program_id=prog_id,
+                semestre=0, # Valor por defecto para materias manuales
+                clave="MANUAL"
+            )
+            db.add(materia)
+            db.commit()
+            db.refresh(materia)
+        sub_id = materia.id
+        
+    # 3. Resolver Tema
+    top_id = request.topic_id
+    if not top_id and request.topic:
+        if not sub_id:
+            # No se puede crear tema sin materia
+            raise ValueError("No se puede resolver el tema sin una materia identificada.")
+            
+        tema = db.query(Tema).filter(
+            Tema.nombre == request.topic,
+            Tema.materia_id == sub_id
+        ).first()
+        if not tema:
+            tema = Tema(
+                nombre=request.topic,
+                materia_id=sub_id
+            )
+            db.add(tema)
+            db.commit()
+            db.refresh(tema)
+        top_id = tema.id
+        
+    if not prog_id or not sub_id or not top_id:
+        raise ValueError("Se requiere al menos el nombre del programa, materia y tema para normalizar la configuración.")
+        
+    return prog_id, sub_id, top_id
 
 async def regenerate_question(db: Session, question_id: int, user_id: int, model_name: str = None):
     reactivo = db.query(Reactivo).filter(Reactivo.id == question_id).first()
@@ -271,13 +415,25 @@ async def regenerate_question(db: Session, question_id: int, user_id: int, model
     existing_texts = [q.question_text for q in existing_questions]
     existing_context = "\n".join([f"- {text}" for text in existing_texts[:50]])
 
+    # ── Recuperación semántica RAG ─────────────────────────────────────────────
+    sub_name = config.materia_obj.nombre if config.materia_obj else ""
+    top_name = config.tema_obj.nombre if config.tema_obj else ""
+    regen_query = f"{sub_name} {top_name} {getattr(config, 'subtopic', '') or ''}".strip()
+    context = _get_rag_context(
+        query=regen_query,
+        document_ids=[config.document_id],
+        fallback_text=document.content_text or "",
+        top_k=5,
+    )
+    # ──────────────────────────────────────────────────────────────────────────
+
     prompt = f"""
     Eres un experto pedagogo. Necesito REGENERAR una pregunta específica para una evaluación.
     La pregunta anterior no fue satisfactoria. Genera una NUEVA pregunta sobre el mismo tema.
     
     CONTEXTO:
-    - Materia: {config.subject}
-    - Tema: {config.topic}
+    - Materia: {config.materia_obj.nombre if config.materia_obj else "Desconocida"}
+    - Tema: {config.tema_obj.nombre if config.tema_obj else "Desconocido"}
     - Dificultad: {config.difficulty.value}
     
     RESTRICCIONES:
@@ -295,14 +451,15 @@ async def regenerate_question(db: Session, question_id: int, user_id: int, model
     {existing_context}
     
     CONTENIDO DE REFERENCIA:
-    {document.content_text[:15000] if document.content_text else "Sin texto"}
+    {context}
     
     DEVOLVER ÚNICAMENTE UN JSON CON ESTA ESTRUCTURA:
     {{
+        "name": "Nombre de la pregunta",
         "text": "Texto de la pregunta",
         "options": [
-            {{ "text": "Opción 1", "is_correct": true }},
-            {{ "text": "Opción 2", "is_correct": false }}
+            {{ "text": "Opción 1", "is_correct": true, "feedback": "Retroalimentación" }},
+            {{ "text": "Opción 2", "is_correct": false, "feedback": "Retroalimentación" }}
         ]
     }}
     """
@@ -338,6 +495,9 @@ async def regenerate_question(db: Session, question_id: int, user_id: int, model
              q_data = q_data["questions"][0]
 
         reactivo.question_text = q_data["text"]
+        reactivo.name = q_data.get("name")
+        reactivo.feedback_correct = q_data.get("feedback_correct")
+        reactivo.feedback_incorrect = q_data.get("feedback_incorrect")
         reactivo.is_validated = False
         
         db.query(Opcion).filter(Opcion.item_id == reactivo.id).delete()
@@ -346,7 +506,8 @@ async def regenerate_question(db: Session, question_id: int, user_id: int, model
             opcion = Opcion(
                 item_id=reactivo.id,
                 option_text=opt["text"],
-                is_correct=opt["is_correct"]
+                is_correct=opt["is_correct"],
+                feedback=opt.get("feedback")
             )
             db.add(opcion)
         
@@ -377,18 +538,29 @@ def update_questions_batch(db: Session, updates: List[dict], user_id: int):
         if "questionText" in update_data:
             reactivo.question_text = update_data["questionText"]
         
+        if "name" in update_data:
+            reactivo.name = update_data["name"]
+
         if "validationStatus" in update_data:
             is_val = update_data["validationStatus"] == "validated"
             reactivo.is_validated = is_val
+
+        if "feedback_correct" in update_data:
+            reactivo.feedback_correct = update_data["feedback_correct"]
+        
+        if "feedback_incorrect" in update_data:
+            reactivo.feedback_incorrect = update_data["feedback_incorrect"]
 
         if "answers" in update_data:
             db.query(Opcion).filter(Opcion.item_id == reactivo.id).delete()
             
             for ans in update_data["answers"]:
+                logger.info(f"Actualizando opción: {ans.get('text')} - Feedback: {ans.get('feedback')}")
                 db.add(Opcion(
                     item_id=reactivo.id,
                     option_text=ans["text"],
-                    is_correct=ans.get("isCorrect", False)
+                    is_correct=ans.get("isCorrect", False),
+                    feedback=ans.get("feedback")
                 ))
         
         db.add(reactivo)

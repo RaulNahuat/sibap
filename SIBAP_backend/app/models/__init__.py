@@ -8,6 +8,7 @@ from app.models.opcion import Opcion
 from app.models.configuracion_generacion import ConfiguracionGeneracion
 from app.models.materia import Materia
 from app.models.programa import Programa
+from app.models.tema import Tema
 
 __all__ = [
     "Base",
@@ -19,5 +20,6 @@ __all__ = [
     "Opcion",
     "ConfiguracionGeneracion",
     "Materia",
-    "Programa"
+    "Programa",
+    "Tema"
 ]

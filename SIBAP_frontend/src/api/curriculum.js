@@ -1,6 +1,15 @@
 import client from './client';
 
 /**
+ * Obtiene todos los programas educativos disponibles en el catálogo.
+ * @returns {Promise<{id: number, nombre: string}[]>}
+ */
+export async function getPrograms() {
+    const res = await client.get('/curriculum/programs');
+    return res.data.programs;
+}
+
+/**
  * Obtiene los semestres disponibles para un programa educativo.
  * @param {string} program - Nombre completo del programa
  * @returns {Promise<number[]>}

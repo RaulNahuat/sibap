@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import math
 
-from app.services.document_processor import process_document
+from app.services.document_service import upload_and_process_document
 from app.services import document_service
 from app.schemas.document import (
     DocumentExtractionResponse,
@@ -22,13 +22,19 @@ router = APIRouter(
 )
 
 
+import os
+import tempfile
+from app.utils.validators import validate_file
+from app.utils.text_cleaner import clean_extracted_text
+from app.logic.document_parsers.factory import get_text_from_file
+
 def process_document_background(
     file_content: bytes,
     filename: str,
     document_id: int,
     db: Session
 ):
-    """Tarea en segundo plano para procesar el documento."""
+    """Tarea en segundo plano para procesar el documento usando la nueva arquitectura."""
     try:
         document_service.update_document_status(
             db=db,
@@ -36,16 +42,38 @@ def process_document_background(
             status=ProcessingStatus.PROCESSING
         )
         
-        result = process_document(file_content, filename)
-        
-        document_service.update_document_status(
-            db=db,
-            document_id=document_id,
-            status=ProcessingStatus.COMPLETED,
-            content_text=result["text"]
-        )
+        # 1. Validación de extensión
+        extension = validate_file(filename, file_content)
+
+        # 2. Gestión de archivo temporal
+        with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_file:
+            temp_file.write(file_content)
+            temp_path = temp_file.name
+
+        try:
+            # 3. Extracción de contenido bruto
+            raw_text = get_text_from_file(extension, temp_path, file_content)
+            
+            # 4. Limpieza profunda del texto
+            clean_text = clean_extracted_text(raw_text)
+
+            if not clean_text.strip():
+                raise ValueError("No se pudo extraer contenido legible.")
+
+            # 5. Actualización final y disparo de RAG
+            document_service.update_document_status(
+                db=db,
+                document_id=document_id,
+                status=ProcessingStatus.COMPLETED,
+                content_text=clean_text
+            )
+            
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+
     except Exception as e:
-        print(f"Error processing document {document_id}: {e}")
+        print(f"Error procesando el documento {document_id}: {e}")
         document_service.update_document_status(
             db=db,
             document_id=document_id,
@@ -168,9 +196,6 @@ def get_document(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Obtener un documento específico del usuario autenticado.
-    """
     documento = document_service.get_document_by_id(db, document_id, current_user.id)
     
     if not documento:
@@ -196,9 +221,6 @@ def delete_document(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Eliminar un documento del usuario autenticado.
-    """
     success = document_service.delete_document(db, document_id, current_user.id)
     
     if not success:

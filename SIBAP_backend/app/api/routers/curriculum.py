@@ -10,7 +10,6 @@ router = APIRouter(prefix="/curriculum", tags=["curriculum"])
 
 @router.get("/programs")
 def get_programs(db: Session = Depends(get_db)):
-    """Devuelve todos los programas con malla curricular registrada."""
     programas = db.execute(select(Programa).order_by(Programa.nombre)).scalars().all()
     return {"programs": [{"id": p.id, "nombre": p.nombre} for p in programas]}
 
@@ -20,7 +19,6 @@ def get_semesters(
     program: str = Query(..., description="Nombre completo del programa educativo"),
     db: Session = Depends(get_db),
 ):
-    """Devuelve los semestres disponibles para un programa."""
     rows = db.execute(
         select(distinct(Materia.semestre))
         .join(Programa, Materia.program_id == Programa.id)
@@ -36,7 +34,6 @@ def get_subjects(
     semester: int = Query(..., description="Número de semestre"),
     db: Session = Depends(get_db),
 ):
-    """Devuelve las materias de un semestre para un programa."""
     materias = db.execute(
         select(Materia)
         .join(Programa, Materia.program_id == Programa.id)

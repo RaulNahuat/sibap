@@ -45,11 +45,15 @@ export default function ValidateQuestionsPage() {
                     if (fetchedQuestions && fetchedQuestions.length > 0) {
                         const mappedQuestions = fetchedQuestions.map(q => ({
                             id: q.id,
+                            name: q.name,
                             questionText: q.question_text,
+                            feedback_correct: q.feedback_correct,
+                            feedback_incorrect: q.feedback_incorrect,
                             answers: q.opciones.map(opt => ({
                                 id: opt.id,
                                 text: opt.option_text,
-                                isCorrect: opt.is_correct
+                                isCorrect: opt.is_correct,
+                                feedback: opt.feedback
                             })),
                             correctAnswerId: q.opciones.find(opt => opt.is_correct)?.id,
                             validationStatus: q.is_validated ? 'validated' : 'pending',
@@ -95,6 +99,7 @@ export default function ValidateQuestionsPage() {
         try {
             await updateBank([{
                 id: question.id,
+                name: question.name,
                 validationStatus: 'validated',
                 questionText: question.questionText,
                 answers: question.answers
@@ -142,10 +147,14 @@ export default function ValidateQuestionsPage() {
             const mappedQuestion = {
                 ...question,
                 questionText: updatedQData.question_text,
+                name: updatedQData.name,
+                feedback_correct: updatedQData.feedback_correct,
+                feedback_incorrect: updatedQData.feedback_incorrect,
                 answers: updatedQData.opciones.map(opt => ({
                     id: opt.id,
                     text: opt.option_text,
-                    isCorrect: opt.is_correct
+                    isCorrect: opt.is_correct,
+                    feedback: opt.feedback
                 })),
                 correctAnswerId: updatedQData.opciones.find(opt => opt.is_correct)?.id,
                 validationStatus: 'pending'
@@ -170,7 +179,10 @@ export default function ValidateQuestionsPage() {
         try {
             const updates = questions.map(q => ({
                 id: q.id,
+                name: q.name,
                 questionText: q.questionText,
+                feedback_correct: q.feedback_correct,
+                feedback_incorrect: q.feedback_incorrect,
                 validationStatus: q.validationStatus,
                 answers: q.answers
             }));
@@ -188,20 +200,26 @@ export default function ValidateQuestionsPage() {
     const handleAddQuestion = async (newQuestionData) => {
         try {
             const payload = {
+                name: newQuestionData.name,
                 question_text: newQuestionData.questionText,
                 options: newQuestionData.answers.map(ans => ({
                     text: ans.text,
                     is_correct: ans.id === newQuestionData.correctAnswerId,
+                    feedback: ans.feedback
                 }))
             };
             const created = await addManualQuestion(bankData.configId, payload);
             const mapped = {
                 id: created.id,
+                name: created.name,
                 questionText: created.question_text,
+                feedback_correct: created.feedback_correct,
+                feedback_incorrect: created.feedback_incorrect,
                 answers: created.opciones.map(opt => ({
                     id: opt.id,
                     text: opt.option_text,
                     isCorrect: opt.is_correct,
+                    feedback: opt.feedback
                 })),
                 correctAnswerId: created.opciones.find(o => o.is_correct)?.id,
                 validationStatus: 'validated',
@@ -219,10 +237,26 @@ export default function ValidateQuestionsPage() {
         }
     };
 
-    const handleExport = (format) => {
-        clearQuestions();
-        toast.success(`Exportando en formato ${format}...`);
-        // TODO: Implement actual export logic
+    const handleExport = async (format) => {
+        try {
+            const endpoint = `/api/questions/bank/${bankData.configId}/export/${format.toLowerCase()}`;
+            const response = await apiClient.get(endpoint, {
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `banco_${bankData.configId}.${format.toLowerCase() === 'gift' ? 'txt' : 'xml'}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            toast.success(`Exportación a ${format} completada.`);
+        } catch (error) {
+            console.error('Error en la exportación:', error);
+            toast.error('No se pudo exportar el banco de preguntas.');
+        }
     };
 
     const handleClearProgress = () => {

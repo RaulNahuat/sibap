@@ -23,13 +23,16 @@ def get_dashboard_stats(
 ):
     user_configs_query = (
         db.query(ConfiguracionGeneracion)
+        .options(
+            joinedload(ConfiguracionGeneracion.tema_obj),
+            joinedload(ConfiguracionGeneracion.materia_obj)
+        )
         .join(Documento)
         .filter(Documento.user_id == current_user.id)
     )
     
     total_banks = user_configs_query.count()
 
-    #Obtener total de reactivos + validados + no validados + en proceso
     reactivos_query = (
         db.query(Reactivo)
         .join(ConfiguracionGeneracion)
@@ -89,8 +92,8 @@ def get_dashboard_stats(
             
         activity_items.append(RecentActivityItem(
             id=config.id,
-            name=f"Banco: {config.topic}",
-            subject=config.subject,
+            name=f"Banco: {config.tema_obj.nombre if config.tema_obj else 'Sin tema'}",
+            subject=config.materia_obj.nombre if config.materia_obj else 'Sin materia',
             date=config.created_at,
             reactives_count=c_total,
             status=status_str,
@@ -112,6 +115,10 @@ def get_user_banks(
 ):
     user_configs = (
         db.query(ConfiguracionGeneracion)
+        .options(
+            joinedload(ConfiguracionGeneracion.tema_obj),
+            joinedload(ConfiguracionGeneracion.materia_obj)
+        )
         .join(Documento)
         .filter(Documento.user_id == current_user.id)
         .order_by(desc(ConfiguracionGeneracion.created_at))
@@ -132,8 +139,8 @@ def get_user_banks(
             
         banks.append(BankListItem(
             id=config.id,
-            name=f"Banco: {config.topic}",
-            subject=config.subject,
+            name=f"Banco: {config.tema_obj.nombre if config.tema_obj else 'Sin tema'}",
+            subject=config.materia_obj.nombre if config.materia_obj else 'Sin materia',
             difficulty=config.difficulty.value,
             created_at=config.created_at,
             totalQuestions=total,

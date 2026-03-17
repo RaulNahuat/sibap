@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"  # development o production
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
     
-    # Email configuration
+    # Configuración de correo electrónico
     EMAIL_HOST: str = "smtp.gmail.com"
     EMAIL_PORT: int = 587
     EMAIL_USERNAME: str = ""
@@ -20,40 +20,48 @@ class Settings(BaseSettings):
     EMAIL_USE_TLS: bool = True
     EMAIL_CONSOLE_MODE: bool = True  # True para desarrollo, False para producción
     
-    # Frontend URL for reset links
+    # URL del frontend para enlaces de restablecimiento
     FRONTEND_URL: str = "http://localhost:5173"
     
-    # Password reset token configuration
+    # Configuración del token de restablecimiento de contraseña
     RESET_TOKEN_EXPIRE_MINUTES: int = 60
     
-    # AI Configuration
+    # Configuración de IA
     GOOGLE_API_KEY: str = ""
     GOOGLE_AI_MODEL: str = "gemini"
+
+    # Configuración de RAG
+    CHROMA_PERSIST_DIR: str = "./chroma_db"
+    EMBEDDING_MODEL: str = "paraphrase-multilingual-mpnet-base-v2"
 
     class Config:
         env_file = ".env"
 
 settings = Settings()
 
-# JWT and Core Configuration
+# Configuración de JWT y Core
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 COOKIE_NAME = settings.COOKIE_NAME
 ENVIRONMENT = settings.ENVIRONMENT
 
-# Refresh token configuration
+# Configuración del token de refresco
 REFRESH_TOKEN_EXPIRE_DAYS = 30
 REFRESH_COOKIE_NAME = "refresh_token"
 
-# Password reset token configuration
+# Configuración del token de restablecimiento de contraseña
 RESET_TOKEN_EXPIRE_MINUTES = settings.RESET_TOKEN_EXPIRE_MINUTES
 
-# AI Configuration
+# Configuración de IA
 GOOGLE_API_KEY = settings.GOOGLE_API_KEY
 GOOGLE_AI_MODEL = settings.GOOGLE_AI_MODEL
 
-# Email configuration
+# Configuración de RAG
+CHROMA_PERSIST_DIR = settings.CHROMA_PERSIST_DIR
+EMBEDDING_MODEL = settings.EMBEDDING_MODEL
+
+# Configuración de correo electrónico
 EMAIL_HOST = settings.EMAIL_HOST
 EMAIL_PORT = settings.EMAIL_PORT
 EMAIL_USERNAME = settings.EMAIL_USERNAME
@@ -63,6 +71,6 @@ EMAIL_FROM_NAME = settings.EMAIL_FROM_NAME
 EMAIL_USE_TLS = settings.EMAIL_USE_TLS
 EMAIL_CONSOLE_MODE = settings.EMAIL_CONSOLE_MODE
 
-# Frontend and CORS
+# Configuración de Frontend y CORS
 FRONTEND_URL = settings.FRONTEND_URL
 CORS_ORIGINS: List[str] = [origin.strip() for origin in settings.CORS_ORIGINS.split(",")]

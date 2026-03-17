@@ -35,12 +35,6 @@ def create_reset_token(email: str) -> str:
     """
     Crea un token seguro para reset de contraseña.
     El token expira según RESET_TOKEN_EXPIRE_MINUTES configurado.
-    
-    Args:
-        email: Email del usuario que solicita el reset
-        
-    Returns:
-        str: Token JWT firmado
     """
     from app.core.config import RESET_TOKEN_EXPIRE_MINUTES
     
@@ -55,13 +49,6 @@ def create_reset_token(email: str) -> str:
 def verify_reset_token(token: str) -> Optional[str]:
     """
     Verifica un token de reset de contraseña y retorna el email si es válido.
-    
-    Args:
-        token: Token JWT a verificar
-        
-    Returns:
-        str: Email del usuario si el token es válido
-        None: Si el token es inválido, expirado o no es de tipo password_reset
     """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])

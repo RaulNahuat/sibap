@@ -16,7 +16,8 @@ from app.schemas.question import (
     BatchUpdateResponse,
     ManualQuestionRequest,
 )
-from app.services import question_service
+from app.services import question_service, moodle_export_service
+from fastapi.responses import PlainTextResponse, Response
 
 router = APIRouter(
     prefix="/api/questions",
@@ -33,10 +34,6 @@ async def generate_questions(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Generar reactivos basados en la configuración proporcionada.
-    Optimizada para concurrencia.
-    """
     try:
         config, questions = await question_service.generate_questions(
             db=db,
@@ -60,6 +57,7 @@ async def generate_questions(
             detail=f"Error al generar las preguntas: {str(e)}"
         )
 
+
 @router.post(
     "/{question_id}/regenerate",
     response_model=QuestionResponse,
@@ -71,10 +69,6 @@ async def regenerate_single_question(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Regenerar un único reactivo manteniendo el contexto original.
-    Permite especificar el modelo a usar.
-    """
     try:
         updated_question = await question_service.regenerate_question(
             db=db,
@@ -95,6 +89,7 @@ async def regenerate_single_question(
             detail=f"Error al regenerar la pregunta: {str(e)}"
         )
 
+
 @router.put(
     "/batch-update",
     response_model=BatchUpdateResponse,
@@ -105,9 +100,6 @@ def batch_update_questions(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Actualizar múltiples reactivos (texto, estado, opciones).
-    """
     try:
         updates_dicts = [u.model_dump() for u in updates]
         
@@ -128,11 +120,14 @@ def batch_update_questions(
             detail=f"Error al actualizar las preguntas: {str(e)}"
         )
 
+
 @router.get(
     "/bank/{config_id}",
     response_model=List[QuestionResponse],
     status_code=status.HTTP_200_OK
 )
+
+
 def get_questions_by_bank(
     config_id: int,
     current_user: Usuario = Depends(get_current_user),
@@ -152,6 +147,7 @@ def get_questions_by_bank(
     questions = db.query(Reactivo).filter(Reactivo.config_id == config_id).all()
     return questions
 
+
 @router.post(
     "/bank/{config_id}/add",
     response_model=QuestionResponse,
@@ -163,10 +159,6 @@ def add_manual_question(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Agrega una pregunta manual al banco (ya validada por el usuario).
-    """
-    # Verify the bank belongs to this user
     config = db.query(ConfiguracionGeneracion).join(Documento).filter(
         ConfiguracionGeneracion.id == config_id,
         Documento.user_id == current_user.id
@@ -181,9 +173,7 @@ def add_manual_question(
     reactivo = Reactivo(
         config_id=config_id,
         question_text=request.question_text,
-        item_type=config.question_type.value,
-        difficulty=config.difficulty.value,
-        is_validated=True  # Manual questions are pre-validated
+        is_validated=True
     )
     db.add(reactivo)
     db.commit()
@@ -200,3 +190,48 @@ def add_manual_question(
     db.refresh(reactivo)
 
     return reactivo
+
+
+@router.get("/bank/{config_id}/export/gift", response_class=PlainTextResponse)
+def export_questions_gift(
+    config_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    config = db.query(ConfiguracionGeneracion).join(Documento).filter(
+        ConfiguracionGeneracion.id == config_id,
+        Documento.user_id == current_user.id
+    ).first()
+    
+    if not config:
+        raise HTTPException(status_code=404, detail="Banco no encontrado")
+        
+    content = moodle_export_service.export_to_gift(db, config_id)
+    filename = f"banco_{config_id}.txt"
+    return PlainTextResponse(
+        content, 
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
+
+
+@router.get("/bank/{config_id}/export/xml", response_class=Response)
+def export_questions_xml(
+    config_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    config = db.query(ConfiguracionGeneracion).join(Documento).filter(
+        ConfiguracionGeneracion.id == config_id,
+        Documento.user_id == current_user.id
+    ).first()
+    
+    if not config:
+        raise HTTPException(status_code=404, detail="Banco no encontrado")
+        
+    content = moodle_export_service.export_to_xml(db, config_id)
+    filename = f"banco_{config_id}.xml"
+    return Response(
+        content=content,
+        media_type="application/xml",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )

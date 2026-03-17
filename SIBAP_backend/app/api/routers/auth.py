@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Response, HTTPException, Request
 from sqlalchemy.orm import Session
 from datetime import timedelta
-
 from app.schemas.user import UserCreate, UserLogin, UserLoginResponse
 from app.schemas import user as schemas
 from app.services.auth_service import register_user, authenticate_user
@@ -17,17 +16,6 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 @router.post("/register")
 def register(data: UserCreate, request: Request, response: Response, db: Session = Depends(get_db)):
-    """
-    Registra un nuevo usuario.
-    
-    Validaciones automáticas (en schema):
-    - Email válido y único
-    - Contraseña fuerte (min 8 characteres, mayúsculas, minúsculas, números, especiales)
-    - Nombres con longitud adecuada (2-150 characteres)
-    
-    Returns:
-        dict: Mensaje de éxito
-    """
     try:
         user = register_user(db, data.name, data.last_name, data.email, data.password)
         token = create_access_token(
@@ -53,14 +41,7 @@ def register(data: UserCreate, request: Request, response: Response, db: Session
 
 @router.post("/login")
 def login(data: UserLogin, request: Request, response: Response, db: Session = Depends(get_db)):
-    """
-    Inicia sesión y retorna un token JWT en una cookie httponly.
-    
-    Rate limiting: 5 intentos por minuto por IP.
-    
-    Returns:
-        dict: Mensaje de éxito y datos del usuario
-    """
+
     check_rate_limit(request, "/auth/login")
     
     user = authenticate_user(db, data.email, data.password)
@@ -115,12 +96,7 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
 
 @router.post("/logout")
 def logout(request: Request, response: Response, db: Session = Depends(get_db), current_user: Usuario = Depends(get_current_user)):
-    """
-    Cierra la sesión del usuario eliminando la cookie del token.
-    
-    Returns:
-        dict: Mensaje de confirmación
-    """
+
     log_logout(current_user.email, current_user.id, db)
     
     response.delete_cookie(key=COOKIE_NAME)
@@ -131,12 +107,7 @@ def logout(request: Request, response: Response, db: Session = Depends(get_db), 
 
 @router.post("/refresh")
 def refresh_token(request: Request, response: Response, db: Session = Depends(get_db)):
-    """
-    Renueva el access token usando el refresh token.
-    
-    Returns:
-        dict: Mensaje de éxito
-    """
+
     refresh_token = request.cookies.get(REFRESH_COOKIE_NAME)
     
     if not refresh_token:
@@ -179,13 +150,6 @@ def refresh_token(request: Request, response: Response, db: Session = Depends(ge
 
 @router.get("/me", response_model=UserLoginResponse)
 def get_current_user_info(current_user: Usuario = Depends(get_current_user)):
-    """
-    Obtiene la información del usuario autenticado actual.
-    Requiere autenticación mediante cookie JWT.
-    
-    Returns:
-        UserLoginResponse: Datos del usuario autenticado (sin metadatos como created_at)
-    """
     return current_user
 
 
@@ -196,19 +160,7 @@ def request_password_reset(
     data: schemas.PasswordResetRequest,
     db: Session = Depends(get_db)
 ):
-    """
-    Solicita un reset de contraseña.
-    Envía un email con el enlace de recuperación si el email existe.
-    
-    Por seguridad, siempre retorna éxito sin revelar si el email existe.
-    
-    Args:
-        data: Email del usuario
-        db: Sesión de base de datos
-        
-    Returns:
-        dict: Mensaje de éxito
-    """
+
     from app.services.password_reset_service import request_password_reset
     
     request_password_reset(db, data.email)
@@ -223,20 +175,7 @@ def verify_reset_token(
     data: schemas.PasswordResetVerify,
     db: Session = Depends(get_db)
 ):
-    """
-    Verifica si un token de reset es válido.
-    Usado para validar antes de mostrar el formulario de nueva contraseña.
-    
-    Args:
-        data: Token de reset
-        db: Sesión de base de datos
-        
-    Returns:
-        dict: Mensaje de éxito si el token es válido
-        
-    Raises:
-        HTTPException: Si el token es inválido o ha expirado
-    """
+
     from app.services.password_reset_service import verify_password_reset_token
     
     email = verify_password_reset_token(db, data.token)
@@ -258,19 +197,6 @@ def complete_password_reset(
     data: schemas.PasswordResetComplete,
     db: Session = Depends(get_db)
 ):
-    """
-    Completa el reset de contraseña con el token y la nueva contraseña.
-    
-    Args:
-        data: Token y nueva contraseña
-        db: Sesión de base de datos
-        
-    Returns:
-        dict: Mensaje de éxito
-        
-    Raises:
-        HTTPException: Si el token es inválido o ha expirado
-    """
     from app.services.password_reset_service import complete_password_reset
     
     success = complete_password_reset(db, data.token, data.new_password)

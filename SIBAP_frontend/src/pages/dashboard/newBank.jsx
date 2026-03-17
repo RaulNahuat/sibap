@@ -16,7 +16,7 @@ import {
 import DocumentSelectionModal from '../../components/documents/DocumentSelectionModal';
 import { uploadDocument, getDocument } from '../../api/documents';
 import { generateQuestions } from '../../api/questions';
-import { getCurriculumSemesters, getCurriculumSubjects } from '../../api/curriculum';
+import { getCurriculumSemesters, getCurriculumSubjects, getPrograms } from '../../api/curriculum';
 import { getErrorMessage } from '../../utils/errorHandler';
 import { useToast } from '../../context/ToastContext';
 import { useLocalStorage } from '../../hooks';
@@ -35,8 +35,10 @@ export default function NewBankPage() {
     const [uploadedFiles, setUploadedFiles, clearUploadedFiles] = useLocalStorage(filesKey, []);
     const [formData, setFormData, clearFormData] = useLocalStorage(formKey, {
         program: '',
+        program_id: null,
         semester: '',
         subject: '',
+        subject_id: null,
         topic: '',
         subtopic: '',
         difficulty: 'Intermedio',
@@ -45,7 +47,7 @@ export default function NewBankPage() {
         plausibleDistractors: false,
         avoidAmbiguity: true,
         externalReferences: '',
-        aiModel: 'gemini-2.0-flash',
+        aiModel: 'gemini-flash-latest',
     });
 
     const [isGenerating, setIsGenerating] = useState(false);
@@ -56,17 +58,28 @@ export default function NewBankPage() {
     // Curriculum cascading state
     const IS_PROGRAM = 'Licenciatura en Ingeniería de Software';
     const isISProgram = formData.program === IS_PROGRAM;
+    const [availablePrograms, setAvailablePrograms] = useState([]);
     const [availableSemesters, setAvailableSemesters] = useState([]);
     const [availableSubjects, setAvailableSubjects] = useState([]);
     const [selectedSemesterNum, setSelectedSemesterNum] = useState('');
+    const [isLoadingPrograms, setIsLoadingPrograms] = useState(false);
     const [isLoadingSemesters, setIsLoadingSemesters] = useState(false);
     const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
 
-    // Load semesters when IS program is selected
+    // Load programs on mount
     useEffect(() => {
-        if (isISProgram) {
+        setIsLoadingPrograms(true);
+        getPrograms()
+            .then(progs => setAvailablePrograms(progs))
+            .catch(() => setAvailablePrograms([]))
+            .finally(() => setIsLoadingPrograms(false));
+    }, []);
+
+    // Load semesters when program is selected
+    useEffect(() => {
+        if (formData.program) {
             setIsLoadingSemesters(true);
-            getCurriculumSemesters(IS_PROGRAM)
+            getCurriculumSemesters(formData.program)
                 .then(sems => setAvailableSemesters(sems))
                 .catch(() => setAvailableSemesters([]))
                 .finally(() => setIsLoadingSemesters(false));
@@ -77,20 +90,20 @@ export default function NewBankPage() {
         }
     }, [formData.program]);
 
-    // Load subjects when semester changes (IS program)
+    // Load subjects when semester changes
     useEffect(() => {
-        if (isISProgram && selectedSemesterNum !== '') {
+        if (formData.program && selectedSemesterNum !== '') {
             setIsLoadingSubjects(true);
-            getCurriculumSubjects(IS_PROGRAM, Number(selectedSemesterNum))
+            getCurriculumSubjects(formData.program, Number(selectedSemesterNum))
                 .then(subjects => {
                     setAvailableSubjects(subjects);
                     // Clear subject when semester changes
-                    setFormData(prev => ({ ...prev, subject: '' }));
+                    setFormData(prev => ({ ...prev, subject: '', subject_id: null }));
                 })
                 .catch(() => setAvailableSubjects([]))
                 .finally(() => setIsLoadingSubjects(false));
         }
-    }, [selectedSemesterNum]);
+    }, [selectedSemesterNum, formData.program]);
 
     const handleGenerate = async () => {
         if (!formData.subject || !formData.topic) {
@@ -121,8 +134,9 @@ export default function NewBankPage() {
 
             const requestData = {
                 document_ids: uploadedFiles.map(f => f.id),
+                program_id: formData.program_id,
+                subject_id: formData.subject_id,
                 program: formData.program,
-                semester: formData.semester,
                 subject: formData.subject,
                 topic: formData.topic,
                 subtopic: formData.subtopic || null,
@@ -483,13 +497,28 @@ export default function NewBankPage() {
                         <select
                             className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
                             value={formData.program}
-                            onChange={(e) => setFormData({ ...formData, program: e.target.value })}
+                            onChange={(e) => {
+                                const progName = e.target.value;
+                                const prog = availablePrograms.find(p => p.nombre === progName);
+                                setFormData({ 
+                                    ...formData, 
+                                    program: progName, 
+                                    program_id: prog?.id || null,
+                                    subject: '',
+                                    subject_id: null
+                                });
+                                setSelectedSemesterNum('');
+                            }}
+                            disabled={isLoadingPrograms}
                         >
-                            <option value="">Seleccionar programa...</option>
-                            <option>Licenciatura en Ingeniería de Software</option>
-                            <option>Licenciatura en Contaduría</option>
-                            <option>Licenciatura en Educación</option>
-                            <option>Licenciatura en Enfermería</option>
+                            <option value="">{isLoadingPrograms ? 'Cargando programas...' : 'Seleccionar programa...'}</option>
+                            {availablePrograms.map(p => (
+                                <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                            ))}
+                            {/* Opciones legacy o manuales si no están en el catálogo */}
+                            {!availablePrograms.find(p => p.nombre === 'Licenciatura en Ingeniería de Software') && (
+                                <option>Licenciatura en Ingeniería de Software</option>
+                            )}
                         </select>
                     </div>
 
@@ -534,7 +563,11 @@ export default function NewBankPage() {
                             <select
                                 className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
                                 value={formData.subject}
-                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                onChange={(e) => {
+                                    const subName = e.target.value;
+                                    const sub = availableSubjects.find(s => s.nombre === subName);
+                                    setFormData({ ...formData, subject: subName, subject_id: sub?.id || null });
+                                }}
                                 disabled={!selectedSemesterNum || isLoadingSubjects}
                             >
                                 <option value="">

@@ -63,13 +63,20 @@ export default function QuestionCard({
                     <div className="w-10 h-10 rounded-full bg-[#f1f5f9] text-[#64748b] flex items-center justify-center text-sm font-semibold flex-shrink-0">
                         {questionNumber}
                     </div>
-                    <div
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${status.bgColor}`}
-                    >
-                        <StatusIcon className={`w-4 h-4 ${status.iconColor}`} />
-                        <span className={`text-xs font-medium ${status.textColor}`}>
-                            {status.label}
-                        </span>
+                    <div className="flex flex-col gap-1">
+                        <div
+                            className={`flex items-center gap-2 px-3 py-1.5 rounded-full w-fit ${status.bgColor}`}
+                        >
+                            <StatusIcon className={`w-4 h-4 ${status.iconColor}`} />
+                            <span className={`text-xs font-medium ${status.textColor}`}>
+                                {status.label}
+                            </span>
+                        </div>
+                        {question.name && (
+                            <span className="text-[10px] font-mono text-[#94a3b8] px-1 uppercase tracking-tight">
+                                {question.name}
+                            </span>
+                        )}
                     </div>
                 </div>
 

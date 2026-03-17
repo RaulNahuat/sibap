@@ -11,11 +11,13 @@ class Reactivo(Base):
     config_id: Mapped[int] = mapped_column(ForeignKey("generation_configs.id"), nullable=False)
     
     question_text: Mapped[str] = mapped_column(Text, nullable=False)
-    
-    item_type: Mapped[str] = mapped_column(Text, nullable=False)
-    difficulty: Mapped[str] = mapped_column(Text, nullable=False)
+    name: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
     is_validated: Mapped[bool] = mapped_column(Boolean, default=False)
+    
+    feedback_correct: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    feedback_incorrect: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     configuracion: Mapped["ConfiguracionGeneracion"] = relationship(

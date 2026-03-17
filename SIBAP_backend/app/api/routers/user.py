@@ -38,15 +38,6 @@ def update_profile(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Actualiza el perfil del usuario autenticado.
-    
-    Validaciones automáticas (en schema):
-    - Nombres con longitud adecuada (2-150 caracteres)
-    
-    Returns:
-        UserResponse: Datos del usuario actualizado
-    """
     user = update_user_profile(db, current_user.id, data.name, data.last_name)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
@@ -59,15 +50,6 @@ def update_password(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Actualiza la contraseña del usuario autenticado.
-    
-    Validaciones automáticas (en schema):
-    - Contraseña fuerte (min 8 chars, mayúsculas, minúsculas, números, especiales)
-    
-    Returns:
-        No Content (204)
-    """
     user = update_user_password(db, current_user.id, data.password, data.new_password)
     if not user:
         raise HTTPException(status_code=400, detail="Contraseña actual incorrecta")
@@ -81,18 +63,6 @@ def delete_account(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Solicita la eliminación de la cuenta del usuario autenticado.
-    Esta acción es IRREVERSIBLE. Elimina permanentemente:
-    - Cuenta de usuario
-    - Documentos asociados
-    - Historial de exportaciones
-    
-    Los logs de actividad se mantienen pero se anonimizan.
-    
-    Returns:
-        dict: Mensaje de éxito
-    """
     user = request_account_deletion(db, current_user.id, data.password)
     if not user:
         raise HTTPException(status_code=400, detail="Contraseña incorrecta")
