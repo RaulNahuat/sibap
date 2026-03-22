@@ -1,12 +1,13 @@
 from sqlalchemy.orm import Session
-from fastapi import HTTPException
 from app.models.usuario import Usuario
 from app.schemas.user import UserResponse
 from app.core.security import hash_password, verify_password
 from app.utils.validators import validate_email_not_exists
-from app.utils.security_logger import log_registration, log_login_attempt
+from app.utils.security_logger import log_registration
+from app.repositories.user_repository import UserRepository
 
 def register_user(db: Session, name: str, last_name: str, email: str, password: str) -> UserResponse:
+    repo = UserRepository(db)
     validate_email_not_exists(email, db)
     
     user = Usuario(
@@ -16,17 +17,15 @@ def register_user(db: Session, name: str, last_name: str, email: str, password: 
         password_hash=hash_password(password)
     )
 
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    
+    user = repo.create(user)
     log_registration(email, user.id, db)
     
     return UserResponse.model_validate(user)
 
 
 def authenticate_user(db: Session, email: str, password: str) -> Usuario | None:
-    user = db.query(Usuario).filter(Usuario.email == email).first()
+    repo = UserRepository(db)
+    user = repo.get_by_email(email)
 
     if not user:
         return None

@@ -103,6 +103,7 @@ const DocumentViewerPage = () => {
         const colors = {
             'PDF': 'bg-red-100 text-red-700',
             'DOCX': 'bg-blue-100 text-blue-700',
+            'PPTX': 'bg-orange-100 text-orange-700',
             'TXT': 'bg-green-100 text-green-700'
         };
         return colors[type] || 'bg-gray-100 text-gray-700';
@@ -236,7 +237,6 @@ const DocumentViewerPage = () => {
                             <div className="p-8 md:p-12 prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-[#0b2540] prose-p:text-[#334155] prose-li:text-[#334155] prose-strong:text-[#0b2540] prose-table:w-full prose-table:text-sm prose-thead:bg-slate-50 prose-th:p-3 prose-td:p-3 prose-th:text-left prose-td:border-b prose-td:border-slate-100 flex-1">
                                 <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
-                                    rehypePlugins={[rehypeRaw]}
                                     components={{
                                         table: ({ node, children, ...props }) => (
                                             <table {...props}>{Children.toArray(children).filter(child => typeof child !== 'string' || child.trim().length > 0)}</table>

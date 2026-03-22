@@ -126,25 +126,17 @@ def batch_update_questions(
     response_model=List[QuestionResponse],
     status_code=status.HTTP_200_OK
 )
-
-
 def get_questions_by_bank(
     config_id: int,
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    config = db.query(ConfiguracionGeneracion).join(Documento).filter(
-        ConfiguracionGeneracion.id == config_id,
-        Documento.user_id == current_user.id
-    ).first()
-    
-    if not config:
+    questions = question_service.get_questions_by_config(db, config_id, current_user.id)
+    if questions is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Banco de preguntas no encontrado o no autorizado"
         )
-        
-    questions = db.query(Reactivo).filter(Reactivo.config_id == config_id).all()
     return questions
 
 
@@ -159,35 +151,19 @@ def add_manual_question(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    config = db.query(ConfiguracionGeneracion).join(Documento).filter(
-        ConfiguracionGeneracion.id == config_id,
-        Documento.user_id == current_user.id
-    ).first()
-
-    if not config:
+    reactivo = question_service.add_manual_question(
+        db=db,
+        config_id=config_id,
+        user_id=current_user.id,
+        question_text=request.question_text,
+        options=request.options
+    )
+    
+    if not reactivo:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Banco de preguntas no encontrado o no autorizado"
         )
-
-    reactivo = Reactivo(
-        config_id=config_id,
-        question_text=request.question_text,
-        is_validated=True
-    )
-    db.add(reactivo)
-    db.commit()
-    db.refresh(reactivo)
-
-    from app.models.opcion import Opcion
-    for opt in request.options:
-        db.add(Opcion(
-            item_id=reactivo.id,
-            option_text=opt.text,
-            is_correct=opt.is_correct
-        ))
-    db.commit()
-    db.refresh(reactivo)
 
     return reactivo
 

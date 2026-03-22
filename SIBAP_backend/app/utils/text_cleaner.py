@@ -1,51 +1,30 @@
 import re
-import pypandoc
-import logging
-
-logger = logging.getLogger(__name__)
 
 def clean_extracted_text(text: str) -> str:
-    """Aplica el pipeline completo de limpieza al texto extraído."""
-    text = normalize_markdown(text)
-    text = fix_spaced_words(text)
-    text = improve_readability(text)
-    text = remove_pdf_artifacts(text)
-    return text.strip()
+    # 1. Unir títulos que se cortaron en dos líneas
+    # Ejemplo: "## 1.Definición de \n ## amortización" -> "## 1.Definición de amortización"
+    text = re.sub(r'(#+ .*?)\n\s*#*\s*([a-zÁéíóúñ])', r'\1 \2', text)
 
-def normalize_markdown(md_text: str) -> str:
-    try:
-        md_text = pypandoc.convert_text(
-            md_text, "gfm", format="markdown", extra_args=["--wrap=none"]
-        )
-    except Exception as e:
-        logger.warning(f"Pandoc falló en normalización: {e}")
+    # 2. Eliminar '#' huérfanos que no tienen texto al lado
+    text = re.sub(r'(?m)^\s*#\s*$', '', text)
     
-    return md_text.replace("\r\n", "\n").replace("\n\n\n", "\n\n")
-
-def fix_spaced_words(text: str) -> str:
-    """Une letras separadas: 'A n á l i s i s' -> 'Análisis'."""
-    return re.sub(
-        r'\b[a-zA-ZÁÉÍÓÚÑñ](?:\s[a-zA-ZÁÉÍÓÚÑñ]){2,}\b', 
-        lambda m: m.group(0).replace(" ", ""), 
-        text
+    # 3. Formatear fórmulas financieras complejas (LaTeX Estándar)
+    # Detecta la estructura de anualidades: P = R [ (1 - (1+i)^-n) / i ]
+    text = re.sub(
+        r'P\s*=\s*R\s*1\s*−\s*\(1\s*\+\s*i\)\s*−\s*n\s*i', 
+        r'$$P = R \\left[ \\frac{1 - (1 + i)^{-n}}{i} \\right]$$', 
+        text, flags=re.IGNORECASE
     )
 
-def improve_readability(text: str) -> str:
-    # Elimina espacios en palabras en mayúsculas
-    text = re.sub(r'\b(?:[A-ZÁÉÍÓÚÑ]\s){2,}[A-ZÁÉÍÓÚÑ]\b', lambda m: m.group(0).replace(" ", ""), text)
-    # Corrige puntuación sin espacio
-    text = re.sub(r"\.([A-ZÁÉÍÓÚÑ])", r". \1", text)
-    # Normaliza viñetas y espacios múltiples
-    text = text.replace("◦", "- ")
-    text = re.sub(r"[ \t]{2,}", " ", text)
-    text = re.sub(r"\n{3,}", "\n\n", text)
-    return text
+    # 4. Formatear la relación de amortización
+    text = re.sub(
+        r'ABONO\s*=\s*INTERÉS\s*\+\s*AMORTIZACIÓN', 
+        r'$$ABONO = INTERÉS + AMORTIZACIÓN$$', 
+        text, flags=re.IGNORECASE
+    )
 
-def remove_pdf_artifacts(text: str) -> str:
-    # Reemplaza ligaduras comunes
-    ligatures = {"ﬁ": "fi", "ﬂ": "fl", "ﬀ": "ff", "ﬃ": "ffi", "ﬄ": "ffl"}
-    for search, replace in ligatures.items():
-        text = text.replace(search, replace)
-    # Elimina números de página repetidos o fechas (patrones simples)
-    text = re.sub(r'\b(\d+)\s+\1\s+(\d+)\b', r'\2', text)
-    return text
+    # 5. Normalizar espacios y saltos de línea excesivos
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    text = re.sub(r' +', ' ', text)
+    
+    return text.strip()

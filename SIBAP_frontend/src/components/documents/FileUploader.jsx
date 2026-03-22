@@ -4,7 +4,7 @@ import { Upload, FileText, X, AlertCircle } from 'lucide-react';
 const FileUploader = ({
     onFileSelect,
     onUpload,
-    acceptedFormats = ['.pdf', '.docx', '.txt'],
+    acceptedFormats = ['.pdf', '.docx', '.pptx', '.txt'],
     maxSizeMB = 10
 }) => {
     const [selectedFile, setSelectedFile] = useState(null);

@@ -6,7 +6,6 @@ logger = logging.getLogger(__name__)
 
 def extract_docx(temp_path: str) -> str:
     try:
-        # Prioridad Pandoc
         text = pypandoc.convert_file(temp_path, "md", extra_args=["--wrap=none"])
         return text
     except Exception as e:

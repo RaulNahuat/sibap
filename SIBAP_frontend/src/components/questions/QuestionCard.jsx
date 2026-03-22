@@ -3,8 +3,11 @@ import {
     CheckCircle,
     AlertCircle,
     Edit3,
-    Trash2,
+    Plus,
+    MessageSquare,
+    Info,
     RefreshCw,
+    Trash2,
 } from 'lucide-react';
 
 export default function QuestionCard({
@@ -129,36 +132,73 @@ export default function QuestionCard({
                     {question.answers.map((answer) => {
                         const isCorrect = answer.id === question.correctAnswerId;
                         return (
-                            <div
-                                key={answer.id}
-                                className={`flex items-center gap-3 p-3 rounded-md border transition-all ${isCorrect
-                                    ? 'bg-green-50 border-green-200'
-                                    : 'bg-[#f8fafc] border-[#e2e8f0]'
-                                    }`}
-                            >
+                            <div key={answer.id} className="space-y-1">
                                 <div
-                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isCorrect
-                                        ? 'border-green-600 bg-green-600'
-                                        : 'border-[#cbd5e1]'
+                                    className={`flex items-center gap-3 p-3 rounded-md border transition-all ${isCorrect
+                                        ? 'bg-green-50 border-green-200'
+                                        : 'bg-[#f8fafc] border-[#e2e8f0]'
                                         }`}
                                 >
-                                    {isCorrect && (
-                                        <div className="w-2 h-2 rounded-full bg-white"></div>
-                                    )}
+                                    <div
+                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isCorrect
+                                            ? 'border-green-600 bg-green-600'
+                                            : 'border-[#cbd5e1]'
+                                            }`}
+                                    >
+                                        {isCorrect && (
+                                            <div className="w-2 h-2 rounded-full bg-white"></div>
+                                        )}
+                                    </div>
+                                    <span
+                                        className={`text-sm ${isCorrect
+                                            ? 'text-green-900 font-medium'
+                                            : 'text-[#475569]'
+                                            }`}
+                                    >
+                                        {answer.text}
+                                    </span>
                                 </div>
-                                <span
-                                    className={`text-sm ${isCorrect
-                                        ? 'text-green-900 font-medium'
-                                        : 'text-[#475569]'
-                                        }`}
-                                >
-                                    {answer.text}
-                                </span>
+                                {answer.feedback && (
+                                    <div className="ml-8 px-3 py-1.5 bg-blue-50/50 border-l-2 border-blue-200 rounded-r-md">
+                                        <p className="text-[11px] text-[#1a5276] italic">
+                                            <span className="font-bold uppercase tracking-tighter mr-1">Nota:</span>
+                                            {answer.feedback}
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         );
                     })}
                 </div>
             </div>
+
+            {/* General Feedback */}
+            {(question.feedback_correct || question.feedback_incorrect) && (
+                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {question.feedback_correct && (
+                        <div className="bg-green-50/30 border border-green-100 rounded-lg p-3">
+                            <h4 className="flex items-center gap-1.5 text-[10px] font-bold text-green-700 uppercase tracking-wider mb-1.5">
+                                <MessageSquare className="w-3 h-3" />
+                                Feedback Correcto
+                            </h4>
+                            <p className="text-xs text-green-800 leading-relaxed italic">
+                                {question.feedback_correct}
+                            </p>
+                        </div>
+                    )}
+                    {question.feedback_incorrect && (
+                        <div className="bg-red-50/30 border border-red-100 rounded-lg p-3">
+                            <h4 className="flex items-center gap-1.5 text-[10px] font-bold text-red-700 uppercase tracking-wider mb-1.5">
+                                <MessageSquare className="w-3 h-3" />
+                                Feedback Incorrecto
+                            </h4>
+                            <p className="text-xs text-red-800 leading-relaxed italic">
+                                {question.feedback_incorrect}
+                            </p>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Validate Button */}
             {question.validationStatus !== 'validated' && (

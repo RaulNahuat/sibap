@@ -1,6 +1,3 @@
-"""
-Servicio para gestión de recuperación de contraseña.
-"""
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from typing import Optional
@@ -12,20 +9,6 @@ from app.services.email_service import send_password_reset_email
 
 
 def request_password_reset(db: Session, email: str) -> bool:
-    """
-    Solicita un reset de contraseña para el usuario.
-    Genera un token y envía un email con el enlace de recuperación.
-    
-    Por seguridad, siempre retorna True incluso si el email no existe,
-    para no revelar qué emails están registrados en el sistema.
-    
-    Args:
-        db: Sesión de base de datos
-        email: Email del usuario
-        
-    Returns:
-        bool: Siempre True por seguridad
-    """
     user = db.query(Usuario).filter(Usuario.email == email).first()
     
     if not user:
@@ -46,17 +29,7 @@ def request_password_reset(db: Session, email: str) -> bool:
 
 
 def verify_password_reset_token(db: Session, token: str) -> Optional[str]:
-    """
-    Verifica si un token de reset es válido.
-    
-    Args:
-        db: Sesión de base de datos
-        token: Token de reset a verificar
-        
-    Returns:
-        str: Email del usuario si el token es válido
-        None: Si el token es inválido o ha expirado
-    """
+
     email = verify_reset_token(token)
     
     if not email:
@@ -87,18 +60,7 @@ def verify_password_reset_token(db: Session, token: str) -> Optional[str]:
 
 
 def complete_password_reset(db: Session, token: str, new_password: str) -> bool:
-    """
-    Completa el proceso de reset de contraseña.
-    Actualiza la contraseña del usuario y limpia el token.
     
-    Args:
-        db: Sesión de base de datos
-        token: Token de reset
-        new_password: Nueva contraseña
-        
-    Returns:
-        bool: True si el reset fue exitoso, False en caso contrario
-    """
     email = verify_password_reset_token(db, token)
     
     if not email:

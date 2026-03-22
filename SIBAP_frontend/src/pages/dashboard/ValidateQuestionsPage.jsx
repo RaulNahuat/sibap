@@ -66,6 +66,26 @@ export default function ValidateQuestionsPage() {
 
                         if (questions.length === 0) {
                             setQuestions(mappedQuestions);
+                        } else {
+                            // Si ya hay preguntas en estado (ej. de localStorage), 
+                            // actualizar solo los campos de feedback que vienen del servidor
+                            const mergedQuestions = questions.map(q => {
+                                const serverQ = mappedQuestions.find(sq => sq.id === q.id);
+                                if (!serverQ) return q;
+                                return {
+                                    ...q,
+                                    feedback_correct: q.feedback_correct || serverQ.feedback_correct,
+                                    feedback_incorrect: q.feedback_incorrect || serverQ.feedback_incorrect,
+                                    answers: q.answers.map(ans => {
+                                        const serverAns = serverQ.answers.find(sa => sa.id === ans.id);
+                                        return {
+                                            ...ans,
+                                            feedback: ans.feedback || serverAns?.feedback
+                                        };
+                                    })
+                                };
+                            });
+                            setQuestions(mergedQuestions);
                         }
                     }
                 } catch (error) {
@@ -102,6 +122,8 @@ export default function ValidateQuestionsPage() {
                 name: question.name,
                 validationStatus: 'validated',
                 questionText: question.questionText,
+                feedback_correct: question.feedback_correct,
+                feedback_incorrect: question.feedback_incorrect,
                 answers: question.answers
             }]);
         } catch (error) {
@@ -114,11 +136,27 @@ export default function ValidateQuestionsPage() {
         setEditingQuestion(question);
     };
 
-    const handleSaveEdit = (updatedQuestion) => {
+    const handleSaveEdit = async (updatedQuestion) => {
         setQuestions(
             questions.map((q) => (q.id === updatedQuestion.id ? updatedQuestion : q))
         );
         setEditingQuestion(null);
+
+        // Auto-guardar en el backend de inmediato
+        try {
+            await updateBank([{
+                id: updatedQuestion.id,
+                name: updatedQuestion.name,
+                validationStatus: updatedQuestion.validationStatus,
+                questionText: updatedQuestion.questionText,
+                feedback_correct: updatedQuestion.feedback_correct,
+                feedback_incorrect: updatedQuestion.feedback_incorrect,
+                answers: updatedQuestion.answers
+            }]);
+        } catch (error) {
+            console.error('Error al auto-guardar edición:', error);
+            toast.error('No se pudo auto-guardar el cambio en el servidor.');
+        }
     };
 
     const handleDelete = (question) => {

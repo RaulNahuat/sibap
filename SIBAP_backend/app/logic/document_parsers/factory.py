@@ -1,5 +1,6 @@
 from .pdf_engine import extract_pdf_with_layout
 from .docx_engine import extract_docx
+from .pptx_engine import extract_pptx
 
 def get_text_from_file(extension: str, temp_path: str, content: bytes = None) -> str:
     if extension == ".pdf":
@@ -7,6 +8,9 @@ def get_text_from_file(extension: str, temp_path: str, content: bytes = None) ->
     
     elif extension == ".docx":
         return extract_docx(temp_path)
+    
+    elif extension == ".pptx":
+        return extract_pptx(temp_path)
     
     elif extension == ".txt":
         try:

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import Modal from '../ui/Modal';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Info, CheckCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 const DEFAULT_ANSWERS = () => [
@@ -74,7 +74,19 @@ export default function EditQuestionModal({
             toast.error('Debe seleccionar una respuesta correcta');
             return;
         }
-        onSave({ ...question, ...editedQuestion });
+
+        // Sincronizar el campo is_correct en cada respuesta antes de salvar
+        const finalAnswers = editedQuestion.answers.map((ans) => ({
+            ...ans,
+            is_correct: ans.id === editedQuestion.correctAnswerId,
+            isCorrect: ans.id === editedQuestion.correctAnswerId, // Keep for legacy
+        }));
+
+        onSave({ 
+            ...question, 
+            ...editedQuestion, 
+            answers: finalAnswers 
+        });
         onClose();
     };
 
@@ -85,12 +97,12 @@ export default function EditQuestionModal({
             title={isCreateMode ? 'Nueva Pregunta' : 'Editar Pregunta'}
             maxWidth="max-w-3xl"
         >
-            <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Question Name */}
-                    <div className="md:col-span-1">
-                        <label className="block text-xs font-bold text-[#64748b] uppercase tracking-wider mb-2">
-                            ID Moodle (Nombre)
+            <div className="space-y-6">
+                {/* Header Information */}
+                <div className="space-y-4">
+                    <div>
+                        <label className="block text-[10px] font-bold text-[#64748b] uppercase tracking-widest mb-1.5 ml-1">
+                            ID Moodle
                         </label>
                         <input
                             type="text"
@@ -101,17 +113,13 @@ export default function EditQuestionModal({
                                     name: e.target.value,
                                 })
                             }
-                            className="w-full px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent transition-all"
-                            placeholder="ej: Geometria_P1"
+                            className="w-full md:w-1/3 px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276]/10 focus:border-[#1a5276] transition-all"
+                            placeholder="Geometria_P1"
                         />
-                        <p className="mt-1.5 text-[10px] text-[#94a3b8] italic">
-                            Nombre único para identificar la pregunta en el banco.
-                        </p>
                     </div>
 
-                    {/* Question Text */}
-                    <div className="md:col-span-2">
-                        <label className="block text-xs font-bold text-[#64748b] uppercase tracking-wider mb-2">
+                    <div>
+                        <label className="block text-[10px] font-bold text-[#64748b] uppercase tracking-widest mb-1.5 ml-1">
                             Enunciado de la Pregunta
                         </label>
                         <textarea
@@ -123,72 +131,65 @@ export default function EditQuestionModal({
                                 })
                             }
                             rows={3}
-                            className="w-full px-4 py-2 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent resize-none transition-all leading-relaxed"
+                            className="w-full px-4 py-3 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276]/10 focus:border-[#1a5276] resize-none transition-all leading-relaxed font-medium text-[#102129]"
                             placeholder="Escribe la pregunta aquí..."
                         />
                     </div>
                 </div>
 
                 {/* General Feedback Section */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-[#f8fafc] p-3 rounded-lg border border-[#e2e8f0]">
-                    <div>
-                        <label className="block text-[10px] font-bold text-green-600 uppercase tracking-wider mb-1.5">
-                            Retroalimentación si es Correcta
-                        </label>
-                        <textarea
-                            value={editedQuestion.feedback_correct}
-                            onChange={(e) =>
-                                setEditedQuestion({
-                                    ...editedQuestion,
-                                    feedback_correct: e.target.value,
-                                })
-                            }
-                            rows={2}
-                            className="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-green-500 transition-all resize-none"
-                            placeholder="Mensaje para cuando acierten..."
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-bold text-red-600 uppercase tracking-wider mb-1.5">
-                            Retroalimentación si es Incorrecta
-                        </label>
-                        <textarea
-                            value={editedQuestion.feedback_incorrect}
-                            onChange={(e) =>
-                                setEditedQuestion({
-                                    ...editedQuestion,
-                                    feedback_incorrect: e.target.value,
-                                })
-                            }
-                            rows={2}
-                            className="w-full px-3 py-2 bg-white border border-[#e2e8f0] rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-red-500 transition-all resize-none"
-                            placeholder="Mensaje para cuando fallen..."
-                        />
+                <div className="space-y-3">
+                    <h3 className="text-xs font-bold text-[#64748b] uppercase tracking-widest ml-1">Retroalimentación General</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-green-600 uppercase tracking-widest ml-1">Correcta</label>
+                            <textarea
+                                value={editedQuestion.feedback_correct}
+                                onChange={(e) =>
+                                    setEditedQuestion({
+                                        ...editedQuestion,
+                                        feedback_correct: e.target.value,
+                                    })
+                                }
+                                rows={3}
+                                className="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-green-500/10 focus:border-green-500 transition-all resize-none shadow-sm"
+                                placeholder="Feedback para acierto..."
+                            />
+                        </div>
+                        <div className="space-y-1.5">
+                            <label className="text-[10px] font-bold text-red-600 uppercase tracking-widest ml-1">Incorrecta</label>
+                            <textarea
+                                value={editedQuestion.feedback_incorrect}
+                                onChange={(e) =>
+                                    setEditedQuestion({
+                                        ...editedQuestion,
+                                        feedback_incorrect: e.target.value,
+                                    })
+                                }
+                                rows={3}
+                                className="w-full px-4 py-3 bg-white border border-[#e2e8f0] rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-red-500/10 focus:border-red-500 transition-all resize-none shadow-sm"
+                                placeholder="Feedback para error..."
+                            />
+                        </div>
                     </div>
                 </div>
 
-                <div className="h-px bg-[#e2e8f0] w-full" />
-
-                {/* Answers */}
-                <div>
-                    <div className="flex items-center justify-between mb-4">
-                        <label className="block text-xs font-bold text-[#64748b] uppercase tracking-wider">
-                            Opciones de Respuesta
-                        </label>
-                        <span className="text-[11px] text-[#94a3b8]">
-                            Selecciona el círculo para la respuesta correcta
-                        </span>
+                {/* Answers Section */}
+                <div className="space-y-4 pt-2">
+                    <div className="flex items-center justify-between px-1">
+                        <h3 className="text-xs font-bold text-[#64748b] uppercase tracking-widest">Opciones de Respuesta</h3>
+                        <span className="text-[10px] font-medium text-[#94a3b8] italic">Selecciona el círculo para la correcta</span>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         {editedQuestion.answers.map((answer, index) => {
                             const isCorrect = editedQuestion.correctAnswerId === answer.id;
                             return (
                                 <div
                                     key={answer.id}
-                                    className={`relative group p-3 rounded-xl border-2 transition-all ${isCorrect
-                                        ? 'bg-green-50/50 border-green-200'
-                                        : 'bg-white border-[#f1f5f9] hover:border-[#e2e8f0]'
+                                    className={`relative p-4 rounded-xl border transition-all ${isCorrect
+                                        ? 'bg-green-50/30 border-green-200 ring-1 ring-green-100'
+                                        : 'bg-white border-[#f1f5f9]'
                                         }`}
                                 >
                                     <div className="flex items-start gap-4">
@@ -203,35 +204,36 @@ export default function EditQuestionModal({
                                                         correctAnswerId: answer.id,
                                                     })
                                                 }
-                                                className="w-5 h-5 text-[#1a5276] focus:ring-[#1a5276] border-[#cbd5e1] transition-all cursor-pointer"
+                                                className="w-5 h-5 text-[#1a5276] focus:ring-[#1a5276] border-[#cbd5e1] cursor-pointer"
                                             />
                                         </div>
 
-                                        <div className="flex-1 space-y-2">
-                                            <div className="flex items-center gap-2">
+                                        <div className="flex-1 space-y-3">
+                                            <div className="flex items-center justify-between">
                                                 <span className="text-[9px] font-bold text-[#94a3b8] uppercase tracking-wider">Opción {index + 1}</span>
-                                                {isCorrect && <span className="text-[9px] font-bold text-green-600 uppercase">Correcta</span>}
+                                                {isCorrect && <span className="text-[9px] font-black text-green-600 uppercase tracking-tighter bg-green-100 px-2 py-0.5 rounded">Correcta</span>}
                                             </div>
 
                                             <input
                                                 type="text"
                                                 value={answer.text}
                                                 onChange={(e) => handleAnswerChange(answer.id, 'text', e.target.value)}
-                                                className={`w-full px-4 py-1.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] transition-all ${isCorrect ? 'bg-white border-green-200' : 'bg-[#fcfdfe] border-[#e2e8f0]'
-                                                    }`}
-                                                placeholder={`Contenido de la respuesta...`}
+                                                className={`w-full px-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#1a5276] transition-all ${
+                                                    isCorrect ? 'bg-white border-green-300' : 'bg-[#fcfdfe] border-[#e2e8f0]'
+                                                }`}
+                                                placeholder={`Texto de la respuesta...`}
                                             />
 
                                             <div className="space-y-1">
-                                                <label className="block text-[10px] font-bold text-[#94a3b8] uppercase tracking-tighter">
-                                                    Retroalimentación (Moodle)
+                                                <label className="block text-[9px] font-bold text-[#94a3b8] uppercase tracking-tighter pl-1">
+                                                    Retroalimentación específica
                                                 </label>
                                                 <textarea
                                                     value={answer.feedback}
                                                     onChange={(e) => handleAnswerChange(answer.id, 'feedback', e.target.value)}
-                                                    rows={2}
-                                                    className="w-full px-3 py-2 bg-[#f8fafc] border border-[#e2e8f0] border-dashed rounded-lg text-xs text-[#64748b] italic focus:outline-none focus:ring-1 focus:ring-[#1a5276] transition-all resize-none"
-                                                    placeholder="Explica por qué esta respuesta es correcta o incorrecta..."
+                                                    rows={1}
+                                                    className="w-full px-3 py-1.5 bg-[#f8fafc]/50 border border-[#e2e8f0] border-dashed rounded-lg text-[11px] text-[#64748b] italic focus:outline-none focus:bg-white focus:border-[#1a5276] transition-all resize-none"
+                                                    placeholder="Por qué es correcta/incorrecta..."
                                                 />
                                             </div>
                                         </div>
@@ -239,7 +241,7 @@ export default function EditQuestionModal({
                                         {editedQuestion.answers.length > 2 && (
                                             <button
                                                 onClick={() => handleRemoveAnswer(answer.id)}
-                                                className="p-1.5 text-[#94a3b8] hover:text-red-500 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                className="p-1.5 text-[#cbd5e1] hover:text-red-500 transition-all"
                                                 title="Eliminar opción"
                                             >
                                                 <X className="w-4 h-4" />
@@ -249,40 +251,33 @@ export default function EditQuestionModal({
                                 </div>
                             );
                         })}
+
+                        {/* Add Answer Button */}
+                        {editedQuestion.answers.length < 6 && (
+                            <button
+                                onClick={handleAddAnswer}
+                                className="w-full flex items-center justify-center gap-2 p-3 border-2 border-dashed border-[#e2e8f0] rounded-xl text-[#64748b] hover:border-[#1a5276] hover:text-[#1a5276] hover:bg-[#f8fafc] transition-all text-xs font-bold uppercase tracking-widest"
+                            >
+                                <Plus className="w-4 h-4" />
+                                Agregar Opción
+                            </button>
+                        )}
                     </div>
-
-                    {/* Add Answer Button */}
-                    {editedQuestion.answers.length < 6 && (
-                        <button
-                            onClick={handleAddAnswer}
-                            className="mt-3 flex items-center gap-2 text-sm font-medium text-[#1a5276] hover:text-[#154360]"
-                        >
-                            <Plus className="w-4 h-4" />
-                            Agregar respuesta
-                        </button>
-                    )}
-                </div>
-
-                {/* Hint */}
-                <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-md p-3">
-                    <p className="text-xs text-[#64748b]">
-                        💡 Selecciona el círculo junto a la respuesta correcta
-                    </p>
                 </div>
 
                 {/* Actions */}
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex justify-end gap-3 pt-4 border-t border-[#e2e8f0]">
                     <button
                         onClick={onClose}
-                        className="px-5 py-2.5 rounded-md border border-[#e2e8f0] text-sm font-medium text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#102129] transition-all"
+                        className="px-6 py-2.5 rounded-xl border border-[#e2e8f0] text-sm font-semibold text-[#64748b] hover:bg-[#f8fafc] transition-all"
                     >
-                        Cancelar
+                        Descartar
                     </button>
                     <button
                         onClick={handleSave}
-                        className="bg-[#1a5276] text-white px-5 py-2.5 rounded-md font-semibold text-sm hover:bg-[#154360] transition-all shadow-sm hover:shadow"
+                        className="bg-[#1a5276] text-white px-8 py-2.5 rounded-xl font-bold text-sm hover:bg-[#154360] transition-all shadow-md active:scale-95"
                     >
-                        {isCreateMode ? 'Agregar Pregunta' : 'Guardar Cambios'}
+                        {isCreateMode ? 'Crear Pregunta' : 'Guardar y Cerrar'}
                     </button>
                 </div>
             </div>

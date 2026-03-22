@@ -46,6 +46,7 @@ export default function NewBankPage() {
         wrongOptionCount: 3,
         plausibleDistractors: false,
         avoidAmbiguity: true,
+        customInstructions: '',
         externalReferences: '',
         aiModel: 'gemini-flash-latest',
     });
@@ -65,6 +66,7 @@ export default function NewBankPage() {
     const [isLoadingPrograms, setIsLoadingPrograms] = useState(false);
     const [isLoadingSemesters, setIsLoadingSemesters] = useState(false);
     const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
+    const [isManualMode, setIsManualMode] = useState(false);
 
     // Load programs on mount
     useEffect(() => {
@@ -147,6 +149,7 @@ export default function NewBankPage() {
                 wrong_option_count: formData.wrongOptionCount,
                 plausible_distractors: formData.plausibleDistractors,
                 avoid_ambiguity: formData.avoidAmbiguity,
+                custom_instructions: formData.customInstructions || null,
                 external_references: formData.externalReferences || null
             };
 
@@ -155,10 +158,13 @@ export default function NewBankPage() {
             const mappedQuestions = response.questions.map((q, idx) => ({
                 id: q.id,
                 questionText: q.question_text,
+                feedback_correct: q.feedback_correct,
+                feedback_incorrect: q.feedback_incorrect,
                 answers: q.opciones.map(opt => ({
                     id: opt.id,
                     text: opt.option_text,
-                    isCorrect: opt.is_correct
+                    isCorrect: opt.is_correct,
+                    feedback: opt.feedback
                 })),
                 correctAnswerId: q.opciones.find(opt => opt.is_correct)?.id,
                 validationStatus: 'pending',
@@ -354,7 +360,7 @@ export default function NewBankPage() {
                                     multiple
                                     className="absolute inset-0 opacity-0 cursor-pointer"
                                     onChange={handleFileUpload}
-                                    accept=".pdf,.docx,.txt"
+                                    accept=".pdf,.docx,.pptx,.txt"
                                 />
                                 <div className="p-3 rounded-full bg-white shadow-sm mb-3 group-hover:scale-110 transition-transform text-[#1a5276]">
                                     {isUploading ? (
@@ -383,7 +389,7 @@ export default function NewBankPage() {
 
                             <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
                                 <p className="text-[10px] text-[#1a5276] leading-relaxed italic">
-                                    Suporta: PDF, DOCX, TXT (Máx. 10MB)
+                                    Suporta: PDF, DOCX, PPTX, TXT (Máx. 10MB)
                                 </p>
                             </div>
                         </div>
@@ -494,32 +500,53 @@ export default function NewBankPage() {
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Programa Educativo
                         </label>
-                        <select
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
-                            value={formData.program}
-                            onChange={(e) => {
-                                const progName = e.target.value;
-                                const prog = availablePrograms.find(p => p.nombre === progName);
-                                setFormData({ 
-                                    ...formData, 
-                                    program: progName, 
-                                    program_id: prog?.id || null,
-                                    subject: '',
-                                    subject_id: null
-                                });
-                                setSelectedSemesterNum('');
-                            }}
-                            disabled={isLoadingPrograms}
-                        >
-                            <option value="">{isLoadingPrograms ? 'Cargando programas...' : 'Seleccionar programa...'}</option>
-                            {availablePrograms.map(p => (
-                                <option key={p.id} value={p.nombre}>{p.nombre}</option>
-                            ))}
-                            {/* Opciones legacy o manuales si no están en el catálogo */}
-                            {!availablePrograms.find(p => p.nombre === 'Licenciatura en Ingeniería de Software') && (
-                                <option>Licenciatura en Ingeniería de Software</option>
+                        <div className="space-y-2">
+                            <select
+                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                                value={availablePrograms.some(p => p.nombre === formData.program) ? formData.program : (formData.program ? "manual" : "")}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (val === "manual") {
+                                        setFormData({ 
+                                            ...formData, 
+                                            program: '', 
+                                            program_id: null,
+                                            subject: '',
+                                            subject_id: null
+                                        });
+                                        setIsManualMode(true);
+                                    } else {
+                                        const prog = availablePrograms.find(p => p.nombre === val);
+                                        setFormData({ 
+                                            ...formData, 
+                                            program: val, 
+                                            program_id: prog?.id || null,
+                                            subject: '',
+                                            subject_id: null
+                                        });
+                                        setIsManualMode(val === IS_PROGRAM ? false : true);
+                                    }
+                                    setSelectedSemesterNum('');
+                                }}
+                                disabled={isLoadingPrograms}
+                            >
+                                <option value="">{isLoadingPrograms ? 'Cargando programas...' : 'Seleccionar programa...'}</option>
+                                {availablePrograms.map(p => (
+                                    <option key={p.id} value={p.nombre}>{p.nombre}</option>
+                                ))}
+                                <option value="manual">Otro (Especificar manualmente)</option>
+                            </select>
+
+                            {(isManualMode || (formData.program && !availablePrograms.some(p => p.nombre === formData.program) && formData.program !== IS_PROGRAM)) && (
+                                <input
+                                    type="text"
+                                    placeholder="Nombre del programa educativo"
+                                    value={formData.program}
+                                    onChange={(e) => setFormData({ ...formData, program: e.target.value, program_id: null })}
+                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent animate-in fade-in slide-in-from-top-1"
+                                />
                             )}
-                        </select>
+                        </div>
                     </div>
 
                     {/* Semestre */}
@@ -527,31 +554,41 @@ export default function NewBankPage() {
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Semestre / Grado
                         </label>
-                        {isISProgram ? (
-                            <select
-                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
-                                value={selectedSemesterNum}
-                                onChange={(e) => {
-                                    const sem = e.target.value;
-                                    setSelectedSemesterNum(sem);
-                                    setFormData(prev => ({ ...prev, semester: sem ? `${sem}° Semestre` : '' }));
-                                }}
-                                disabled={isLoadingSemesters}
-                            >
-                                <option value="">{isLoadingSemesters ? 'Cargando...' : 'Seleccionar semestre...'}</option>
-                                {availableSemesters.map(s => (
-                                    <option key={s} value={s}>{s}° Semestre</option>
-                                ))}
-                            </select>
-                        ) : (
-                            <input
-                                type="text"
-                                placeholder="Ej. 5to Semestre"
-                                value={formData.semester}
-                                onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
-                            />
-                        )}
+                        <div className="relative">
+                            {!isManualMode && isISProgram ? (
+                                <select
+                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                                    value={selectedSemesterNum}
+                                    onChange={(e) => {
+                                        const sem = e.target.value;
+                                        setSelectedSemesterNum(sem);
+                                        setFormData(prev => ({ ...prev, semester: sem ? `${sem}° Semestre` : '' }));
+                                    }}
+                                    disabled={isLoadingSemesters}
+                                >
+                                    <option value="">{isLoadingSemesters ? 'Cargando...' : 'Seleccionar semestre...'}</option>
+                                    {availableSemesters.map(s => (
+                                        <option key={s} value={s}>{s}° Semestre</option>
+                                    ))}
+                                </select>
+                            ) : (
+                                <input
+                                    type="text"
+                                    placeholder="Ej. 5to Semestre"
+                                    value={formData.semester}
+                                    onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                                />
+                            )}
+                            {isISProgram && (
+                                <button 
+                                    onClick={() => setIsManualMode(!isManualMode)}
+                                    className="absolute right-0 -top-6 text-[10px] font-bold text-[#1a5276] hover:underline uppercase tracking-tighter"
+                                >
+                                    {isManualMode ? 'Usar catálogo' : 'Ingreso manual'}
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     {/* Materia / Asignatura */}
@@ -559,7 +596,7 @@ export default function NewBankPage() {
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Materia / Asignatura
                         </label>
-                        {isISProgram ? (
+                        {!isManualMode && isISProgram ? (
                             <select
                                 className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
                                 value={formData.subject}
@@ -586,7 +623,7 @@ export default function NewBankPage() {
                                 type="text"
                                 placeholder="Ej. Historia Universal"
                                 value={formData.subject}
-                                onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                onChange={(e) => setFormData({ ...formData, subject: e.target.value, subject_id: null })}
                                 className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
                             />
                         )}
@@ -696,6 +733,22 @@ export default function NewBankPage() {
                                 Verificar y evitar ambigüedades en los enunciados
                             </span>
                         </label>
+                    </div>
+
+                    <div className="mt-6">
+                        <label className="block text-sm font-semibold text-[#102129] mb-3 flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4 text-[#1a5276]" />
+                            Instrucciones Especiales (Opcional)
+                        </label>
+                        <textarea
+                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-lg text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent bg-[#f8fafc] min-h-[100px] transition-all resize-y"
+                            placeholder="Ej: 'Usa un tono formal y técnico', 'Todas las preguntas deben incluir ejemplos de la vida real', 'Enfócate en aspectos legales'..."
+                            value={formData.customInstructions}
+                            onChange={(e) => setFormData({ ...formData, customInstructions: e.target.value })}
+                        />
+                        <p className="mt-2 text-[11px] text-[#64748b] leading-tight italic">
+                            Estas reglas se sumarán a los estándares pedagógicos del sistema.
+                        </p>
                     </div>
                 </div>
             </div>

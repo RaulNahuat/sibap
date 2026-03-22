@@ -12,14 +12,12 @@ def export_to_gift(db: Session, config_id: int) -> str:
     
     gift_lines = []
     
-    # Categoría basada en Materia/Tema
     sub_name = config.materia_obj.nombre if config.materia_obj else "Sin Materia"
     top_name = config.tema_obj.nombre if config.tema_obj else "Sin Tema"
     category = f"{sub_name} / {top_name}"
     gift_lines.append(f"$CATEGORY: $course$/{category}\n")
 
     for reactivo in config.reactivos:
-        # Título
         name = reactivo.name or f"Pregunta_{reactivo.id}"
         question_text = reactivo.question_text
         
@@ -34,7 +32,6 @@ def export_to_gift(db: Session, config_id: int) -> str:
         elif config.question_type == QuestionType.TF:
             correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
             val = "T" if correct_opt and "verdadero" in correct_opt.option_text.lower() else "F"
-            # Asumimos que si no es Verdadero/Falso explícito, la lógica de T/F de Moodle aplica
             gift_str += val
             
         if reactivo.feedback_correct:

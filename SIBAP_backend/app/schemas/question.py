@@ -45,6 +45,7 @@ class QuestionGenerationRequest(BaseModel):
     model_name: Optional[str] = "gemini-2.0-flash"
     plausible_distractors: bool = False
     avoid_ambiguity: bool = True
+    custom_instructions: Optional[str] = None
     external_references: Optional[str] = None
 
 class QuestionUpdateRequest(BaseModel):

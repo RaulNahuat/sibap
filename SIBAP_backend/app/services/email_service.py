@@ -26,21 +26,6 @@ def send_email(
     html_content: str,
     text_content: Optional[str] = None
 ) -> bool:
-    """
-    Envía un correo electrónico.
-    
-    En modo desarrollo (EMAIL_CONSOLE_MODE=True), imprime el correo en consola.
-    En modo producción (EMAIL_CONSOLE_MODE=False), envía el correo vía SMTP.
-    
-    Args:
-        to_email: Dirección de correo del destinatario
-        subject: Asunto del correo
-        html_content: Contenido HTML del correo
-        text_content: Contenido de texto plano (opcional)
-        
-    Returns:
-        bool: True si el correo se envió exitosamente, False en caso contrario
-    """
     try:
         if EMAIL_CONSOLE_MODE:
             # Modo desarrollo: imprimir en consola
@@ -84,16 +69,6 @@ def send_email(
 
 
 def send_password_reset_email(email: str, reset_token: str) -> bool:
-    """
-    Envía un correo electrónico con el enlace para restablecer la contraseña.
-    
-    Args:
-        email: Dirección de correo del usuario
-        reset_token: Token de reset de contraseña
-        
-    Returns:
-        bool: True si el correo se envió exitosamente, False en caso contrario
-    """
     reset_url = f"{FRONTEND_URL}/reset-password?token={reset_token}"
     
     subject = "Recuperación de Contraseña - SIBAP"

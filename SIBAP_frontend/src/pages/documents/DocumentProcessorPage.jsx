@@ -173,6 +173,7 @@ const DocumentProcessorPage = () => {
         const colors = {
             'PDF': 'bg-red-100 text-red-700',
             'DOCX': 'bg-blue-100 text-blue-700',
+            'PPTX': 'bg-orange-100 text-orange-700',
             'TXT': 'bg-green-100 text-green-700'
         };
         return colors[type] || 'bg-gray-100 text-gray-700';
@@ -294,6 +295,7 @@ const DocumentProcessorPage = () => {
                                 <option value="all">Todos</option>
                                 <option value="PDF">PDF</option>
                                 <option value="DOCX">DOCX</option>
+                                <option value="PPTX">PowerPoint (PPTX)</option>
                                 <option value="TXT">TXT</option>
                             </select>
                             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#7b8a8a] pointer-events-none" />
@@ -369,7 +371,7 @@ const DocumentProcessorPage = () => {
                         <p className="text-sm text-[#7b8a8a]">
                             {searchTerm
                                 ? 'Intenta con otros términos de búsqueda'
-                                : 'Sube un PDF, DOCX o TXT de hasta 10 MB para comenzar'
+                                : 'Sube un PDF, DOCX, PPTX o TXT de hasta 10 MB para comenzar'
                             }
                         </p>
                     </div>
@@ -520,7 +522,7 @@ const DocumentProcessorPage = () => {
                         </div>
                         <FileUploader
                             onUpload={handleUpload}
-                            acceptedFormats={['.pdf', '.docx', '.txt']}
+                            acceptedFormats={['.pdf', '.docx', '.pptx', '.txt']}
                             maxSizeMB={10}
                         />
                     </div>

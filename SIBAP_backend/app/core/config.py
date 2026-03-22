@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     GOOGLE_AI_MODEL: str = "gemini"
 
     # Configuración de RAG
+    ENABLE_RAG: bool = True
     CHROMA_PERSIST_DIR: str = "./chroma_db"
     EMBEDDING_MODEL: str = "paraphrase-multilingual-mpnet-base-v2"
 
@@ -58,6 +59,7 @@ GOOGLE_API_KEY = settings.GOOGLE_API_KEY
 GOOGLE_AI_MODEL = settings.GOOGLE_AI_MODEL
 
 # Configuración de RAG
+ENABLE_RAG = settings.ENABLE_RAG
 CHROMA_PERSIST_DIR = settings.CHROMA_PERSIST_DIR
 EMBEDDING_MODEL = settings.EMBEDDING_MODEL
 

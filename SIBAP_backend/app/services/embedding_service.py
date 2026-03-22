@@ -1,52 +1,18 @@
-"""
-embedding_service.py
---------------------
-Genera embeddings vectoriales usando la API de Google (text-embedding-004).
-
-Ventajas sobre modelo local:
-  - Sin PyTorch (~2.5 GB ahorro en servidor)
-  - Embeddings de mayor calidad (3072 dims, reducible a 768)
-  - Reutiliza la google-genai ya instalada en el proyecto
-  - Costo: ~$0.00001 / chunk (prácticamente cero)
-
-Dimensión de salida: 768 (configurado via output_dimensionality para
-mantener compatibilidad con ChromaDB y eficiencia de búsqueda).
-"""
-
 import logging
 from typing import List
 
 logger = logging.getLogger(__name__)
 
-# Modelo de embeddings de Google
-_GOOGLE_EMBEDDING_MODEL = "models/text-embedding-004"
-
-# Dimensión de salida (text-embedding-004 soporta hasta 3072, usamos 768 para eficiencia)
-_OUTPUT_DIMENSIONALITY = 768
+_GOOGLE_EMBEDDING_MODEL = "models/gemini-embedding-001"
+_OUTPUT_DIMENSIONALITY = 3072
 
 
 def get_embeddings(
     texts: List[str],
-    model_name: str = _GOOGLE_EMBEDDING_MODEL,  # parámetro mantenido por compatibilidad
+    model_name: str = _GOOGLE_EMBEDDING_MODEL,
     batch_size: int = 32,
     show_progress: bool = False,
 ) -> List[List[float]]:
-    """
-    Genera embeddings para una lista de textos usando la API de Google.
-
-    Args:
-        texts:      Lista de strings a embeddear.
-        model_name: Ignorado (siempre usa text-embedding-004). Presente por compatibilidad.
-        batch_size: No aplicable — la API de Google maneja el batching internamente.
-        show_progress: No aplicable.
-
-    Returns:
-        Lista de vectores (list[float]) de 768 dimensiones, uno por texto.
-
-    Raises:
-        ImportError: Si google-genai no está instalado (no debería ocurrir).
-        Exception:   Si la API key no está configurada o hay error de red.
-    """
     if not texts:
         return []
 
@@ -94,21 +60,8 @@ def get_embeddings(
 
 def get_query_embedding(
     query: str,
-    model_name: str = _GOOGLE_EMBEDDING_MODEL,  # parámetro mantenido por compatibilidad
+    model_name: str = _GOOGLE_EMBEDDING_MODEL,
 ) -> List[float]:
-    """
-    Genera el embedding de una consulta usando task_type RETRIEVAL_QUERY.
-
-    Google diferencia entre embeddings de documentos (RETRIEVAL_DOCUMENT)
-    y de consultas (RETRIEVAL_QUERY) para mejor calidad de búsqueda.
-
-    Args:
-        query:      Texto de la consulta del usuario.
-        model_name: Ignorado. Presente por compatibilidad con vector_service.
-
-    Returns:
-        Vector de 768 dimensiones como list[float].
-    """
     try:
         from google import genai
         from google.genai import types

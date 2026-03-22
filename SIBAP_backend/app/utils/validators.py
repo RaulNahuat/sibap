@@ -53,7 +53,7 @@ def validate_name_length(name: str, field_name: str = "nombre") -> str:
 
 
 MAX_FILE_SIZE = 10 * 1024 * 1024
-ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".pptx"}
 
 def validate_file(filename: str, content: bytes) -> str:
     ext = Path(filename).suffix.lower()

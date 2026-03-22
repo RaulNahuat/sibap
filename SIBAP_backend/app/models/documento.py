@@ -9,6 +9,7 @@ class FileType(enum.Enum):
     PDF = "PDF"
     DOCX = "DOCX"
     TXT = "TXT"
+    PPTX = "PPTX"
 
 class ProcessingStatus(enum.Enum):
     PENDING = "PENDING"
