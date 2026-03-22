@@ -30,7 +30,15 @@ class DocumentRepository:
         self.db.refresh(documento)
         return documento
 
-    def update_status(self, document_id: int, status: ProcessingStatus, content_text: Optional[str] = None, error_message: Optional[str] = None) -> Optional[Documento]:
+    def update_status(
+        self, 
+        document_id: int, 
+        status: ProcessingStatus, 
+        content_text: Optional[str] = None, 
+        error_message: Optional[str] = None,
+        file_path: Optional[str] = None,
+        is_complex: Optional[bool] = None
+    ) -> Optional[Documento]:
         documento = self.get_by_id(document_id)
         if not documento:
             return None
@@ -40,6 +48,10 @@ class DocumentRepository:
             documento.content_text = content_text
         if error_message is not None:
             documento.error_message = error_message
+        if file_path is not None:
+            documento.file_path = file_path
+        if is_complex is not None:
+            documento.is_complex = is_complex
             
         self.db.commit()
         self.db.refresh(documento)

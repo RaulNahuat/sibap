@@ -1,9 +1,46 @@
 import html
+import re
 from sqlalchemy.orm import Session
 from app.models.reactivo import Reactivo
 from app.models.configuracion_generacion import ConfiguracionGeneracion, QuestionType
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+
+def format_moodle_text(text: str) -> str:
+    """
+    Formatea el texto para compatibilidad con Moodle, escapando CDATA, 
+    y convirtiendo ecuaciones LaTeX en línia de formato $P=R$ a formato \\( P=R \\).
+    Desescapa símbolos de la moneda '$' previamente protegidos.
+    """
+    if not text:
+        return ""
+    
+    # 1. Proteger signos de moneda escapados (\$195,000 -> ESCAPED_DOLLAR_SIGN195,000)
+    text = text.replace(r"\$", "ESCAPED_DOLLAR_SIGN")
+    
+    # 2. Transformar $...$ a \(...\) (Filtro MathJax de Moodle para bloque en línea)
+    text = re.sub(r'\$([^$]+)\$', r'\\(\1\\)', text)
+    
+    # 3. Restaurar los signos de dólar normales y sin escapar para impresión literal de dinero
+    text = text.replace("ESCAPED_DOLLAR_SIGN", "$")
+    
+    return text
+
+def escape_gift_text(text: str) -> str:
+    """
+    Escapa los caracteres de control exclusivos del formato GIFT.
+    Los caracteres ~, =, #, {, }, : deben ir precedidos por una barra invertida \\.
+    Moodle detectará que están escapados y los restaurará internamente a su valor original de LaTeX o texto.
+    """
+    if not text:
+        return ""
+    result = ""
+    for char in text:
+        if char in ['~', '=', '#', '{', '}', ':']:
+            result += '\\' + char
+        else:
+            result += char
+    return result
 
 def export_to_gift(db: Session, config_id: int) -> str:
     config = db.query(ConfiguracionGeneracion).filter(ConfiguracionGeneracion.id == config_id).first()
@@ -19,15 +56,22 @@ def export_to_gift(db: Session, config_id: int) -> str:
 
     for reactivo in config.reactivos:
         name = reactivo.name or f"Pregunta_{reactivo.id}"
-        question_text = reactivo.question_text
+        # Solo escapamos los caracteres de control Moodle en el contenido, no en los metadatos de formato
+        question_text = escape_gift_text(format_moodle_text(reactivo.question_text))
         
-        gift_str = f"::{name}:: {question_text} {{"
+        gift_str = f"::{name}:: [html]{question_text} {{"
         
         if config.question_type == QuestionType.MCQ:
             for opcion in reactivo.opciones:
                 prefix = "=" if opcion.is_correct else "~"
-                feedback = f"#{opcion.feedback}" if opcion.feedback else ""
-                gift_str += f"\n    {prefix}{opcion.option_text}{feedback}"
+                opt_text = escape_gift_text(format_moodle_text(opcion.option_text))
+                
+                feedback_str = ""
+                if opcion.feedback:
+                    feedback_text = escape_gift_text(format_moodle_text(opcion.feedback))
+                    feedback_str = f"#[html]{feedback_text}"
+                
+                gift_str += f"\n    {prefix}[html]{opt_text}{feedback_str}"
         
         elif config.question_type == QuestionType.TF:
             correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
@@ -35,9 +79,11 @@ def export_to_gift(db: Session, config_id: int) -> str:
             gift_str += val
             
         if reactivo.feedback_correct:
-            gift_str += f"\n    ####[correct] {reactivo.feedback_correct}"
+            fb_correct = escape_gift_text(format_moodle_text(reactivo.feedback_correct))
+            gift_str += f"\n    ####[html]{fb_correct}"
         if reactivo.feedback_incorrect:
-            gift_str += f"\n    ####[incorrect] {reactivo.feedback_incorrect}"
+            fb_incorrect = escape_gift_text(format_moodle_text(reactivo.feedback_incorrect))
+            gift_str += f"\n    ####[html]{fb_incorrect}"
             
         gift_str += "\n}\n"
         gift_lines.append(gift_str)
@@ -73,7 +119,7 @@ def export_to_xml(db: Session, config_id: int) -> str:
         # Texto de la pregunta
         qtext = ET.SubElement(q, "questiontext", format="html")
         text = ET.SubElement(qtext, "text")
-        text.text = f"<![CDATA[<p>{reactivo.question_text}</p>]]>"
+        text.text = f"<![CDATA[{format_moodle_text(reactivo.question_text)}]]>"
         
         # Opciones
         if config.question_type == QuestionType.MCQ:
@@ -85,36 +131,41 @@ def export_to_xml(db: Session, config_id: int) -> str:
                 score = "100" if opcion.is_correct else "0"
                 ans = ET.SubElement(q, "answer", fraction=score, format="html")
                 ans_text = ET.SubElement(ans, "text")
-                ans_text.text = opcion.option_text
+                ans_text.text = f"<![CDATA[{format_moodle_text(opcion.option_text)}]]>"
                 
                 if opcion.feedback:
                     fb = ET.SubElement(ans, "feedback", format="html")
                     fb_text = ET.SubElement(fb, "text")
-                    fb_text.text = opcion.feedback
+                    fb_text.text = f"<![CDATA[{format_moodle_text(opcion.feedback)}]]>"
 
         elif config.question_type == QuestionType.TF:
-            # Moodle XML para T/F requiere dos etiquetas <answer> específicas
-            for val, label, fraction in [("true", "Verdadero", "100"), ("false", "Falso", "0")]:
-                # Aquí necesitaríamos saber cuál es la correcta realmente. 
-                # Por simplicidad en este MVP, buscamos la opción marcada como correcta.
-                is_this_correct = False
-                correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
-                if correct_opt:
-                    if val == "true" and "verdadero" in correct_opt.option_text.lower(): is_this_correct = True
-                    if val == "false" and "falso" in correct_opt.option_text.lower(): is_this_correct = True
+            correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
+            is_true_correct = correct_opt and "verdadero" in correct_opt.option_text.lower()
+            
+            for val, label in [("true", "Verdadero"), ("false", "Falso")]:
+                fraction = "100" if (val == "true" and is_true_correct) or (val == "false" and not is_true_correct) else "0"
+                ans = ET.SubElement(q, "answer", fraction=fraction, format="moodle_auto_format")
+                ans_text = ET.SubElement(ans, "text")
+                ans_text.text = val
                 
-                # (Lógica simplificada: ajustamos la fracción basada en la opción correcta del reactivo)
-                # NOTA: En una implementación real, esto debe ser más robusto.
+                fb = ET.SubElement(ans, "feedback", format="html")
+                fb_text = ET.SubElement(fb, "text")
+                fb_text.text = f"<![CDATA[{label}]]>"
 
         # Feedback General (Correcto/Incorrecto)
         if reactivo.feedback_correct:
             fb_correct = ET.SubElement(q, "correctfeedback", format="html")
-            ET.SubElement(fb_correct, "text").text = reactivo.feedback_correct
+            ET.SubElement(fb_correct, "text").text = f"<![CDATA[{format_moodle_text(reactivo.feedback_correct)}]]>"
             
         if reactivo.feedback_incorrect:
             fb_incorrect = ET.SubElement(q, "incorrectfeedback", format="html")
-            ET.SubElement(fb_incorrect, "text").text = reactivo.feedback_incorrect
+            ET.SubElement(fb_incorrect, "text").text = f"<![CDATA[{format_moodle_text(reactivo.feedback_incorrect)}]]>"
 
-    xml_str = ET.tostring(quiz, encoding="utf-8")
-    reparsed = minidom.parseString(xml_str)
+    xml_str = ET.tostring(quiz, encoding="utf-8").decode("utf-8")
+    
+    def unescape_cdata(match):
+        return f"<![CDATA[{html.unescape(match.group(1))}]]>"
+        
+    xml_str = re.sub(r"&lt;!\[CDATA\[(.*?)\]\]&gt;", unescape_cdata, xml_str, flags=re.DOTALL)
+    reparsed = minidom.parseString(xml_str.encode("utf-8"))
     return reparsed.toprettyxml(indent="  ")

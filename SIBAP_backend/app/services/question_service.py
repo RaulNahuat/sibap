@@ -110,7 +110,8 @@ async def generate_questions(db: Session, request: QuestionGenerationRequest, us
         2. Equidad y sensibilidad: Eliminar cualquier sesgo o estereotipo.
         3. Calidad de las opciones: Distractores PLAUSIBLES pero INEQUÍVOCAMENTE INCORRECTAS.
         4. Validez de Contenido: Evaluar estrictamente el contenido proporcionado.
-        
+        5. Formato Matemático (CRÍTICO): Usa el símbolo de dólar `$` ÚNICAMENTE para aislar fórmulas matemáticas (ej: `$E=mc^2$`). Para expresar dinero, usa la palabra escrita (ej: 50,000 pesos) o escapa el símbolo (`\\$50,000`). NUNCA envuelvas oraciones enteras ni texto normal dentro de signos `$`.
+
         CONTENIDO DE REFERENCIA:
         {context}
         
@@ -211,6 +212,7 @@ async def regenerate_question(db: Session, question_id: int, user_id: int, model
     REQUISITOS:
     - El enunciado debe ser sustancialmente mejorado.
     - NO debe ser académicamente similar ni repetitiva respecto a las 'OTRAS PREGUNTAS'.
+    - Formato Matemático (CRÍTICO): Usa `$` SOLO para aislar fórmulas matemáticas (ej: `$E=mc^2$`). Para referirte a montos de dinero usa la palabra escrita o escápalo (`\\$50,000`). NUNCA encierres oraciones enteras dentro de signos `$`.
     
     DEVOLVER ÚNICAMENTE UN JSON CON ESTA ESTRUCTURA:
     {{

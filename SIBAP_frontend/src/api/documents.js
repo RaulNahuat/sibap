@@ -9,9 +9,10 @@ import apiClient from './client';
  * @param {File} file - Archivo a subir (PDF, DOCX, TXT)
  * @returns {Promise} Documento guardado con texto extraído
  */
-export const uploadDocument = async (file) => {
+export const uploadDocument = async (file, isComplex = false) => {
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('is_complex', isComplex);
 
     const response = await apiClient.post('/api/documents/extract-text', formData, {
         headers: {
@@ -49,5 +50,30 @@ export const getDocument = async (id) => {
  */
 export const deleteDocument = async (id) => {
     const response = await apiClient.delete(`/api/documents/${id}`);
+    return response.data;
+};
+
+/**
+ * Importa un archivo desde un enlace público de Google Drive
+ * @param {string} driveUrl - URL pública de Google Drive
+ * @returns {Promise} Documento registrado (se procesa en segundo plano)
+ */
+export const uploadFromDrive = async (driveUrl, isComplex = false) => {
+    const response = await apiClient.post('/api/documents/from-drive', {
+        drive_url: driveUrl,
+        is_complex: isComplex
+    });
+    return response.data;
+};
+
+/**
+ * Descarga el archivo físico original si está disponible
+ * @param {number} id - ID del documento
+ * @returns {Promise<Blob>} Blob del archivo
+ */
+export const downloadOriginalDocument = async (id) => {
+    const response = await apiClient.get(`/api/documents/${id}/download`, {
+        responseType: 'blob'
+    });
     return response.data;
 };

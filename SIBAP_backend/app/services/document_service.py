@@ -14,21 +14,33 @@ from app.repositories.document_repository import DocumentRepository
 logger = logging.getLogger(__name__)
 
 def upload_and_process_document(db: Session, user_id: int, filename: str, content: bytes) -> Documento:
-
+    # Esta función (usada síncronamente) la readaptamos para soportar is_complex también
     repo = DocumentRepository(db)
-
     extension = validate_file(filename, content)
 
+    # Solo para procesamiento síncrono rápido
     with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_file:
         temp_file.write(content)
         temp_path = temp_file.name
 
     try:
-        raw_text = get_text_from_file(extension, temp_path, content)
+        raw_text, is_complex = get_text_from_file(extension, temp_path, content)
         clean_text = clean_extracted_text(raw_text)
 
         if not clean_text.strip():
             raise ValueError("No se pudo extraer contenido legible del documento.")
+
+        # Si es complejo y estamos aquí, deberíamos guardarlo físicamente,
+        # pero la arquitectura síncrona vieja está deprecada. Por seguridad:
+        final_path = None
+        if is_complex:
+            storage_dir = os.path.join(os.getcwd(), "app", "storage", "documents")
+            os.makedirs(storage_dir, exist_ok=True)
+            import uuid
+            unique_filename = f"{uuid.uuid4().hex}{extension}"
+            final_path = os.path.join(storage_dir, unique_filename)
+            with open(final_path, "wb") as f:
+                f.write(content)
 
         documento = create_document(
             db=db,
@@ -36,9 +48,10 @@ def upload_and_process_document(db: Session, user_id: int, filename: str, conten
             filename=filename,
             file_type=extension,
             content_text=clean_text,
+            is_complex=is_complex,
+            file_path=final_path,
             status=ProcessingStatus.COMPLETED
         )
-        
         return documento
 
     except Exception as e:
@@ -56,6 +69,7 @@ def create_document(
     file_type: str, 
     content_text: Optional[str] = None, 
     file_path: Optional[str] = None,
+    is_complex: bool = False,
     status: ProcessingStatus = ProcessingStatus.PENDING
 ) -> Documento:
 
@@ -73,6 +87,7 @@ def create_document(
         filename=filename,
         file_type=file_type_map.get(file_type.lower(), FileType.TXT),
         file_path=file_path,
+        is_complex=is_complex,
         content_text=content_text,
         status=status
     )
@@ -105,10 +120,12 @@ def update_document_status(
     document_id: int, 
     status: ProcessingStatus, 
     content_text: Optional[str] = None, 
-    error_message: Optional[str] = None
+    error_message: Optional[str] = None,
+    file_path: Optional[str] = None,
+    is_complex: Optional[bool] = None
 ) -> Optional[Documento]:
     repo = DocumentRepository(db)
-    documento = repo.update_status(document_id, status, content_text, error_message)
+    documento = repo.update_status(document_id, status, content_text, error_message, file_path, is_complex)
     
     if documento and status == ProcessingStatus.COMPLETED and documento.content_text:
         _index_document_rag(document_id, documento.content_text)

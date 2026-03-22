@@ -8,6 +8,7 @@ const FileUploader = ({
     maxSizeMB = 10
 }) => {
     const [selectedFile, setSelectedFile] = useState(null);
+    const [isComplex, setIsComplex] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [error, setError] = useState('');
     const [isUploading, setIsUploading] = useState(false);
@@ -85,7 +86,7 @@ const FileUploader = ({
         setError('');
 
         try {
-            await onUpload(selectedFile);
+            await onUpload(selectedFile, isComplex);
         } catch (err) {
             setError(err.message || 'Error al subir el archivo');
         } finally {
@@ -95,6 +96,7 @@ const FileUploader = ({
 
     const handleClear = () => {
         setSelectedFile(null);
+        setIsComplex(false);
         setError('');
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -177,6 +179,27 @@ const FileUploader = ({
                 <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-2">
                     <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
                     <p className="text-sm text-red-700">{error}</p>
+                </div>
+            )}
+
+            {/* Opciones adicionales */}
+            {selectedFile && !error && (
+                <div className="mt-4 flex items-start space-x-2 text-left">
+                    <div className="flex items-center h-5">
+                        <input
+                            id="complex-file"
+                            type="checkbox"
+                            checked={isComplex}
+                            onChange={(e) => setIsComplex(e.target.checked)}
+                            className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="complex-file" className="text-sm font-medium text-gray-900 cursor-pointer">
+                            Es un documento complejo
+                        </label>
+                        <p className="text-xs text-gray-500">Mantiene el archivo original para su análisis avanzado o si tiene mala lectura (ej. tablas sueltas)</p>
+                    </div>
                 </div>
             )}
 

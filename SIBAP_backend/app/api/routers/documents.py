@@ -1,10 +1,19 @@
-from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, BackgroundTasks, Query
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, BackgroundTasks, Query, Body, Form
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import math
+import os
+import tempfile
+import json
+import re
+from pydantic import BaseModel
+
+
 
 from app.services.document_service import upload_and_process_document
 from app.services import document_service
+from app.services.drive_manager import download_from_drive
 from app.schemas.document import (
     DocumentExtractionResponse,
     DocumentListResponse,
@@ -22,8 +31,6 @@ router = APIRouter(
 )
 
 
-import os
-import tempfile
 from app.utils.validators import validate_file
 from app.utils.text_cleaner import clean_extracted_text
 from app.logic.document_parsers.factory import get_text_from_file
@@ -32,7 +39,8 @@ def process_document_background(
     file_content: bytes,
     filename: str,
     document_id: int,
-    db: Session
+    db: Session,
+    user_is_complex: bool = False
 ):
     """Tarea en segundo plano para procesar el documento usando la nueva arquitectura."""
     try:
@@ -45,14 +53,14 @@ def process_document_background(
         # 1. Validación de extensión
         extension = validate_file(filename, file_content)
 
-        # 2. Gestión de archivo temporal
+        # 2. Gestión de archivo temporal base para la extracción inicial
         with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_file:
             temp_file.write(file_content)
             temp_path = temp_file.name
 
         try:
-            # 3. Extracción de contenido bruto
-            raw_text = get_text_from_file(extension, temp_path, file_content)
+            # 3. Extracción de contenido bruto (y flag is_complex)
+            raw_text, is_complex = get_text_from_file(extension, temp_path, file_content)
             
             # 4. Limpieza profunda del texto
             clean_text = clean_extracted_text(raw_text)
@@ -60,12 +68,26 @@ def process_document_background(
             if not clean_text.strip():
                 raise ValueError("No se pudo extraer contenido legible.")
 
+            # Gestionar almacenamiento final del físico
+            final_path = None
+            is_final_complex = user_is_complex or is_complex
+            if is_final_complex:
+                storage_dir = os.path.join(os.getcwd(), "app", "storage", "documents")
+                os.makedirs(storage_dir, exist_ok=True)
+                import uuid
+                unique_filename = f"{uuid.uuid4().hex}{extension}"
+                final_path = os.path.join(storage_dir, unique_filename)
+                with open(final_path, "wb") as f:
+                    f.write(file_content)
+
             # 5. Actualización final y disparo de RAG
             document_service.update_document_status(
                 db=db,
                 document_id=document_id,
                 status=ProcessingStatus.COMPLETED,
-                content_text=clean_text
+                content_text=clean_text,
+                is_complex=is_final_complex,
+                file_path=final_path
             )
             
         finally:
@@ -89,6 +111,7 @@ def process_document_background(
 async def extract_text(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
+    is_complex: bool = Form(False),
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -120,7 +143,8 @@ async def extract_text(
             content,
             filename,
             documento.id,
-            db
+            db,
+            is_complex
         )
         
         return DocumentExtractionResponse(
@@ -141,6 +165,69 @@ async def extract_text(
             detail=f"Error iniciando carga del documento: {str(e)}"
         )
 
+
+class DriveImportRequest(BaseModel):
+    drive_url: str
+    is_complex: bool = False
+
+
+@router.post(
+    "/from-drive",
+    response_model=DocumentExtractionResponse,
+    summary="Import a document from a public Google Drive URL"
+)
+async def import_from_drive(
+    background_tasks: BackgroundTasks,
+    body: DriveImportRequest,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Descarga un archivo público de Google Drive (sin credenciales) y lo
+    procesa igual que un upload local (extracción en segundo plano).
+    El archivo debe estar configurado como 'Cualquiera con el enlace'.
+    Máximo 10 MB. Soporta PDF, DOCX y cualquier binario descargable.
+    """
+    # ── Descargar el archivo vía HTTP directo ──────────────────────────────
+    file_bytes = download_from_drive(body.drive_url)
+
+    # Nombre sintético basado en el file_id de la URL
+    _id_match = re.search(r"/file/d/([a-zA-Z0-9_-]{25,})|[?&]id=([a-zA-Z0-9_-]{25,})", body.drive_url)
+    file_id = (_id_match.group(1) or _id_match.group(2)) if _id_match else "drive_file"
+    filename = f"drive_{file_id}.pdf"
+
+    if document_service.check_duplicate_document(db, current_user.id, filename):
+        raise HTTPException(
+            status_code=400,
+            detail="Este archivo de Drive ya fue importado anteriormente."
+        )
+
+    # ── Registrar y procesar en segundo plano ─────────────────────────────
+    documento = document_service.create_document(
+        db=db,
+        user_id=current_user.id,
+        filename=filename,
+        file_type=".pdf",
+        status=ProcessingStatus.PENDING
+    )
+
+    background_tasks.add_task(
+        process_document_background,
+        file_bytes,
+        filename,
+        documento.id,
+        db,
+        body.is_complex
+    )
+
+    return DocumentExtractionResponse(
+        id=documento.id,
+        filename=documento.filename,
+        file_type=documento.file_type.value,
+        characters=0,
+        content_text="",
+        uploaded_at=documento.uploaded_at
+    )
 
 @router.get(
     "",
@@ -230,3 +317,30 @@ def delete_document(
         )
     
     return {"message": "Documento eliminado exitosamente"}
+
+@router.get(
+    "/{document_id}/download",
+    response_class=FileResponse,
+    summary="Descargar el archivo físico original"
+)
+def download_original(
+    document_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    documento = document_service.get_document_by_id(db, document_id, current_user.id)
+    
+    if not documento:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+        
+    if not hasattr(documento, 'file_path') or not documento.file_path or not os.path.exists(documento.file_path):
+        raise HTTPException(
+            status_code=404, 
+            detail="El archivo original no está disponible. Posiblemente expiró o era un documento simple."
+        )
+        
+    return FileResponse(
+        path=documento.file_path,
+        filename=documento.filename,
+        media_type='application/octet-stream'
+    )

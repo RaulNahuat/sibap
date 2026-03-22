@@ -13,10 +13,12 @@ import {
     ChevronLeft,
     ChevronRight,
     X,
-    Eye
+    Eye,
+    Link,
+    AlignLeft
 } from 'lucide-react';
 import FileUploader from '../../components/documents/FileUploader';
-import { uploadDocument, getDocuments, deleteDocument, getDocument } from '../../api/documents';
+import { uploadDocument, getDocuments, deleteDocument, uploadFromDrive } from '../../api/documents';
 import { getErrorMessage } from '../../utils/errorHandler';
 
 const DocumentProcessorPage = () => {
@@ -30,6 +32,11 @@ const DocumentProcessorPage = () => {
     const [sortBy, setSortBy] = useState('recent');
     const [selectedDocs, setSelectedDocs] = useState([]);
     const [showUploadModal, setShowUploadModal] = useState(false);
+    // 'local' | 'drive'
+    const [uploadMode, setUploadMode] = useState('local');
+    const [driveUrl, setDriveUrl] = useState('');
+    const [driveIsComplex, setDriveIsComplex] = useState(false);
+    const [isDriveLoading, setIsDriveLoading] = useState(false);
 
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -79,13 +86,13 @@ const DocumentProcessorPage = () => {
         navigate(`/dashboard/documents/${doc.id}`);
     };
 
-    const handleUpload = async (file) => {
+    const handleUpload = async (file, isComplex) => {
         setLoading(true);
         setError('');
         setSuccess('');
 
         try {
-            const result = await uploadDocument(file);
+            const result = await uploadDocument(file, isComplex);
             setSuccess(`Documento "${result.filename}" subido. Procesamiento iniciado en segundo plano.`);
             setShowUploadModal(false);
             await loadDocuments();
@@ -94,6 +101,25 @@ const DocumentProcessorPage = () => {
             setError(errorMessage);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDriveImport = async () => {
+        if (!driveUrl.trim()) return;
+        setIsDriveLoading(true);
+        setError('');
+        setSuccess('');
+        try {
+            const result = await uploadFromDrive(driveUrl.trim(), driveIsComplex);
+            setSuccess(`Archivo de Drive "${result.filename}" importado. Procesamiento iniciado en segundo plano.`);
+            setShowUploadModal(false);
+            setDriveUrl('');
+            setDriveIsComplex(false);
+            await loadDocuments();
+        } catch (err) {
+            setError(getErrorMessage(err));
+        } finally {
+            setIsDriveLoading(false);
         }
     };
 
@@ -202,6 +228,24 @@ const DocumentProcessorPage = () => {
                 );
             default:
                 return null;
+        }
+    };
+
+    const getStorageBadge = (doc) => {
+        if (doc.status !== 'COMPLETED') return null;
+        
+        if (doc.has_physical_file) {
+            return (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#1a5276] bg-[#eaf3f7] px-1.5 py-0.5 rounded border border-[#1a5276]/20" title="Archivo original complejo conservado (hasta 24h)">
+                    <FileText className="w-3 h-3" /> Físico intacto
+                </span>
+            );
+        } else {
+            return (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200" title="Almacén optimizado: el archivo físico expiró o era simple. Solo texto disponible.">
+                    <AlignLeft className="w-3 h-3" /> Solo texto
+                </span>
+            );
         }
     };
 
@@ -393,13 +437,16 @@ const DocumentProcessorPage = () => {
 
                             {/* Nombre */}
                             <div className="col-span-5">
-                                <div className="flex flex-col gap-0.5">
+                                <div className="flex flex-col gap-0.5 mt-2 mb-2">
                                     <p className="text-sm font-medium text-[#0b2540] truncate pr-4" title={doc.filename}>
                                         {doc.filename}
                                     </p>
-                                    <p className="text-xs text-[#7b8a8a]">
-                                        {doc.file_type} · {doc.characters?.toLocaleString()} caracteres
-                                    </p>
+                                    <div className="flex flex-wrap items-center gap-2 mt-1">
+                                        <p className="text-[11px] text-[#7b8a8a]">
+                                            {doc.characters?.toLocaleString()} caracteres
+                                        </p>
+                                        {getStorageBadge(doc)}
+                                    </div>
                                 </div>
                             </div>
 
@@ -509,22 +556,124 @@ const DocumentProcessorPage = () => {
             {showUploadModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity">
                     <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 transform transition-all scale-100">
-                        <div className="flex items-center justify-between mb-6">
+                        {/* Header del modal */}
+                        <div className="flex items-center justify-between mb-5">
                             <h2 className="text-xl font-bold text-[#0b2540]">
-                                Subir nuevo documento
+                                Agregar documento
                             </h2>
                             <button
-                                onClick={() => setShowUploadModal(false)}
+                                onClick={() => { setShowUploadModal(false); setDriveUrl(''); setUploadMode('local'); }}
                                 className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors"
                             >
                                 <X className="w-5 h-5" />
                             </button>
                         </div>
-                        <FileUploader
-                            onUpload={handleUpload}
-                            acceptedFormats={['.pdf', '.docx', '.pptx', '.txt']}
-                            maxSizeMB={10}
-                        />
+
+                        {/* Tabs */}
+                        <div className="flex gap-1 p-1 bg-gray-100 rounded-lg mb-6">
+                            <button
+                                onClick={() => setUploadMode('local')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                                    uploadMode === 'local'
+                                        ? 'bg-white text-[#1a5276] shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                <Upload className="w-4 h-4" />
+                                Subir archivo
+                            </button>
+                            <button
+                                onClick={() => setUploadMode('drive')}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                                    uploadMode === 'drive'
+                                        ? 'bg-white text-[#1a5276] shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                <Link className="w-4 h-4" />
+                                Desde Google Drive
+                            </button>
+                        </div>
+
+                        {/* Contenido del tab activo */}
+                        {uploadMode === 'local' ? (
+                            <FileUploader
+                                onUpload={handleUpload}
+                                acceptedFormats={['.pdf', '.docx', '.pptx', '.txt']}
+                                maxSizeMB={10}
+                            />
+                        ) : (
+                            <div>
+                                {/* Instrucción */}
+                                <p className="text-sm text-gray-500 mb-4">
+                                    Pega el enlace público de Google Drive. El archivo debe estar
+                                    configurado como <strong>«Cualquiera con el enlace»</strong>.
+                                    Máximo <strong>10 MB</strong>. Soporta PDF, Google Docs, Sheets y Slides.
+                                </p>
+
+                                {/* Input URL */}
+                                <div className="flex gap-2">
+                                    <div className="relative flex-1">
+                                        <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                        <input
+                                            type="url"
+                                            value={driveUrl}
+                                            onChange={(e) => setDriveUrl(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleDriveImport()}
+                                            placeholder="https://drive.google.com/file/d/..."
+                                            className="w-full h-10 pl-9 pr-3 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={handleDriveImport}
+                                        disabled={!driveUrl.trim() || isDriveLoading}
+                                        className="px-4 py-2 bg-[#1a5276] text-white rounded-lg text-sm font-medium hover:bg-[#145a86] disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 whitespace-nowrap"
+                                    >
+                                        {isDriveLoading ? (
+                                            <>
+                                                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                                </svg>
+                                                Importando...
+                                            </>
+                                        ) : (
+                                            'Importar'
+                                        )}
+                                    </button>
+                                </div>
+
+                                {/* Opciones adicionales */}
+                                <div className="mt-4 flex items-start space-x-2 text-left">
+                                    <div className="flex items-center h-5">
+                                        <input
+                                            id="drive-complex-file"
+                                            type="checkbox"
+                                            checked={driveIsComplex}
+                                            onChange={(e) => setDriveIsComplex(e.target.checked)}
+                                            className="w-4 h-4 text-[#1a5276] bg-gray-100 border-gray-300 rounded focus:ring-[#1a5276] cursor-pointer"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="drive-complex-file" className="text-sm font-medium text-gray-900 cursor-pointer">
+                                            Es un documento complejo
+                                        </label>
+                                        <p className="text-xs text-gray-500">Mantiene el archivo original por 24h para OCR avanzado o si es muy pesado/difícil.</p>
+                                    </div>
+                                </div>
+
+                                {/* Consejos */}
+                                <div className="mt-4 p-3 bg-blue-50 border border-blue-100 rounded-lg">
+                                    <p className="text-xs font-semibold text-blue-700 mb-1">¿Cómo compartir el archivo?</p>
+                                    <ol className="text-xs text-blue-600 space-y-0.5 list-decimal list-inside">
+                                        <li>Abre el archivo en Google Drive</li>
+                                        <li>Clic en <strong>Compartir</strong> → <strong>Cambiar acceso general</strong></li>
+                                        <li>Selecciona <strong>«Cualquiera con el enlace»</strong></li>
+                                        <li>Copia el enlace y pégalo aquí</li>
+                                    </ol>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

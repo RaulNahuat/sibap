@@ -26,6 +26,7 @@ class Documento(Base):
     filename: Mapped[str] = mapped_column(String(255), nullable=False)
     file_type: Mapped[FileType] = mapped_column(Enum(FileType), nullable=False)
     file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    is_complex: Mapped[bool] = mapped_column(default=False, server_default="0", nullable=False)
     content_text: Mapped[str] = mapped_column(Text(4294967295), nullable=True) # Text can be null initially
     
     status: Mapped[ProcessingStatus] = mapped_column(

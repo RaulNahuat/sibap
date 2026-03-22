@@ -1,4 +1,9 @@
 import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeRaw from 'rehype-raw';
+import rehypeKatex from 'rehype-katex';
 import {
     CheckCircle,
     AlertCircle,
@@ -55,6 +60,17 @@ export default function QuestionCard({
 
     const status = getStatusConfig();
     const StatusIcon = status.icon;
+
+    // Helper para evitar que los símbolos de moneda ($50,000) rompan el modo matemático de KaTeX ($...$)
+    const cleanText = (text) => {
+        if (!text) return '';
+        let res = text;
+        // 1. Usamos la entidad HTML &#36; en lugar de \$ para que remark-math lo ignore garantizadamente.
+        res = res.replace(/\\(\d+(?:,\d+)*(?:\.\d+)?)/g, '&#36;$1');
+        // 2. Escapar dólares numéricos ($50, $2.5%)
+        res = res.replace(/(?<!\\)\$(\d+(?:,\d+)*(?:\.\d+)?(?!\w))/g, '&#36;$1');
+        return res;
+    };
 
     return (
         <div
@@ -118,9 +134,21 @@ export default function QuestionCard({
                 <label className="block text-xs font-medium text-[#64748b] mb-2">
                     Pregunta
                 </label>
-                <p className="text-[15px] text-[#102129] leading-relaxed">
-                    {question.questionText}
-                </p>
+                <div className="text-[15px] text-[#102129] leading-relaxed prose prose-slate max-w-none prose-p:my-1 prose-headings:text-lg prose-headings:font-bold prose-headings:text-[#0b2540] prose-a:text-[#1a5276]">
+                    <ReactMarkdown
+                        remarkPlugins={[remarkGfm, remarkMath]}
+                        rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
+                        components={{
+                            code: ({ node, inline, children, ...props }) => (
+                                <code className="bg-slate-100 text-blue-800 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-slate-200" {...props}>
+                                    {children}
+                                </code>
+                            )
+                        }}
+                    >
+                        {cleanText(question.questionText)}
+                    </ReactMarkdown>
+                </div>
             </div>
 
             {/* Answers */}
@@ -149,21 +177,45 @@ export default function QuestionCard({
                                             <div className="w-2 h-2 rounded-full bg-white"></div>
                                         )}
                                     </div>
-                                    <span
-                                        className={`text-sm ${isCorrect
+                                    <div
+                                        className={`text-sm flex-1 prose prose-sm max-w-none prose-p:m-0 prose-p:inline ${isCorrect
                                             ? 'text-green-900 font-medium'
                                             : 'text-[#475569]'
                                             }`}
                                     >
-                                        {answer.text}
-                                    </span>
+                                        <ReactMarkdown
+                                            remarkPlugins={[remarkGfm, remarkMath]}
+                                            rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
+                                            components={{
+                                                p: ({ node, ...props }) => <span {...props} />,
+                                                code: ({ node, inline, children, ...props }) => (
+                                                    <code className="bg-slate-100 text-blue-800 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-slate-200" {...props}>
+                                                        {children}
+                                                    </code>
+                                                )
+                                            }}
+                                        >
+                                            {cleanText(answer.text)}
+                                        </ReactMarkdown>
+                                    </div>
                                 </div>
                                 {answer.feedback && (
                                     <div className="ml-8 px-3 py-1.5 bg-blue-50/50 border-l-2 border-blue-200 rounded-r-md">
-                                        <p className="text-[11px] text-[#1a5276] italic">
-                                            <span className="font-bold uppercase tracking-tighter mr-1">Nota:</span>
-                                            {answer.feedback}
-                                        </p>
+                                        <div className="text-[11px] text-[#1a5276] italic prose prose-sm max-w-none prose-p:m-0 prose-p:inline flex gap-1">
+                                            <span className="font-bold uppercase tracking-tighter shrink-0">Nota:</span>
+                                            <ReactMarkdown
+                                                remarkPlugins={[remarkGfm, remarkMath]}
+                                                rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
+                                                components={{ 
+                                                    p: ({ node, ...props }) => <span {...props} />,
+                                                    code: ({ node, inline, children, ...props }) => (
+                                                        <code className="bg-slate-100/50 text-blue-800 px-1 py-0.5 rounded text-[0.9em] font-mono" {...props}>{children}</code>
+                                                    )
+                                                }}
+                                            >
+                                                {cleanText(answer.feedback)}
+                                            </ReactMarkdown>
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -181,9 +233,19 @@ export default function QuestionCard({
                                 <MessageSquare className="w-3 h-3" />
                                 Feedback Correcto
                             </h4>
-                            <p className="text-xs text-green-800 leading-relaxed italic">
-                                {question.feedback_correct}
-                            </p>
+                            <div className="text-xs text-green-800 leading-relaxed italic prose prose-sm max-w-none prose-p:m-0">
+                                <ReactMarkdown
+                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                    rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
+                                    components={{
+                                        code: ({ node, inline, children, ...props }) => (
+                                            <code className="bg-green-100/50 text-green-900 px-1 py-0.5 rounded text-[0.9em] font-mono" {...props}>{children}</code>
+                                        )
+                                    }}
+                                >
+                                    {cleanText(question.feedback_correct)}
+                                </ReactMarkdown>
+                            </div>
                         </div>
                     )}
                     {question.feedback_incorrect && (
@@ -192,9 +254,19 @@ export default function QuestionCard({
                                 <MessageSquare className="w-3 h-3" />
                                 Feedback Incorrecto
                             </h4>
-                            <p className="text-xs text-red-800 leading-relaxed italic">
-                                {question.feedback_incorrect}
-                            </p>
+                            <div className="text-xs text-red-800 leading-relaxed italic prose prose-sm max-w-none prose-p:m-0">
+                                <ReactMarkdown
+                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                    rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
+                                    components={{
+                                        code: ({ node, inline, children, ...props }) => (
+                                            <code className="bg-red-100/50 text-red-900 px-1 py-0.5 rounded text-[0.9em] font-mono" {...props}>{children}</code>
+                                        )
+                                    }}
+                                >
+                                    {cleanText(question.feedback_incorrect)}
+                                </ReactMarkdown>
+                            </div>
                         </div>
                     )}
                 </div>

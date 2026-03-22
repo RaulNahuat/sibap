@@ -15,6 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getBankQuestions, regenerateQuestion, updateBank, addManualQuestion } from '../../api/questions';
 import RegenerateDialog from '../../components/questions/RegenerateDialog';
 import { toast } from 'react-hot-toast';
+import apiClient from '../../api/client';
 
 export default function ValidateQuestionsPage() {
     const navigate = useNavigate();

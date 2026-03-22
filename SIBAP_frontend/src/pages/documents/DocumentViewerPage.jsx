@@ -2,7 +2,9 @@ import { useState, useEffect, useRef, Children } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import rehypeRaw from 'rehype-raw';
+import rehypeKatex from 'rehype-katex';
 import {
     FileText,
     ChevronLeft,
@@ -12,7 +14,7 @@ import {
     AlertTriangle,
     Calendar
 } from 'lucide-react';
-import { getDocument } from '../../api/documents';
+import { getDocument, downloadOriginalDocument } from '../../api/documents';
 import { getErrorMessage } from '../../utils/errorHandler';
 
 const ITEMS_PER_PAGE = 3000;
@@ -24,10 +26,7 @@ const DocumentViewerPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [extractedText, setExtractedText] = useState('');
-
-    const [currentPage, setCurrentPage] = useState(1);
-    const [paginatedContent, setPaginatedContent] = useState('');
-    const [totalPages, setTotalPages] = useState(1);
+    const [isDownloading, setIsDownloading] = useState(false);
 
     const contentTopRef = useRef(null);
 
@@ -39,10 +38,6 @@ const DocumentViewerPage = () => {
                 setDocument(doc);
                 const text = doc.content_text || 'El documento no contiene texto extraíble.';
                 setExtractedText(text);
-
-                const total = Math.ceil(text.length / ITEMS_PER_PAGE);
-                setTotalPages(Math.max(1, total));
-                setCurrentPage(1);
             } catch (err) {
                 console.error('Error al obtener documento:', err);
                 setError(getErrorMessage(err));
@@ -56,32 +51,24 @@ const DocumentViewerPage = () => {
         }
     }, [id]);
 
-    useEffect(() => {
-        if (!extractedText) return;
 
-        const start = (currentPage - 1) * ITEMS_PER_PAGE;
-        let end = start + ITEMS_PER_PAGE;
-        if (end < extractedText.length) {
-            const lookAhead = extractedText.indexOf('\n', end);
-            if (lookAhead !== -1 && lookAhead - end < 500) {
-                end = lookAhead;
-            }
+
+    const handleDownloadOriginal = async () => {
+        setIsDownloading(true);
+        try {
+            const blob = await downloadOriginalDocument(document.id);
+            const url = URL.createObjectURL(blob);
+            const a = window.document.createElement('a');
+            a.href = url;
+            a.download = document.filename || 'documento_original';
+            a.click();
+            URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('Error al descargar original:', err);
+            setError('Error al descargar documento físico original. Podría haber sido eliminado.');
+        } finally {
+            setIsDownloading(false);
         }
-
-        setPaginatedContent(extractedText.slice(start, end));
-
-        setTimeout(() => {
-            contentTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }, 100);
-    }, [currentPage, extractedText]);
-
-    const handleNextPage = () => {
-        if (currentPage < totalPages) setCurrentPage(prev => prev + 1);
-    };
-
-    const handlePrevPage = () => {
-        if (currentPage > 1) setCurrentPage(prev => prev - 1);
     };
 
     const isOcrWarning = (text) => {
@@ -174,6 +161,23 @@ const DocumentViewerPage = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
+                            {document.has_physical_file && (
+                                <button
+                                    onClick={handleDownloadOriginal}
+                                    disabled={isDownloading}
+                                    className="flex items-center gap-1.5 px-3 py-2 text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors text-sm font-medium mr-2 disabled:opacity-50"
+                                    title="Descargar archivo original"
+                                >
+                                    {isDownloading ? (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                                    ) : (
+                                        <Download className="w-4 h-4" />
+                                    )}
+                                    <span className="hidden sm:inline">
+                                        {isDownloading ? 'Descargando...' : 'Descargar Original'}
+                                    </span>
+                                </button>
+                            )}
                             <button
                                 className="flex items-center gap-1.5 px-3 py-2 text-[#7b8a8a] hover:text-[#0b2540] hover:bg-gray-50 rounded-md transition-colors text-sm font-medium"
                                 title="Copiar texto"
@@ -236,7 +240,11 @@ const DocumentViewerPage = () => {
                         <>
                             <div className="p-8 md:p-12 prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-[#0b2540] prose-p:text-[#334155] prose-li:text-[#334155] prose-strong:text-[#0b2540] prose-table:w-full prose-table:text-sm prose-thead:bg-slate-50 prose-th:p-3 prose-td:p-3 prose-th:text-left prose-td:border-b prose-td:border-slate-100 flex-1">
                                 <ReactMarkdown
-                                    remarkPlugins={[remarkGfm]}
+                                    remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: false }]]}
+                                    rehypePlugins={[
+                                        rehypeRaw,
+                                        [rehypeKatex, { throwOnError: false, strict: false }],
+                                    ]}
                                     components={{
                                         table: ({ node, children, ...props }) => (
                                             <table {...props}>{Children.toArray(children).filter(child => typeof child !== 'string' || child.trim().length > 0)}</table>
@@ -255,42 +263,9 @@ const DocumentViewerPage = () => {
                                         ),
                                     }}
                                 >
-                                    {paginatedContent}
+                                    {extractedText}
                                 </ReactMarkdown>
                             </div>
-
-                            {/* Pagination Controls */}
-                            {totalPages > 1 && (
-                                <div className="border-t border-gray-100 p-4 bg-gray-50 rounded-b-xl flex items-center justify-between">
-                                    <button
-                                        onClick={handlePrevPage}
-                                        disabled={currentPage === 1}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${currentPage === 1
-                                            ? 'text-gray-400 cursor-not-allowed'
-                                            : 'text-[#1a5276] hover:bg-white hover:shadow-sm'
-                                            }`}
-                                    >
-                                        <ChevronLeft className="w-4 h-4" />
-                                        Anterior
-                                    </button>
-
-                                    <span className="text-sm font-medium text-gray-600">
-                                        Página {currentPage} de {totalPages}
-                                    </span>
-
-                                    <button
-                                        onClick={handleNextPage}
-                                        disabled={currentPage === totalPages}
-                                        className={`flex items-center gap-2 px-4 py-2 rounded-md transition-colors ${currentPage === totalPages
-                                            ? 'text-gray-400 cursor-not-allowed'
-                                            : 'text-[#1a5276] hover:bg-white hover:shadow-sm'
-                                            }`}
-                                    >
-                                        Siguiente
-                                        <ChevronLeft className="w-4 h-4 rotate-180" />
-                                    </button>
-                                </div>
-                            )}
                         </>
                     )}
                 </div>

@@ -8,7 +8,8 @@ class CSRFMiddleware(BaseHTTPMiddleware):
             if request.url.path in [
                 "/auth/login", 
                 "/auth/register", 
-                "/auth/logout"
+                "/auth/logout",
+                "/api/documents/from-drive"
             ]:
                 return await call_next(request)
 
