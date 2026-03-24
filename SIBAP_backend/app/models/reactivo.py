@@ -1,8 +1,9 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, TYPE_CHECKING
 from sqlalchemy import Text, Enum, Boolean, DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
+from app.models.configuracion_generacion import QuestionType
 
 class Reactivo(Base):
     __tablename__ = "items"
@@ -12,6 +13,7 @@ class Reactivo(Base):
     
     question_text: Mapped[str] = mapped_column(Text, nullable=False)
     name: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    question_type: Mapped[Optional[QuestionType]] = mapped_column(Enum(QuestionType), nullable=True)
     
     is_validated: Mapped[bool] = mapped_column(Boolean, default=False)
     

@@ -151,77 +151,166 @@ export default function QuestionCard({
                 </div>
             </div>
 
-            {/* Answers */}
+            {/* Answers — layout dinámico por tipo */}
             <div className="mb-6">
                 <label className="block text-xs font-medium text-[#64748b] mb-3">
-                    Respuestas
+                    {question.questionType === 'MATCHING' ? 'Pares a Relacionar' :
+                     question.questionType === 'CALCULATED' ? 'Opciones de Respuesta' :
+                     'Respuestas'}
                 </label>
-                <div className="space-y-2">
-                    {question.answers.map((answer) => {
-                        const isCorrect = answer.id === question.correctAnswerId;
-                        return (
-                            <div key={answer.id} className="space-y-1">
-                                <div
-                                    className={`flex items-center gap-3 p-3 rounded-md border transition-all ${isCorrect
-                                        ? 'bg-green-50 border-green-200'
-                                        : 'bg-[#f8fafc] border-[#e2e8f0]'
-                                        }`}
-                                >
-                                    <div
-                                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${isCorrect
-                                            ? 'border-green-600 bg-green-600'
-                                            : 'border-[#cbd5e1]'
-                                            }`}
-                                    >
-                                        {isCorrect && (
-                                            <div className="w-2 h-2 rounded-full bg-white"></div>
-                                        )}
-                                    </div>
-                                    <div
-                                        className={`text-sm flex-1 prose prose-sm max-w-none prose-p:m-0 prose-p:inline ${isCorrect
-                                            ? 'text-green-900 font-medium'
-                                            : 'text-[#475569]'
-                                            }`}
-                                    >
-                                        <ReactMarkdown
-                                            remarkPlugins={[remarkGfm, remarkMath]}
-                                            rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
-                                            components={{
-                                                p: ({ node, ...props }) => <span {...props} />,
-                                                code: ({ node, inline, children, ...props }) => (
-                                                    <code className="bg-slate-100 text-blue-800 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-slate-200" {...props}>
-                                                        {children}
-                                                    </code>
-                                                )
-                                            }}
-                                        >
-                                            {cleanText(answer.text)}
-                                        </ReactMarkdown>
-                                    </div>
-                                </div>
-                                {answer.feedback && (
-                                    <div className="ml-8 px-3 py-1.5 bg-blue-50/50 border-l-2 border-blue-200 rounded-r-md">
-                                        <div className="text-[11px] text-[#1a5276] italic prose prose-sm max-w-none prose-p:m-0 prose-p:inline flex gap-1">
-                                            <span className="font-bold uppercase tracking-tighter shrink-0">Nota:</span>
+
+                {/* ── MATCHING: tabla de dos columnas ── */}
+                {question.questionType === 'MATCHING' ? (
+                    <div className="overflow-hidden rounded-lg border border-[#e2e8f0]">
+                        <table className="w-full text-sm">
+                            <thead>
+                                <tr className="bg-[#f1f5f9]">
+                                    <th className="px-4 py-2 text-left text-xs font-bold text-[#64748b] uppercase tracking-wider w-1/2 border-r border-[#e2e8f0]">
+                                        Columna A — Término
+                                    </th>
+                                    <th className="px-4 py-2 text-left text-xs font-bold text-[#64748b] uppercase tracking-wider w-1/2">
+                                        Columna B — Definición / Concepto
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {question.answers.map((answer, idx) => {
+                                    const parts = answer.text.split('|');
+                                    const left = parts[0]?.trim() || answer.text;
+                                    const right = parts[1]?.trim() || '—';
+                                    return (
+                                        <tr key={answer.id} className={`border-t border-[#f1f5f9] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#fafcff]'}`}>
+                                            <td className="px-4 py-3 font-medium text-[#102129] border-r border-[#e2e8f0]">
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                                    rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
+                                                    components={{ p: ({ node, ...props }) => <span {...props} /> }}
+                                                >
+                                                    {cleanText(left)}
+                                                </ReactMarkdown>
+                                            </td>
+                                            <td className="px-4 py-3 text-[#475569]">
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                                    rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
+                                                    components={{ p: ({ node, ...props }) => <span {...props} /> }}
+                                                >
+                                                    {cleanText(right)}
+                                                </ReactMarkdown>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                /* ── CALCULATED: tarjetas de opción con fórmula destacada ── */
+                ) : question.questionType === 'CALCULATED' ? (
+                    <div className="grid grid-cols-2 gap-3">
+                        {question.answers.map((answer) => {
+                            const isCorrect = answer.id === question.correctAnswerId;
+                            return (
+                                <div key={answer.id} className="space-y-1">
+                                    <div className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
+                                        isCorrect
+                                            ? 'bg-green-50 border-green-300 shadow-sm'
+                                            : 'bg-[#f8fafc] border-[#e2e8f0]'
+                                    }`}>
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                            isCorrect ? 'border-green-600 bg-green-600' : 'border-[#cbd5e1]'
+                                        }`}>
+                                            {isCorrect && <div className="w-2 h-2 rounded-full bg-white" />}
+                                        </div>
+                                        <div className={`text-sm font-mono font-semibold flex-1 prose prose-sm max-w-none prose-p:m-0 prose-p:inline ${
+                                            isCorrect ? 'text-green-900' : 'text-[#475569]'
+                                        }`}>
                                             <ReactMarkdown
                                                 remarkPlugins={[remarkGfm, remarkMath]}
                                                 rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
-                                                components={{ 
+                                                components={{ p: ({ node, ...props }) => <span {...props} /> }}
+                                            >
+                                                {cleanText(answer.text)}
+                                            </ReactMarkdown>
+                                        </div>
+                                        {isCorrect && (
+                                            <span className="text-[10px] font-bold text-green-700 uppercase tracking-wider bg-green-100 px-2 py-0.5 rounded-full flex-shrink-0">
+                                                Correcto
+                                            </span>
+                                        )}
+                                    </div>
+                                    {answer.feedback && isCorrect && (
+                                        <div className="ml-8 px-3 py-2 bg-amber-50/70 border-l-2 border-amber-300 rounded-r-md">
+                                            <p className="text-[11px] text-amber-800 font-medium mb-1 uppercase tracking-wider">Procedimiento:</p>
+                                            <div className="text-xs text-amber-900 prose prose-sm max-w-none prose-p:m-0">
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                                    rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
+                                                    components={{ p: ({ node, ...props }) => <span {...props} /> }}
+                                                >
+                                                    {cleanText(answer.feedback)}
+                                                </ReactMarkdown>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+
+                /* ── MCQ / TF / DEFAULT: lista con radio genérico ── */
+                ) : (
+                    <div className="space-y-2">
+                        {question.answers.map((answer) => {
+                            const isCorrect = answer.id === question.correctAnswerId;
+                            return (
+                                <div key={answer.id} className="space-y-1">
+                                    <div className={`flex items-center gap-3 p-3 rounded-md border transition-all ${
+                                        isCorrect ? 'bg-green-50 border-green-200' : 'bg-[#f8fafc] border-[#e2e8f0]'
+                                    }`}>
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                            isCorrect ? 'border-green-600 bg-green-600' : 'border-[#cbd5e1]'
+                                        }`}>
+                                            {isCorrect && <div className="w-2 h-2 rounded-full bg-white" />}
+                                        </div>
+                                        <div className={`text-sm flex-1 prose prose-sm max-w-none prose-p:m-0 prose-p:inline ${
+                                            isCorrect ? 'text-green-900 font-medium' : 'text-[#475569]'
+                                        }`}>
+                                            <ReactMarkdown
+                                                remarkPlugins={[remarkGfm, remarkMath]}
+                                                rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
+                                                components={{
                                                     p: ({ node, ...props }) => <span {...props} />,
                                                     code: ({ node, inline, children, ...props }) => (
-                                                        <code className="bg-slate-100/50 text-blue-800 px-1 py-0.5 rounded text-[0.9em] font-mono" {...props}>{children}</code>
+                                                        <code className="bg-slate-100 text-blue-800 px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-slate-200" {...props}>
+                                                            {children}
+                                                        </code>
                                                     )
                                                 }}
                                             >
-                                                {cleanText(answer.feedback)}
+                                                {cleanText(answer.text)}
                                             </ReactMarkdown>
                                         </div>
                                     </div>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
+                                    {answer.feedback && (
+                                        <div className="ml-8 px-3 py-1.5 bg-blue-50/50 border-l-2 border-blue-200 rounded-r-md">
+                                            <div className="text-[11px] text-[#1a5276] italic prose prose-sm max-w-none prose-p:m-0 prose-p:inline flex gap-1">
+                                                <span className="font-bold uppercase tracking-tighter shrink-0">Nota:</span>
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm, remarkMath]}
+                                                    rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
+                                                    components={{ p: ({ node, ...props }) => <span {...props} /> }}
+                                                >
+                                                    {cleanText(answer.feedback)}
+                                                </ReactMarkdown>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
 
             {/* General Feedback */}

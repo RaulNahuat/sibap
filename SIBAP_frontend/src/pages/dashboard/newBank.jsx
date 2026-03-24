@@ -5,8 +5,6 @@ import {
     FileText,
     Sparkles,
     CheckCircle,
-    List,
-    Circle,
     MessageSquare,
     X,
     Library,
@@ -27,11 +25,9 @@ export default function NewBankPage() {
     const { showToast } = useToast();
     const { user } = useAuth();
 
-    const typeKey = user?.id ? `sibap_newbank_type_${user.id}` : 'sibap_newbank_type';
     const filesKey = user?.id ? `sibap_newbank_files_${user.id}` : 'sibap_newbank_files';
     const formKey = user?.id ? `sibap_newbank_form_${user.id}` : 'sibap_newbank_form';
 
-    const [selectedQuestionType, setSelectedQuestionType, clearQuestionType] = useLocalStorage(typeKey, 'multiple');
     const [uploadedFiles, setUploadedFiles, clearUploadedFiles] = useLocalStorage(filesKey, []);
     const [formData, setFormData, clearFormData] = useLocalStorage(formKey, {
         program: '',
@@ -41,8 +37,11 @@ export default function NewBankPage() {
         subject_id: null,
         topic: '',
         subtopic: '',
+        learningObjectives: '',
         difficulty: 'Intermedio',
-        questionCount: 10,
+        numMCQ: 5,
+        numMatching: 2,
+        numCalculated: 1,
         wrongOptionCount: 3,
         plausibleDistractors: false,
         avoidAmbiguity: true,
@@ -122,17 +121,22 @@ export default function NewBankPage() {
         setError('');
 
         try {
-            const typeMapping = {
-                'multiple': 'MCQ',
-                'trueFalse': 'TF',
-                'open': 'OPEN'
-            };
 
             const difficultyMapping = {
                 'Básico': 'EASY',
                 'Intermedio': 'MEDIUM',
                 'Avanzado': 'HARD'
             };
+
+            const num_mcq = parseInt(formData.numMCQ) || 0;
+            const num_matching = parseInt(formData.numMatching) || 0;
+            const num_calculated = parseInt(formData.numCalculated) || 0;
+
+            if (num_mcq + num_matching + num_calculated === 0) {
+                setError('Debes especificar al menos 1 pregunta en cualquier tipo');
+                setIsGenerating(false);
+                return;
+            }
 
             const requestData = {
                 document_ids: uploadedFiles.map(f => f.id),
@@ -142,9 +146,13 @@ export default function NewBankPage() {
                 subject: formData.subject,
                 topic: formData.topic,
                 subtopic: formData.subtopic || null,
-                question_type: typeMapping[selectedQuestionType] || 'MCQ',
+                learning_objectives: formData.learningObjectives || null,
+                question_type: 'MIXED',
                 difficulty: difficultyMapping[formData.difficulty] || 'MEDIUM',
-                num_questions: formData.questionCount,
+                num_mcq,
+                num_matching,
+                num_calculated,
+                num_questions: num_mcq + num_matching + num_calculated,
                 model_name: formData.aiModel,
                 wrong_option_count: formData.wrongOptionCount,
                 plausible_distractors: formData.plausibleDistractors,
@@ -158,6 +166,7 @@ export default function NewBankPage() {
             const mappedQuestions = response.questions.map((q, idx) => ({
                 id: q.id,
                 questionText: q.question_text,
+                questionType: q.question_type,
                 feedback_correct: q.feedback_correct,
                 feedback_incorrect: q.feedback_incorrect,
                 answers: q.opciones.map(opt => ({
@@ -289,29 +298,10 @@ export default function NewBankPage() {
         return questions;
     };
 
-    const questionTypes = [
-        {
-            id: 'multiple',
-            label: 'Opción Múltiple',
-            icon: List,
-        },
-        {
-            id: 'trueFalse',
-            label: 'Verdadero / Falso',
-            icon: Circle,
-        },
-        {
-            id: 'open',
-            label: 'Respuesta Abierta',
-            icon: MessageSquare,
-        },
-    ];
-
     const handleClearAll = () => {
         if (window.confirm('¿Estás seguro de que deseas limpiar todos los campos y archivos?')) {
             clearFormData();
             clearUploadedFiles();
-            clearQuestionType();
         }
     };
 
@@ -657,6 +647,23 @@ export default function NewBankPage() {
                         />
                     </div>
 
+                    {/* Objetivos de Aprendizaje */}
+                    <div className="col-span-2">
+                        <label className="block text-sm font-medium text-[#102129] mb-2">
+                            Objetivos de Aprendizaje del Tema
+                            <span className="ml-2 text-xs font-normal text-[#94a3b8]">(Opcional)</span>
+                        </label>
+                        <textarea
+                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-lg text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent bg-[#f8fafc] min-h-[90px] resize-y"
+                            placeholder="Ej: El estudiante identificará las fases del ciclo de vida del software y justificará su orden lógico..."
+                            value={formData.learningObjectives}
+                            onChange={(e) => setFormData({ ...formData, learningObjectives: e.target.value })}
+                        />
+                        <p className="mt-1 text-[11px] text-[#64748b] italic">
+                            Las preguntas se alinearán a estos objetivos para medir exactamente lo que deseas evaluar.
+                        </p>
+                    </div>
+
                     {/* Nivel de Dificultad */}
                     <div>
                         <label className="block text-sm font-medium text-[#102129] mb-2">
@@ -673,19 +680,60 @@ export default function NewBankPage() {
                         </select>
                     </div>
 
-                    {/* Número de Preguntas */}
-                    <div>
-                        <label className="block text-sm font-medium text-[#102129] mb-2">
-                            Número de Preguntas
+                    {/* Número de Preguntas por Tipo */}
+                    <div className="col-span-2">
+                        <label className="block text-sm font-medium text-[#102129] mb-3">
+                            Número de Preguntas por Tipo
                         </label>
-                        <input
-                            type="number"
-                            min="1"
-                            max="100"
-                            value={formData.questionCount}
-                            onChange={(e) => setFormData({ ...formData, questionCount: parseInt(e.target.value) })}
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
-                        />
+                        <div className="grid grid-cols-3 gap-4">
+                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4">
+                                <label className="block text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
+                                    Opción Múltiple
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="50"
+                                    value={formData.numMCQ}
+                                    onChange={(e) => setFormData({ ...formData, numMCQ: parseInt(e.target.value) || 0 })}
+                                    className="w-full px-3 py-2 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent text-center font-semibold text-[#102129]"
+                                />
+                                <p className="text-[10px] text-[#94a3b8] mt-1 text-center">4 opciones, 1 correcta</p>
+                            </div>
+                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4">
+                                <label className="block text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
+                                    Relacionar Columnas
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="50"
+                                    value={formData.numMatching}
+                                    onChange={(e) => setFormData({ ...formData, numMatching: parseInt(e.target.value) || 0 })}
+                                    className="w-full px-3 py-2 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent text-center font-semibold text-[#102129]"
+                                />
+                                <p className="text-[10px] text-[#94a3b8] mt-1 text-center">4–6 pares de conceptos</p>
+                            </div>
+                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4">
+                                <label className="block text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
+                                    Calculada
+                                </label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="50"
+                                    value={formData.numCalculated}
+                                    onChange={(e) => setFormData({ ...formData, numCalculated: parseInt(e.target.value) || 0 })}
+                                    className="w-full px-3 py-2 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent text-center font-semibold text-[#102129]"
+                                />
+                                <p className="text-[10px] text-[#94a3b8] mt-1 text-center">Problemas numéricos</p>
+                            </div>
+                        </div>
+                        <p className="mt-2 text-xs text-[#64748b]">
+                            Total: <span className="font-semibold text-[#102129]">
+                                {(parseInt(formData.numMCQ) || 0) + (parseInt(formData.numMatching) || 0) + (parseInt(formData.numCalculated) || 0)}
+                            </span> preguntas · Escribe 0 para omitir un tipo.
+                        </p>
                     </div>
 
                     {/* Número de Opciones Incorrectas */}
@@ -796,6 +844,8 @@ export default function NewBankPage() {
                 </div>
 
                 {/* Tipo de Reactivo Principal */}
+                {/* This section is removed as per the instruction */}
+                {/*
                 <div className="mb-6">
                     <label className="block text-sm font-medium text-[#102129] mb-4">
                         Tipo de Reactivo Principal
@@ -828,6 +878,7 @@ export default function NewBankPage() {
                         })}
                     </div>
                 </div>
+                */}
 
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-3 pt-4">

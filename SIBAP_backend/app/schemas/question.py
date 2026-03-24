@@ -24,6 +24,7 @@ class QuestionResponse(QuestionBase):
     id: int
     is_validated: bool
     created_at: datetime
+    question_type: Optional[QuestionType] = None
     opciones: List[OptionResponse]
 
     class Config:
@@ -38,9 +39,13 @@ class QuestionGenerationRequest(BaseModel):
     subject: Optional[str] = None
     topic: Optional[str] = None
     subtopic: Optional[str] = None
-    question_type: QuestionType
+    learning_objectives: Optional[str] = None
+    question_type: Optional[QuestionType] = QuestionType.MIXED
     difficulty: DifficultyLevel
     num_questions: int = 10
+    num_mcq: int = 0
+    num_matching: int = 0
+    num_calculated: int = 0
     wrong_option_count: int = 3
     model_name: Optional[str] = "gemini-2.0-flash"
     plausible_distractors: bool = False

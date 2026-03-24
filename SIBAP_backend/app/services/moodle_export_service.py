@@ -8,9 +8,11 @@ from xml.dom import minidom
 
 def format_moodle_text(text: str) -> str:
     """
-    Formatea el texto para compatibilidad con Moodle, escapando CDATA, 
-    y convirtiendo ecuaciones LaTeX en línia de formato $P=R$ a formato \\( P=R \\).
-    Desescapa símbolos de la moneda '$' previamente protegidos.
+    Formatea el texto para compatibilidad con Moodle:
+    1. Protege signos de moneda ya escapados (\\$) con un placeholder.
+    2. Convierte $...$ a \\(...\\) para el filtro MathJax de Moodle.
+    3. Restaura los placeholders como $ (símbolo de moneda literal).
+    4. Escapa todo $ restante como &#36; para que Moodle no lo confunda con fórmulas.
     """
     if not text:
         return ""
@@ -21,8 +23,12 @@ def format_moodle_text(text: str) -> str:
     # 2. Transformar $...$ a \(...\) (Filtro MathJax de Moodle para bloque en línea)
     text = re.sub(r'\$([^$]+)\$', r'\\(\1\\)', text)
     
-    # 3. Restaurar los signos de dólar normales y sin escapar para impresión literal de dinero
+    # 3. Restaurar los signos de dólar protegidos (símbolo de moneda literal)
     text = text.replace("ESCAPED_DOLLAR_SIGN", "$")
+    
+    # 4. Escapar cualquier $ restante (ej: $30,000 sin escapar) como entidad HTML
+    #    para que Moodle no lo interprete como inicio de fórmula.
+    text = text.replace("$", "&#36;")
     
     return text
 
@@ -56,12 +62,14 @@ def export_to_gift(db: Session, config_id: int) -> str:
 
     for reactivo in config.reactivos:
         name = reactivo.name or f"Pregunta_{reactivo.id}"
+        # Determine per-reactivo type (falls back to config type for legacy data)
+        r_type = reactivo.question_type or config.question_type
         # Solo escapamos los caracteres de control Moodle en el contenido, no en los metadatos de formato
         question_text = escape_gift_text(format_moodle_text(reactivo.question_text))
         
         gift_str = f"::{name}:: [html]{question_text} {{"
         
-        if config.question_type == QuestionType.MCQ:
+        if r_type == QuestionType.MCQ:
             for opcion in reactivo.opciones:
                 prefix = "=" if opcion.is_correct else "~"
                 opt_text = escape_gift_text(format_moodle_text(opcion.option_text))
@@ -73,10 +81,29 @@ def export_to_gift(db: Session, config_id: int) -> str:
                 
                 gift_str += f"\n    {prefix}[html]{opt_text}{feedback_str}"
         
-        elif config.question_type == QuestionType.TF:
+        elif r_type == QuestionType.TF:
             correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
             val = "T" if correct_opt and "verdadero" in correct_opt.option_text.lower() else "F"
             gift_str += val
+
+        elif r_type == QuestionType.MATCHING:
+            # Each option is formatted as "Término | Definición"
+            for opcion in reactivo.opciones:
+                parts = opcion.option_text.split("|", 1)
+                if len(parts) == 2:
+                    left = escape_gift_text(format_moodle_text(parts[0].strip()))
+                    right = escape_gift_text(format_moodle_text(parts[1].strip()))
+                else:
+                    left = escape_gift_text(format_moodle_text(opcion.option_text))
+                    right = left
+                gift_str += f"\n    ={left} -> {right}"
+
+        elif r_type in (QuestionType.CALCULATED, QuestionType.OPEN):
+            # Export as short answer / essay
+            correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
+            if correct_opt:
+                opt_text = escape_gift_text(format_moodle_text(correct_opt.option_text))
+                gift_str += f"\n    ={opt_text}"
             
         if reactivo.feedback_correct:
             fb_correct = escape_gift_text(format_moodle_text(reactivo.feedback_correct))
@@ -106,10 +133,21 @@ def export_to_xml(db: Session, config_id: int) -> str:
     text_cat.text = f"$course$/{sub_name}/{top_name}"
 
     for reactivo in config.reactivos:
-        q_type = "multichoice" if config.question_type == QuestionType.MCQ else "truefalse"
-        if config.question_type == QuestionType.OPEN: q_type = "essay"
+        # Determine per-reactivo type
+        r_type = reactivo.question_type or config.question_type
+
+        if r_type == QuestionType.MCQ:
+            q_type_str = "multichoice"
+        elif r_type == QuestionType.TF:
+            q_type_str = "truefalse"
+        elif r_type == QuestionType.MATCHING:
+            q_type_str = "matching"
+        elif r_type == QuestionType.CALCULATED:
+            q_type_str = "calculated"
+        else:
+            q_type_str = "essay"
         
-        q = ET.SubElement(quiz, "question", type=q_type)
+        q = ET.SubElement(quiz, "question", type=q_type_str)
         
         # Nombre
         name = ET.SubElement(q, "name")
@@ -121,8 +159,8 @@ def export_to_xml(db: Session, config_id: int) -> str:
         text = ET.SubElement(qtext, "text")
         text.text = f"<![CDATA[{format_moodle_text(reactivo.question_text)}]]>"
         
-        # Opciones
-        if config.question_type == QuestionType.MCQ:
+        # Opciones por tipo
+        if r_type == QuestionType.MCQ:
             ET.SubElement(q, "single").text = "true"
             ET.SubElement(q, "shuffleanswers").text = "true"
             ET.SubElement(q, "answernumbering").text = "abc"
@@ -138,7 +176,7 @@ def export_to_xml(db: Session, config_id: int) -> str:
                     fb_text = ET.SubElement(fb, "text")
                     fb_text.text = f"<![CDATA[{format_moodle_text(opcion.feedback)}]]>"
 
-        elif config.question_type == QuestionType.TF:
+        elif r_type == QuestionType.TF:
             correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
             is_true_correct = correct_opt and "verdadero" in correct_opt.option_text.lower()
             
@@ -151,6 +189,32 @@ def export_to_xml(db: Session, config_id: int) -> str:
                 fb = ET.SubElement(ans, "feedback", format="html")
                 fb_text = ET.SubElement(fb, "text")
                 fb_text.text = f"<![CDATA[{label}]]>"
+
+        elif r_type == QuestionType.MATCHING:
+            ET.SubElement(q, "shuffleanswers").text = "true"
+            for opcion in reactivo.opciones:
+                parts = opcion.option_text.split("|", 1)
+                if len(parts) == 2:
+                    left, right = parts[0].strip(), parts[1].strip()
+                else:
+                    left = right = opcion.option_text.strip()
+                subq = ET.SubElement(q, "subquestion", format="html")
+                sq_text = ET.SubElement(subq, "text")
+                sq_text.text = f"<![CDATA[{format_moodle_text(left)}]]>"
+                ans = ET.SubElement(subq, "answer")
+                ans_text = ET.SubElement(ans, "text")
+                ans_text.text = f"<![CDATA[{format_moodle_text(right)}]]>"
+
+        elif r_type == QuestionType.CALCULATED:
+            correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
+            if correct_opt:
+                ans = ET.SubElement(q, "answer", fraction="100", format="html")
+                ans_text = ET.SubElement(ans, "text")
+                ans_text.text = f"<![CDATA[{format_moodle_text(correct_opt.option_text)}]]>"
+                if correct_opt.feedback:
+                    fb = ET.SubElement(ans, "feedback", format="html")
+                    fb_text = ET.SubElement(fb, "text")
+                    fb_text.text = f"<![CDATA[{format_moodle_text(correct_opt.feedback)}]]>"
 
         # Feedback General (Correcto/Incorrecto)
         if reactivo.feedback_correct:

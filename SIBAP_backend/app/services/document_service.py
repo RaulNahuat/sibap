@@ -14,11 +14,9 @@ from app.repositories.document_repository import DocumentRepository
 logger = logging.getLogger(__name__)
 
 def upload_and_process_document(db: Session, user_id: int, filename: str, content: bytes) -> Documento:
-    # Esta función (usada síncronamente) la readaptamos para soportar is_complex también
     repo = DocumentRepository(db)
     extension = validate_file(filename, content)
 
-    # Solo para procesamiento síncrono rápido
     with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_file:
         temp_file.write(content)
         temp_path = temp_file.name
@@ -30,8 +28,6 @@ def upload_and_process_document(db: Session, user_id: int, filename: str, conten
         if not clean_text.strip():
             raise ValueError("No se pudo extraer contenido legible del documento.")
 
-        # Si es complejo y estamos aquí, deberíamos guardarlo físicamente,
-        # pero la arquitectura síncrona vieja está deprecada. Por seguridad:
         final_path = None
         if is_complex:
             storage_dir = os.path.join(os.getcwd(), "app", "storage", "documents")
@@ -168,7 +164,6 @@ def _index_document_rag(document_id: int, content_text: str) -> None:
             logger.warning(f"RAG: No se generaron chunks para el documento {document_id}.")
             return
 
-        # Si el modelo en settings es el de HuggingFace, dejamos que embedding_service use su default de Google
         model_to_use = getattr(settings, "EMBEDDING_MODEL", None)
         if model_to_use == "paraphrase-multilingual-mpnet-base-v2":
             model_to_use = None

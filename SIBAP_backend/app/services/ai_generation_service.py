@@ -8,6 +8,36 @@ from app.core.config import GOOGLE_API_KEY
 
 logger = logging.getLogger(__name__)
 
+_VALID_JSON_ESCAPES = set('"\\/ bfnrtu\n\r')
+
+
+def _sanitize_json_str(text: str) -> str:
+    result = []
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        if ch == '\\':
+            if i + 1 < n:
+                nxt = text[i + 1]
+                if nxt in _VALID_JSON_ESCAPES:
+                    result.append(ch)
+                    result.append(nxt)
+                    i += 2
+                else:
+                    result.append('\\')
+                    result.append('\\')
+                    i += 1
+            else:
+                result.append('\\')
+                result.append('\\')
+                i += 1
+        else:
+            result.append(ch)
+            i += 1
+    return ''.join(result)
+
+
 class AiGenerationService:
     def __init__(self, api_key: str = GOOGLE_API_KEY):
         self.api_key = api_key
@@ -15,14 +45,14 @@ class AiGenerationService:
 
     def _extract_json(self, text: str):
         try:
-            return json.loads(text)
+            return json.loads(_sanitize_json_str(text))
         except json.JSONDecodeError:
             pass
 
         match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text)
         if match:
             try:
-                return json.loads(match.group(1))
+                return json.loads(_sanitize_json_str(match.group(1)))
             except json.JSONDecodeError:
                 pass
 
@@ -31,7 +61,7 @@ class AiGenerationService:
             end = text.rfind('}')
             if start != -1 and end != -1:
                 json_str = text[start:end+1]
-                return json.loads(json_str)
+                return json.loads(_sanitize_json_str(json_str))
         except json.JSONDecodeError:
             pass
             
@@ -49,7 +79,7 @@ class AiGenerationService:
                     response_mime_type="application/json",
                 )
             )
-            return json.loads(response.text)
+            return json.loads(_sanitize_json_str(response.text))
             
         except Exception as e:
             logger.warning(f"Error generando contenido con {model}: {e}")

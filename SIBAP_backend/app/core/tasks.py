@@ -19,8 +19,6 @@ async def cleanup_expired_documents_loop(interval_seconds: int = 3600):
             cleanup_expired_documents()
         except Exception as e:
             logger.error(f"Task: Error en ciclo de limpieza de documentos: {e}")
-        
-        # Dormir hasta la siguiente iteración
         await asyncio.sleep(interval_seconds)
 
 def cleanup_expired_documents():
@@ -30,10 +28,8 @@ def cleanup_expired_documents():
     """
     db = SessionLocal()
     try:
-        # Límite: hace exactamente 24 horas
         cutoff_date = datetime.utcnow() - timedelta(hours=24)
         
-        # Buscar: es complejo, AÚN tiene file_path, y se subió antes del cutoff
         candidatos = db.query(Documento).filter(
             Documento.is_complex == True,
             Documento.file_path.isnot(None),
@@ -53,7 +49,6 @@ def cleanup_expired_documents():
                 except OSError as e:
                     logger.warning(f"Task: No se pudo eliminar archivo físico {doc.file_path}: {e}")
             else:
-                # Si el archivo no existía en disco pero estaba en DB, limpiamos la DB igual
                 doc.file_path = None
                 eliminados += 1
                 

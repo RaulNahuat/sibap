@@ -1,18 +1,3 @@
-"""
-pdf_engine.py — Motor de extracción de PDF para SIBAP (v2)
-=========================================================
-Mejoras respecto a la v1:
-  * is_inside_table usa ratio de solapamiento (≥60 %) en lugar de
-    contención estricta, eliminando la fuga de texto en bordes de tabla.
-  * _expand_bboxes añade padding configurable a los bboxes de pdfplumber.
-  * _classify_heading detecta encabezados por tamaño de fuente Y por el
-    flag de negrita (bit 4 de fitz), no solo por tamaño.
-  * _is_noise filtra bloques de decoración, números de página sueltos y
-    residuos de un solo carácter ANTES de agregarlos al output.
-  * El ordenamiento por columnas usa una clave (columna, y0) estable.
-  * extract_tables_from_page maneja celdas None de forma robusta.
-"""
-
 import re
 import fitz
 import pdfplumber
@@ -22,24 +7,19 @@ from collections import Counter
 
 logger = logging.getLogger(__name__)
 
-# ── Constantes configurables ──────────────────────────────────────────────────
-OVERLAP_THRESHOLD = 0.60   # fracción mínima del bloque que debe solaparse con la tabla
-TABLE_PADDING = 4          # pts de padding alrededor de cada bbox de tabla
-BOLD_FLAG = 0b10000        # bit 4 del campo flags de fitz → negrita
+OVERLAP_THRESHOLD = 0.60   
+TABLE_PADDING = 4          
+BOLD_FLAG = 0b10000        
 
 _NOISE_RE = re.compile(
-    r'^[\s\|─│\-–—=*•·°~`]+$'   # líneas puramente decorativas
-    r'|^\s*\d{1,4}\s*$'          # números de página sueltos (1-4 dígitos)
-    r'|^\s*[A-Za-z]\s*$'         # residuos de un solo carácter
-    r'|^\s*\|?\s*[a-zA-Z0-9]\s*\|?\s*$',  # celdas residuales tipo "| i |"
+    r'^[\s\|─│\-–—=*•·°~`]+$'   
+    r'|^\s*\d{1,4}\s*$'          
+    r'|^\s*[A-Za-z]\s*$'         
+    r'|^\s*\|?\s*[a-zA-Z0-9]\s*\|?\s*$',  
     re.UNICODE,
 )
 
-
-# ── Funciones auxiliares ──────────────────────────────────────────────────────
-
 def _bbox_overlap_ratio(block_bbox: tuple, table_bbox: tuple) -> float:
-    """Calcula qué fracción del bloque queda dentro de la tabla."""
     bx0, by0, bx1, by1 = block_bbox
     tx0, ty0, tx1, ty1 = table_bbox
     ix = max(0.0, min(bx1, tx1) - max(bx0, tx0))
@@ -51,31 +31,20 @@ def _bbox_overlap_ratio(block_bbox: tuple, table_bbox: tuple) -> float:
 
 def is_inside_table(bbox: tuple, table_bboxes: list,
                     threshold: float = OVERLAP_THRESHOLD) -> bool:
-    """
-    Devuelve True si el bloque de texto pertenece a alguna tabla.
-    Usa ratio de solapamiento en lugar de contención estricta para evitar
-    que variaciones de 1-2 pts en los bboxes de pdfplumber provoquen fugas.
-    """
     return any(_bbox_overlap_ratio(bbox, t) >= threshold for t in table_bboxes)
 
 
 def _expand_bboxes(bboxes: list, pad: float = TABLE_PADDING) -> list:
-    """Expande cada bbox añadiendo `pad` puntos en cada dirección."""
     return [(x0 - pad, y0 - pad, x1 + pad, y1 + pad)
             for x0, y0, x1, y1 in bboxes]
 
 
 def _is_noise(text: str) -> bool:
-    """Devuelve True si el bloque es ruido visual y debe descartarse."""
     return bool(_NOISE_RE.match(text.strip()))
 
 
 def _classify_heading(max_size: float, is_bold: bool,
                       text_len: int, base_size: float) -> str:
-    """
-    Devuelve el prefijo Markdown de encabezado adecuado o '' si es párrafo.
-    Criterio: tamaño de fuente relativo al dominante + flag de negrita fitz.
-    """
     if max_size > base_size + 4 and text_len < 80:
         return "#"
     if (max_size > base_size + 2 or is_bold) and text_len < 120:
@@ -87,10 +56,6 @@ def _classify_heading(max_size: float, is_bold: bool,
 
 
 def get_dominant_font_size(doc, max_pages: int = 10) -> float:
-    """
-    Calcula el tamaño de fuente dominante analizando las primeras N páginas.
-    El modo de la distribución representa el texto de cuerpo normal.
-    """
     sizes = []
     for i, page in enumerate(doc):
         if i >= max_pages:
@@ -104,10 +69,6 @@ def get_dominant_font_size(doc, max_pages: int = 10) -> float:
 
 
 def extract_tables_from_page(plumber_page) -> str:
-    """
-    Extrae todas las tablas de una página pdfplumber y las convierte a
-    Markdown. Maneja celdas None y filas completamente vacías de forma robusta.
-    """
     tables = plumber_page.find_tables()
     if not tables:
         return ""
@@ -120,7 +81,6 @@ def extract_tables_from_page(plumber_page) -> str:
 
         rows_md = []
         for i, row in enumerate(data):
-            # Normalizar: reemplazar None, limpiar saltos internos
             clean = [str(cell).replace("\n", " ").strip() if cell else "" for cell in row]
             if not any(clean):
                 continue
@@ -139,15 +99,6 @@ from typing import Tuple
 # ── Función principal de extracción ──────────────────────────────────────────
 
 def extract_pdf_with_layout(temp_path: str) -> Tuple[str, bool]:
-    """
-    Extrae el contenido de un PDF como Markdown estructurado.
-
-    Garantías:
-    - Ningún texto que pertenezca a una tabla se duplica fuera del bloque Markdown.
-    - Los encabezados se detectan por tamaño de fuente Y negrita.
-    - El ruido visual (números de página, decoraciones) se filtra a nivel de bloque.
-    - El orden de lectura en documentos de dos columnas es correcto.
-    """
     start_time = time.time()
 
     try:
@@ -168,25 +119,19 @@ def extract_pdf_with_layout(temp_path: str) -> Tuple[str, bool]:
     try:
         for page_index, page in enumerate(doc):
             plumber_page = pdf_p.pages[page_index]
-            # 1. Obtener y expandir bboxes de tablas detectadas por pdfplumber
             raw_bboxes = [t.bbox for t in plumber_page.find_tables()]
             if raw_bboxes:
                 is_complex = True
             table_bboxes = _expand_bboxes(raw_bboxes)
-
-            # 2. Iterar sobre bloques de texto de fitz (sort=True ordena topológicamente)
             blocks = page.get_text("dict", sort=True)["blocks"]
             extracted_blocks = []
 
             for b in blocks:
                 if b["type"] != 0:
                     continue
-
-                # Excluir si el bloque pertenece a una tabla (ratio ≥ threshold)
                 if is_inside_table(b["bbox"], table_bboxes):
                     continue
 
-                # Recopilar texto y atributos tipográficos del bloque
                 block_lines = []
                 max_size = 0.0
                 any_bold = False
@@ -205,7 +150,6 @@ def extract_pdf_with_layout(temp_path: str) -> Tuple[str, bool]:
                 if not full_text or _is_noise(full_text):
                     continue
 
-                # 3. Clasificar como encabezado o párrafo
                 heading_prefix = _classify_heading(
                     max_size, any_bold, len(full_text), base_size
                 )
@@ -218,10 +162,8 @@ def extract_pdf_with_layout(temp_path: str) -> Tuple[str, bool]:
                     "center_x": (b["bbox"][0] + b["bbox"][2]) / 2,
                 })
 
-            # 4. Concatenar bloques, ya que fitz sort=True nos los entrega en orden correcto
             page_text = "\n\n".join(blk["text"] for blk in extracted_blocks)
 
-            # 5. Agregar tablas formateadas en Markdown al final de la página
             table_md = extract_tables_from_page(plumber_page)
             all_content.append(f"{page_text}\n\n{table_md}\n" if table_md else page_text)
 

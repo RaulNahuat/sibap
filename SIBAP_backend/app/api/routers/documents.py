@@ -9,8 +9,6 @@ import json
 import re
 from pydantic import BaseModel
 
-
-
 from app.services.document_service import upload_and_process_document
 from app.services import document_service
 from app.services.drive_manager import download_from_drive
@@ -49,26 +47,22 @@ def process_document_background(
             document_id=document_id,
             status=ProcessingStatus.PROCESSING
         )
-        
-        # 1. Validación de extensión
+
         extension = validate_file(filename, file_content)
 
-        # 2. Gestión de archivo temporal base para la extracción inicial
         with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_file:
             temp_file.write(file_content)
             temp_path = temp_file.name
 
         try:
-            # 3. Extracción de contenido bruto (y flag is_complex)
+
             raw_text, is_complex = get_text_from_file(extension, temp_path, file_content)
             
-            # 4. Limpieza profunda del texto
             clean_text = clean_extracted_text(raw_text)
 
             if not clean_text.strip():
                 raise ValueError("No se pudo extraer contenido legible.")
 
-            # Gestionar almacenamiento final del físico
             final_path = None
             is_final_complex = user_is_complex or is_complex
             if is_final_complex:
@@ -80,7 +74,6 @@ def process_document_background(
                 with open(final_path, "wb") as f:
                     f.write(file_content)
 
-            # 5. Actualización final y disparo de RAG
             document_service.update_document_status(
                 db=db,
                 document_id=document_id,
@@ -182,16 +175,8 @@ async def import_from_drive(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Descarga un archivo público de Google Drive (sin credenciales) y lo
-    procesa igual que un upload local (extracción en segundo plano).
-    El archivo debe estar configurado como 'Cualquiera con el enlace'.
-    Máximo 10 MB. Soporta PDF, DOCX y cualquier binario descargable.
-    """
-    # ── Descargar el archivo vía HTTP directo ──────────────────────────────
     file_bytes = download_from_drive(body.drive_url)
 
-    # Nombre sintético basado en el file_id de la URL
     _id_match = re.search(r"/file/d/([a-zA-Z0-9_-]{25,})|[?&]id=([a-zA-Z0-9_-]{25,})", body.drive_url)
     file_id = (_id_match.group(1) or _id_match.group(2)) if _id_match else "drive_file"
     filename = f"drive_{file_id}.pdf"
@@ -202,7 +187,6 @@ async def import_from_drive(
             detail="Este archivo de Drive ya fue importado anteriormente."
         )
 
-    # ── Registrar y procesar en segundo plano ─────────────────────────────
     documento = document_service.create_document(
         db=db,
         user_id=current_user.id,
@@ -239,9 +223,6 @@ def list_documents(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Listar documentos del usuario con paginación.
-    """
     documentos, total = document_service.get_user_documents(
         db, 
         current_user.id,

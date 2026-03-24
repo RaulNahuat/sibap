@@ -16,6 +16,9 @@ class QuestionType(enum.Enum):
     MCQ = "MCQ"   
     TF = "TF"     
     OPEN = "OPEN" 
+    MATCHING = "MATCHING"
+    CALCULATED = "CALCULATED"
+    MIXED = "MIXED"
 
 class DifficultyLevel(enum.Enum):
     EASY = "EASY"
@@ -38,6 +41,10 @@ class ConfiguracionGeneracion(Base):
     difficulty: Mapped[DifficultyLevel] = mapped_column(Enum(DifficultyLevel), nullable=False)
     
     num_questions: Mapped[int] = mapped_column(Integer, nullable=False)
+    num_mcq: Mapped[int] = mapped_column(Integer, default=0)
+    num_matching: Mapped[int] = mapped_column(Integer, default=0)
+    num_calculated: Mapped[int] = mapped_column(Integer, default=0)
+    
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 
     documento: Mapped["Documento"] = relationship("Documento", back_populates="configuraciones")
