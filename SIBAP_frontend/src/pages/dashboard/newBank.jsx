@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import DocumentSelectionModal from '../../components/documents/DocumentSelectionModal';
 import { uploadDocument, getDocument } from '../../api/documents';
-import { generateQuestions } from '../../api/questions';
+import { generateQuestions, checkGenerationStatus, getBankQuestions } from '../../api/questions';
 import { getCurriculumSemesters, getCurriculumSubjects, getPrograms } from '../../api/curriculum';
 import { getErrorMessage } from '../../utils/errorHandler';
 import { useToast } from '../../context/ToastContext';
@@ -51,6 +51,8 @@ export default function NewBankPage() {
     });
 
     const [isGenerating, setIsGenerating] = useState(false);
+    const [statusMessage, setStatusMessage] = useState('');
+    const [progress, setProgress] = useState({ current: 0, total: 0 });
     const [isUploading, setIsUploading] = useState(false);
     const [showLibraryModal, setShowLibraryModal] = useState(false);
     const [error, setError] = useState('');
@@ -118,10 +120,11 @@ export default function NewBankPage() {
         }
 
         setIsGenerating(true);
+        setStatusMessage('Iniciando generación...');
+        setProgress({ current: 0, total: 0 });
         setError('');
 
         try {
-
             const difficultyMapping = {
                 'Básico': 'EASY',
                 'Intermedio': 'MEDIUM',
@@ -161,59 +164,102 @@ export default function NewBankPage() {
                 external_references: formData.externalReferences || null
             };
 
-            const response = await generateQuestions(requestData);
+            // 1. Iniciar la generación (asíncrona)
+            const initialResponse = await generateQuestions(requestData);
+            const { config_id } = initialResponse;
+            
+            // 2. Iniciar el sondeo (polling)
+            const startTime = Date.now();
+            const MAX_POLLING_TIME = 3 * 60 * 1000; // 3 minutos
 
-            const mappedQuestions = response.questions.map((q, idx) => ({
-                id: q.id,
-                questionText: q.question_text,
-                questionType: q.question_type,
-                feedback_correct: q.feedback_correct,
-                feedback_incorrect: q.feedback_incorrect,
-                answers: q.opciones.map(opt => ({
-                    id: opt.id,
-                    text: opt.option_text,
-                    isCorrect: opt.is_correct,
-                    feedback: opt.feedback
-                })),
-                correctAnswerId: q.opciones.find(opt => opt.is_correct)?.id,
-                validationStatus: 'pending',
-                metadata: {
-                    difficulty: formData.difficulty,
-                    topic: formData.topic,
-                    semester: formData.semester,
-                    generatedAt: q.created_at,
-                },
-            }));
+            const pollStatus = async () => {
+                try {
+                    // Verificación de timeout de seguridad
+                    if (Date.now() - startTime > MAX_POLLING_TIME) {
+                        throw new Error('Tiempo de espera agotado después de 3 minutos. Revisa el Banco de Preguntas más tarde.');
+                    }
 
-            // Limpiar el caché del formulario antes de navegar
-            clearFormData();
-            clearUploadedFiles();
-            clearQuestionType();
+                    const statusData = await checkGenerationStatus(config_id);
+                    const { status, question_count, total_requested, error_message } = statusData;
 
-            navigate('/dashboard/validate', {
-                state: {
-                    name: `${formData.subject} - ${formData.topic}`,
-                    subject: formData.subject,
-                    topic: formData.topic,
-                    difficulty: formData.difficulty,
-                    program: formData.program,
-                    semester: formData.semester,
-                    wrongOptionCount: formData.wrongOptionCount,
-                    plausibleDistractors: formData.plausibleDistractors,
-                    avoidAmbiguity: formData.avoidAmbiguity,
-                    externalReferences: formData.externalReferences,
-                    questions: mappedQuestions,
-                    sourceDocuments: requestData.document_ids,
-                    configId: response.config_id
+                    setProgress({ current: question_count, total: total_requested });
+
+                    if (status === 'COMPLETED') {
+                        // Obtener las preguntas finales para navegar
+                        const finalQuestions = await getBankQuestions(config_id);
+                        handleSuccessfulGeneration(finalQuestions, config_id, requestData);
+                    } else if (status === 'FAILED') {
+                        throw new Error(error_message || 'La IA falló al generar las preguntas.');
+                    } else {
+                        // Seguimos procesando: actualizar mensaje y re-agendar
+                        setStatusMessage(`Generando preguntas (${question_count}/${total_requested})...`);
+                        setTimeout(pollStatus, 3000); // Polling cada 3 segundos
+                    }
+                } catch (err) {
+                    const msg = getErrorMessage(err);
+                    setError(msg);
+                    showToast(msg, 'error', 6000);
+                    setIsGenerating(false);
                 }
-            });
+            };
+
+            // Iniciar el ciclo de polling
+            pollStatus();
+
         } catch (err) {
             const msg = getErrorMessage(err);
             setError(msg);
             showToast(msg, 'error', 6000);
-        } finally {
             setIsGenerating(false);
         }
+    };
+
+    const handleSuccessfulGeneration = (questions, config_id, requestData) => {
+        const mappedQuestions = questions.map((q, idx) => ({
+            id: q.id,
+            questionText: q.question_text,
+            questionType: q.question_type,
+            feedback_correct: q.feedback_correct,
+            feedback_incorrect: q.feedback_incorrect,
+            answers: q.opciones.map(opt => ({
+                id: opt.id,
+                text: opt.option_text,
+                isCorrect: opt.is_correct,
+                feedback: opt.feedback
+            })),
+            correctAnswerId: q.opciones.find(opt => opt.is_correct)?.id,
+            validationStatus: 'pending',
+            metadata: {
+                difficulty: formData.difficulty,
+                topic: formData.topic,
+                semester: formData.semester,
+                generatedAt: q.created_at,
+            },
+        }));
+
+        // Limpiar el caché del formulario antes de navegar
+        clearFormData();
+        clearUploadedFiles();
+        
+        navigate('/dashboard/validate', {
+            state: {
+                name: `${formData.subject} - ${formData.topic}`,
+                subject: formData.subject,
+                topic: formData.topic,
+                difficulty: formData.difficulty,
+                program: formData.program,
+                semester: formData.semester,
+                wrongOptionCount: formData.wrongOptionCount,
+                plausibleDistractors: formData.plausibleDistractors,
+                avoidAmbiguity: formData.avoidAmbiguity,
+                externalReferences: formData.externalReferences,
+                questions: mappedQuestions,
+                sourceDocuments: requestData.document_ids,
+                configId: config_id
+            }
+        });
+        
+        setIsGenerating(false);
     };
 
     const handleFileUpload = async (e) => {
@@ -879,6 +925,38 @@ export default function NewBankPage() {
                     </div>
                 </div>
                 */}
+
+                {/* Progress UI */}
+                {isGenerating && (
+                    <div className="mb-6 p-5 bg-[#f0f9ff] border border-[#bae6fd] rounded-xl animate-in fade-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-white rounded-lg shadow-sm">
+                                    <Loader2 className="w-5 h-5 text-[#0369a1] animate-spin" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-bold text-[#0369a1] leading-none mb-1">
+                                        {statusMessage}
+                                    </p>
+                                    <p className="text-[11px] text-[#0ea5e9] font-medium">
+                                        No cierres esta ventana mientras la IA trabaja
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <span className="text-lg font-black text-[#0369a1]">
+                                    {progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0}%
+                                </span>
+                            </div>
+                        </div>
+                        <div className="w-full bg-[#e0f2fe] rounded-full h-3 overflow-hidden shadow-inner">
+                            <div 
+                                className="bg-[#0369a1] h-full rounded-full transition-all duration-700 ease-out shadow-[0_0_10px_rgba(3,105,161,0.3)]" 
+                                style={{ width: `${progress.total > 0 ? (progress.current / progress.total) * 100 : 5}%` }}
+                            ></div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-3 pt-4">

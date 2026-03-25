@@ -41,3 +41,8 @@ export const addManualQuestion = async (configId, data) => {
     const response = await apiClient.post(`/api/questions/bank/${configId}/add`, data);
     return response.data;
 };
+
+export const checkGenerationStatus = async (configId) => {
+    const response = await apiClient.get(`/api/questions/status/${configId}`);
+    return response.data;
+};
