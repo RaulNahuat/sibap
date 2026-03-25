@@ -131,8 +131,8 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <div className="text-right">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <div className="hidden md:block text-right">
               <div className="text-sm font-semibold text-[#102129]">
                 {user.name + ' ' + user.last_name}
               </div>
@@ -156,7 +156,7 @@ export default function DashboardPage() {
         </header>
 
         {/* Content Scroll */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-8 sm:py-8">
+        <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
           <Outlet />
         </div>
       </main>

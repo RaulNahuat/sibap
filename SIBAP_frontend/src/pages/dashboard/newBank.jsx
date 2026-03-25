@@ -2,28 +2,23 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     UploadCloud,
-    FileText,
-    Sparkles,
-    CheckCircle,
-    MessageSquare,
-    X,
-    Library,
-    Loader2,
-    RotateCcw
+    Play, Sparkles, AlertCircle, FileText, CheckCircle, Save, Download, RefreshCw, Loader2, Info, BookOpen, BrainCircuit, GripVertical, Plus, Trash2, X, RotateCcw, UploadCloud, MessageSquare, Library
 } from 'lucide-react';
 import DocumentSelectionModal from '../../components/documents/DocumentSelectionModal';
 import { uploadDocument, getDocument } from '../../api/documents';
 import { generateQuestions, checkGenerationStatus, getBankQuestions } from '../../api/questions';
 import { getCurriculumSemesters, getCurriculumSubjects, getPrograms } from '../../api/curriculum';
 import { getErrorMessage } from '../../utils/errorHandler';
-import { useToast } from '../../context/ToastContext';
 import { useLocalStorage } from '../../hooks';
 import { useAuth } from '../../context/AuthContext';
+import { toast } from 'react-hot-toast';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 
 export default function NewBankPage() {
     const navigate = useNavigate();
-    const { showToast } = useToast();
     const { user } = useAuth();
+
+    const [showClearModal, setShowClearModal] = useState(false);
 
     const filesKey = user?.id ? `sibap_newbank_files_${user.id}` : 'sibap_newbank_files';
     const formKey = user?.id ? `sibap_newbank_form_${user.id}` : 'sibap_newbank_form';
@@ -198,7 +193,7 @@ export default function NewBankPage() {
                 } catch (err) {
                     const msg = getErrorMessage(err);
                     setError(msg);
-                    showToast(msg, 'error', 6000);
+                    toast.error(msg, { duration: 6000 });
                     setIsGenerating(false);
                 }
             };
@@ -209,7 +204,7 @@ export default function NewBankPage() {
         } catch (err) {
             const msg = getErrorMessage(err);
             setError(msg);
-            showToast(msg, 'error', 6000);
+            toast.error(msg, { duration: 6000 });
             setIsGenerating(false);
         }
     };
@@ -281,7 +276,7 @@ export default function NewBankPage() {
         } catch (err) {
             const msg = getErrorMessage(err);
             setError(msg);
-            showToast(msg, 'error', 4000);
+            toast.error(msg, { duration: 4000 });
         } finally {
             setIsUploading(false);
         }
@@ -302,7 +297,7 @@ export default function NewBankPage() {
         } catch (err) {
             const msg = 'Error al cargar documentos seleccionados';
             setError(msg);
-            showToast(msg, 'error', 4000);
+            toast.error(msg, { duration: 4000 });
         } finally {
             setIsUploading(false);
         }
@@ -345,10 +340,13 @@ export default function NewBankPage() {
     };
 
     const handleClearAll = () => {
-        if (window.confirm('¿Estás seguro de que deseas limpiar todos los campos y archivos?')) {
-            clearFormData();
-            clearUploadedFiles();
-        }
+        setShowClearModal(true);
+    };
+
+    const confirmClearAll = () => {
+        clearFormData();
+        clearUploadedFiles();
+        setShowClearModal(false);
     };
 
     return (
@@ -365,7 +363,7 @@ export default function NewBankPage() {
                 </div>
                 <button
                     onClick={handleClearAll}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#64748b] hover:text-[#1a5276] hover:bg-white rounded-md transition-all border border-transparent hover:border-[#e2e8f0] self-end sm:self-auto"
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#64748b] hover:text-[#1a5276] hover:bg-white rounded-lg transition-all border border-transparent hover:border-[#e2e8f0] self-end sm:self-auto"
                 >
                     <RotateCcw className="w-4 h-4" />
                     Limpiar
@@ -373,8 +371,8 @@ export default function NewBankPage() {
             </div>
 
             {/* Step 1: Carga de Insumos */}
-            <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden shadow-sm mb-6">
-                <div className="p-4 sm:p-5 border-b border-[#f1f5f9] flex items-center gap-3 bg-[#f8fafc]">
+            <div className="bg-white border border-[#e2e8f0]/60 rounded-2xl overflow-hidden shadow-md mb-6">
+                <div className="p-4 sm:p-5 border-b border-[#f1f5f9] flex items-center gap-3 bg-slate-50">
                     <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1a5276] text-white flex items-center justify-center font-bold text-sm shadow-sm">
                         1
                     </div>
@@ -388,7 +386,7 @@ export default function NewBankPage() {
                             <div
                                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                 onDrop={(e) => { e.preventDefault(); e.stopPropagation(); handleFileUpload(e); }}
-                                className="relative flex flex-col items-center justify-center aspect-square sm:aspect-[4/3] w-full border-2 border-dashed border-[#cbd5e1] rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] hover:border-[#1a5276] transition-all cursor-pointer group"
+                                className="relative flex flex-col items-center justify-center h-32 sm:h-40 w-full border-2 border-dashed border-[#cbd5e1] rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] hover:border-[#1a5276] transition-all cursor-pointer group"
                             >
                                 <input
                                     type="file"
@@ -447,7 +445,7 @@ export default function NewBankPage() {
                                     )}
                                 </div>
 
-                                <div className="flex-1 bg-[#fdfdfd] rounded-xl border border-[#f1f5f9] min-h-[160px] max-h-[220px] overflow-y-auto custom-scrollbar p-2">
+                                <div className="flex-1 bg-[#fdfdfd] rounded-xl border border-[#f1f5f9] min-h-[120px] max-h-[180px] overflow-y-auto custom-scrollbar p-2">
                                     {uploadedFiles.length === 0 ? (
                                         <div className="h-full flex flex-col items-center justify-center text-[#94a3b8]">
                                             <FileText className="w-8 h-8 mb-2 opacity-10" />
@@ -488,7 +486,7 @@ export default function NewBankPage() {
                                     Referencias Externas (Opcional)
                                 </label>
                                 <textarea
-                                    className="w-full px-3 py-2 border border-[#e2e8f0] rounded-lg text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent bg-[#f8fafc] min-h-[80px]"
+                                    className="w-full px-3 py-2 border border-[#e2e8f0] rounded-xl text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] bg-slate-50 min-h-[80px] transition-all"
                                     placeholder="Pega aquí URLs o bibliografía adicional..."
                                     value={formData.externalReferences}
                                     onChange={(e) => setFormData({ ...formData, externalReferences: e.target.value })}
@@ -520,25 +518,25 @@ export default function NewBankPage() {
             </div>
 
             {/* Step 2: Parámetros Académicos */}
-            <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 sm:p-8 mb-6">
+            <div className="bg-white border border-[#e2e8f0]/60 rounded-2xl p-6 sm:p-8 mb-6 shadow-md">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#1a5276] text-white flex items-center justify-center text-sm sm:text-base font-semibold flex-shrink-0">
                         2
                     </div>
-                    <h2 className="text-base sm:text-lg font-semibold text-[#102129]">
+                    <h2 className="text-lg font-bold text-slate-800">
                         Parámetros Académicos
                     </h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-y-5 gap-x-6 mb-6">
                     {/* Programa Educativo */}
-                    <div>
+                    <div className="lg:col-span-4">
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Programa Educativo
                         </label>
                         <div className="space-y-2">
                             <select
-                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm text-[#64748b] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] transition-all"
                                 value={availablePrograms.some(p => p.nombre === formData.program) ? formData.program : (formData.program ? "manual" : "")}
                                 onChange={(e) => {
                                     const val = e.target.value;
@@ -579,21 +577,21 @@ export default function NewBankPage() {
                                     placeholder="Nombre del programa educativo"
                                     value={formData.program}
                                     onChange={(e) => setFormData({ ...formData, program: e.target.value, program_id: null })}
-                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent animate-in fade-in slide-in-from-top-1"
+                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] transition-all animate-in fade-in slide-in-from-top-1"
                                 />
                             )}
                         </div>
                     </div>
 
                     {/* Semestre */}
-                    <div>
+                    <div className="lg:col-span-4">
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Semestre / Grado
                         </label>
                         <div className="relative">
                             {!isManualMode && isISProgram ? (
                                 <select
-                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm text-[#64748b] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] transition-all"
                                     value={selectedSemesterNum}
                                     onChange={(e) => {
                                         const sem = e.target.value;
@@ -613,7 +611,7 @@ export default function NewBankPage() {
                                     placeholder="Ej. 5to Semestre"
                                     value={formData.semester}
                                     onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] transition-all"
                                 />
                             )}
                             {isISProgram && (
@@ -628,13 +626,13 @@ export default function NewBankPage() {
                     </div>
 
                     {/* Materia / Asignatura */}
-                    <div>
+                    <div className="lg:col-span-4">
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Materia / Asignatura
                         </label>
                         {!isManualMode && isISProgram ? (
                             <select
-                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm text-[#64748b] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                                className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm text-[#64748b] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] transition-all"
                                 value={formData.subject}
                                 onChange={(e) => {
                                     const subName = e.target.value;
@@ -666,7 +664,7 @@ export default function NewBankPage() {
                     </div>
 
                     {/* Tema Principal */}
-                    <div>
+                    <div className="lg:col-span-6">
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Tema Principal
                         </label>
@@ -680,7 +678,7 @@ export default function NewBankPage() {
                     </div>
 
                     {/* Subtema (Opcional) */}
-                    <div>
+                    <div className="lg:col-span-6">
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Subtema (Opcional)
                         </label>
@@ -694,13 +692,13 @@ export default function NewBankPage() {
                     </div>
 
                     {/* Objetivos de Aprendizaje */}
-                    <div className="col-span-2">
+                    <div className="lg:col-span-12">
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Objetivos de Aprendizaje del Tema
                             <span className="ml-2 text-xs font-normal text-[#94a3b8]">(Opcional)</span>
                         </label>
                         <textarea
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-lg text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent bg-[#f8fafc] min-h-[90px] resize-y"
+                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] bg-slate-50 min-h-[90px] resize-y transition-all"
                             placeholder="Ej: El estudiante identificará las fases del ciclo de vida del software y justificará su orden lógico..."
                             value={formData.learningObjectives}
                             onChange={(e) => setFormData({ ...formData, learningObjectives: e.target.value })}
@@ -709,14 +707,16 @@ export default function NewBankPage() {
                             Las preguntas se alinearán a estos objetivos para medir exactamente lo que deseas evaluar.
                         </p>
                     </div>
+                </div>
 
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-5 gap-x-6 mb-6">
                     {/* Nivel de Dificultad */}
                     <div>
                         <label className="block text-sm font-medium text-[#102129] mb-2">
                             Nivel de Dificultad
                         </label>
                         <select
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] bg-white transition-all"
                             value={formData.difficulty}
                             onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
                         >
@@ -724,62 +724,6 @@ export default function NewBankPage() {
                             <option>Intermedio</option>
                             <option>Avanzado</option>
                         </select>
-                    </div>
-
-                    {/* Número de Preguntas por Tipo */}
-                    <div className="col-span-1 md:col-span-2">
-                        <label className="block text-sm font-medium text-[#102129] mb-3">
-                            Número de Preguntas por Tipo
-                        </label>
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-3 sm:p-4">
-                                <label className="block text-[10px] sm:text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
-                                    Opción Múltiple
-                                </label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="50"
-                                    value={formData.numMCQ}
-                                    onChange={(e) => setFormData({ ...formData, numMCQ: parseInt(e.target.value) || 0 })}
-                                    className="w-full px-3 py-2 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent text-center font-semibold text-[#102129]"
-                                />
-                                <p className="text-[10px] text-[#94a3b8] mt-1 text-center">4 opciones, 1 correcta</p>
-                            </div>
-                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-3 sm:p-4">
-                                <label className="block text-[10px] sm:text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
-                                    Relacionar Columnas
-                                </label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="50"
-                                    value={formData.numMatching}
-                                    onChange={(e) => setFormData({ ...formData, numMatching: parseInt(e.target.value) || 0 })}
-                                    className="w-full px-3 py-2 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent text-center font-semibold text-[#102129]"
-                                />
-                                <p className="text-[10px] text-[#94a3b8] mt-1 text-center">4–6 pares de conceptos</p>
-                            </div>
-                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-3 sm:p-4">
-                                <label className="block text-[10px] sm:text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
-                                    Calculada
-                                </label>
-                                <input
-                                    type="number"
-                                    min="0"
-                                    max="50"
-                                    value={formData.numCalculated}
-                                    onChange={(e) => setFormData({ ...formData, numCalculated: parseInt(e.target.value) || 0 })}
-                                    className="w-full px-3 py-2 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent text-center font-semibold text-[#102129]"
-                                />
-                                <p className="text-[10px] text-[#94a3b8] mt-1 text-center">Problemas numéricos</p>
-                            </div>
-                        </div>
-                        <p className="mt-2 text-xs text-[#64748b]">
-                            Total: <span className="font-semibold text-[#102129]">
-                                {(parseInt(formData.numMCQ) || 0) + (parseInt(formData.numMatching) || 0) + (parseInt(formData.numCalculated) || 0)}
-                            </span> preguntas · Escribe 0 para omitir un tipo.
-                        </p>
                     </div>
 
                     {/* Número de Opciones Incorrectas */}
@@ -793,9 +737,65 @@ export default function NewBankPage() {
                             max="5"
                             value={formData.wrongOptionCount}
                             onChange={(e) => setFormData({ ...formData, wrongOptionCount: parseInt(e.target.value) })}
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] bg-white transition-all"
                         />
                     </div>
+                </div>
+
+                {/* Número de Preguntas por Tipo */}
+                <div className="mb-6">
+                    <label className="block text-sm font-medium text-[#102129] mb-3">
+                        Número de Preguntas por Tipo
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                        <div className="bg-slate-50 border border-[#e2e8f0]/80 rounded-xl p-3 sm:p-5 transition-all hover:border-[#1a5276]/30 hover:bg-slate-100/50 shadow-sm">
+                            <label className="block text-[10px] sm:text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
+                                Opción Múltiple
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="50"
+                                value={formData.numMCQ}
+                                onChange={(e) => setFormData({ ...formData, numMCQ: parseInt(e.target.value) || 0 })}
+                                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] text-center font-semibold text-slate-800 bg-white transition-all"
+                            />
+                            <p className="text-[9px] sm:text-[10px] text-[#94a3b8] mt-1.5 text-center">4 opciones, 1 correcta</p>
+                        </div>
+                        <div className="bg-slate-50 border border-[#e2e8f0]/80 rounded-xl p-3 sm:p-5 transition-all hover:border-[#1a5276]/30 hover:bg-slate-100/50 shadow-sm">
+                            <label className="block text-[10px] sm:text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
+                                Relacionar Columnas
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="50"
+                                value={formData.numMatching}
+                                onChange={(e) => setFormData({ ...formData, numMatching: parseInt(e.target.value) || 0 })}
+                                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] text-center font-semibold text-slate-800 bg-white transition-all"
+                            />
+                            <p className="text-[9px] sm:text-[10px] text-[#94a3b8] mt-1.5 text-center">4–6 pares de conceptos</p>
+                        </div>
+                        <div className="bg-slate-50 border border-[#e2e8f0]/80 rounded-xl p-3 sm:p-5 transition-all hover:border-[#1a5276]/30 hover:bg-slate-100/50 shadow-sm">
+                            <label className="block text-[10px] sm:text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
+                                Calculada
+                            </label>
+                            <input
+                                type="number"
+                                min="0"
+                                max="50"
+                                value={formData.numCalculated}
+                                onChange={(e) => setFormData({ ...formData, numCalculated: parseInt(e.target.value) || 0 })}
+                                className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] text-center font-semibold text-slate-800 bg-white transition-all"
+                            />
+                            <p className="text-[9px] sm:text-[10px] text-[#94a3b8] mt-1.5 text-center">Problemas numéricos</p>
+                        </div>
+                    </div>
+                    <p className="mt-2 text-xs text-[#64748b]">
+                        Total: <span className="font-semibold text-[#102129]">
+                            {(parseInt(formData.numMCQ) || 0) + (parseInt(formData.numMatching) || 0) + (parseInt(formData.numCalculated) || 0)}
+                        </span> preguntas · Escribe 0 para omitir un tipo.
+                    </p>
                 </div>
 
                 {/* Restricciones Pedagógicas */}
@@ -848,12 +848,12 @@ export default function NewBankPage() {
             </div>
 
             {/* Step 3: Configuración de IA */}
-            <div className="bg-white border border-[#e2e8f0] rounded-xl p-8 mb-6">
+            <div className="bg-white border border-[#e2e8f0]/60 rounded-2xl p-6 sm:p-8 mb-6 shadow-md">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-10 h-10 rounded-full bg-[#1a5276] text-white flex items-center justify-center text-base font-semibold flex-shrink-0">
                         3
                     </div>
-                    <h2 className="text-lg font-semibold text-[#102129]">
+                    <h2 className="text-lg font-bold text-slate-800">
                         Configuración de IA
                     </h2>
                 </div>
@@ -865,7 +865,7 @@ export default function NewBankPage() {
                             Modelo de Inteligencia Artificial
                         </label>
                         <select
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent transition-all"
+                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] transition-all"
                             value={formData.aiModel}
                             onChange={(e) => setFormData({ ...formData, aiModel: e.target.value })}
                         >
@@ -960,13 +960,13 @@ export default function NewBankPage() {
 
                 {/* Action Buttons */}
                 <div className="flex justify-end gap-3 pt-4">
-                    <button className="px-6 py-3 rounded-md border border-[#e2e8f0] text-sm font-medium text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#102129] transition-all">
+                    <button className="px-6 py-3 rounded-xl border border-[#e2e8f0] text-sm font-medium text-[#64748b] hover:bg-[#f1f5f9] hover:text-slate-800 transition-all">
                         Guardar Borrador
                     </button>
                     <button
                         onClick={handleGenerate}
                         disabled={isGenerating}
-                        className="bg-[#1a5276] text-white px-6 py-3 rounded-md font-semibold text-sm flex items-center gap-2 hover:bg-[#154360] transition-all shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-[#1a5276] text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#154360] transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         <Sparkles className="w-4 h-4" />
                         {isGenerating ? 'Generando...' : 'Generar Reactivos con IA'}
@@ -980,6 +980,16 @@ export default function NewBankPage() {
                 onClose={() => setShowLibraryModal(false)}
                 onSelect={handleLibrarySelect}
                 selectedIds={uploadedFiles.map(f => f.id)}
+            />
+            <ConfirmModal
+                isOpen={showClearModal}
+                onClose={() => setShowClearModal(false)}
+                onConfirm={confirmClearAll}
+                title="Limpiar Formulario"
+                message="¿Estás seguro de que deseas limpiar todos los campos y borrar los archivos cargados? Esta acción no se puede deshacer."
+                confirmText="Sí, limpiar todo"
+                cancelText="Cancelar"
+                danger={true}
             />
         </div>
     );

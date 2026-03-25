@@ -77,32 +77,37 @@ export default function DashboardHome() {
 
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
+            <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-6 sm:mb-10">
                 {stats.map((stat, index) => {
                     const Icon = stat.icon;
                     const TrendIcon = stat.trendIcon;
                     return (
                         <div
                             key={index}
-                            className="bg-white p-6 rounded-lg border border-[#e2e8f0] flex flex-col gap-3 shadow-sm"
+                            className="bg-white p-3 sm:p-6 rounded-2xl border border-[#e2e8f0]/60 flex flex-col justify-between gap-1 sm:gap-3 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden"
                         >
-                            <div className="flex items-center justify-between text-sm font-medium text-[#64748b]">
-                                <span>{stat.label}</span>
-                                <Icon className="w-5 h-5 text-[#1a5276]" />
-                            </div>
-                            {loading ? (
-                                <div className="h-8 w-24 bg-gray-200 animate-pulse rounded"></div>
-                            ) : (
-                                <div className="text-[32px] font-bold text-[#102129]">
-                                    {stat.value}
+                            <div className="flex flex-col sm:flex-row items-center sm:items-start sm:justify-between text-center sm:text-left w-full mb-1 sm:mb-0">
+                                <span className="text-[10px] sm:text-sm font-medium text-[#64748b] leading-tight order-2 sm:order-1 mt-1 sm:mt-0">{stat.label}</span>
+                                <div className="w-6 h-6 sm:w-auto sm:h-auto bg-[#f1f5f9] sm:bg-transparent rounded-full flex items-center justify-center shrink-0 order-1 sm:order-2 mb-1 sm:mb-0 text-[#1a5276]">
+                                    <Icon className="w-3.5 h-3.5 sm:w-5 sm:h-5" />
                                 </div>
-                            )}
-                            <div
-                                className={`text-[13px] flex items-center gap-1 ${TrendIcon ? 'text-[#27ae60]' : 'text-[#64748b]'
-                                    }`}
-                            >
-                                {TrendIcon && <TrendIcon className="w-4 h-4" />}
-                                {stat.trend}
+                            </div>
+                            
+                            <div className="flex flex-col items-center sm:items-start">
+                                {loading ? (
+                                    <div className="h-6 w-12 sm:h-8 sm:w-24 bg-gray-200 animate-pulse rounded"></div>
+                                ) : (
+                                    <div className="text-xl sm:text-[32px] font-bold text-[#102129] leading-none mb-1 sm:mb-2">
+                                        {stat.value}
+                                    </div>
+                                )}
+                                <div
+                                    className={`text-[9px] sm:text-[13px] flex justify-center sm:justify-start items-center gap-0.5 sm:gap-1 w-full text-center sm:text-left leading-tight ${TrendIcon ? 'text-[#27ae60]' : 'text-[#64748b]'
+                                        }`}
+                                >
+                                    {TrendIcon && <TrendIcon className="w-2.5 h-2.5 sm:w-4 sm:h-4 shrink-0" />}
+                                    <span className="truncate">{stat.trend}</span>
+                                </div>
                             </div>
                         </div>
                     );
@@ -110,19 +115,19 @@ export default function DashboardHome() {
             </div>
 
             {/* CTA Banner */}
-            <div className="bg-gradient-to-br from-[#1a5276] to-[#154360] rounded-lg p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8 sm:mb-10 shadow-[0_4px_12px_rgba(26,82,118,0.15)]">
+            <div className="bg-gradient-to-br from-[#1a5276] to-[#154360] rounded-2xl p-5 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-10 shadow-lg">
                 <div className="text-white">
-                    <h3 className="text-lg sm:text-xl font-bold mb-2">
+                    <h3 className="text-base sm:text-xl font-bold mb-1 sm:mb-2 text-white">
                         Crear un Nuevo Banco de Preguntas
                     </h3>
-                    <p className="text-sm sm:text-[15px] opacity-90">
+                    <p className="text-xs sm:text-[15px] text-blue-100">
                         Sube tus materiales (PDF, DOCX) y deja que la IA genere
                         reactivos personalizados.
                     </p>
                 </div>
                 <button
                     onClick={() => navigate('/dashboard/new-bank')}
-                    className="w-full sm:w-auto bg-white text-[#1a5276] px-6 py-3 rounded-md font-semibold text-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform"
+                    className="w-full sm:w-auto bg-white text-[#1a5276] px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform shadow-md"
                 >
                     <Sparkles className="w-[18px] h-[18px]" />
                     Comenzar ahora

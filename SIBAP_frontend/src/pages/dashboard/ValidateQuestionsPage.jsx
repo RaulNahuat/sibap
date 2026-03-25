@@ -331,7 +331,7 @@ export default function ValidateQuestionsPage() {
             </div>
 
             {/* Bank Info Card - Sticky */}
-            <div className="sticky top-0 z-10 bg-[#f4f7f6] pb-4 -mx-4 sm:-mx-8 px-4 sm:px-8">
+            <div className="sticky top-0 z-10 bg-[#f4f7f6] pb-4">
                 <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 sm:p-6 shadow-sm">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                         <div>

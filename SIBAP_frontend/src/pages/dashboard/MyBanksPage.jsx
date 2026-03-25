@@ -110,8 +110,8 @@ export default function MyBanksPage() {
             </div>
 
             {/* Filters and Search */}
-            <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 mb-6">
-                <div className="flex flex-col sm:flex-row items-center gap-4">
+            <div className="bg-white border border-[#e2e8f0]/60 rounded-2xl p-4 mb-6 shadow-sm">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                     {/* Search */}
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
@@ -120,7 +120,7 @@ export default function MyBanksPage() {
                             placeholder="Buscar por nombre o materia..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2.5 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                            className="w-full pl-10 pr-4 py-2.5 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] transition-all"
                         />
                     </div>
 
@@ -130,7 +130,7 @@ export default function MyBanksPage() {
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            className="px-4 py-2.5 border border-[#e2e8f0] rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
+                            className="w-full sm:w-auto px-4 py-2.5 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] transition-all bg-white"
                         >
                             <option value="all">Todos</option>
                             <option value="completed">Completados</option>
@@ -141,41 +141,35 @@ export default function MyBanksPage() {
             </div>
 
             {/* Stats Summary */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div className="bg-white border border-[#e2e8f0] rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-[#e9f5f8] rounded-lg flex items-center justify-center">
-                            <FolderOpen className="w-5 h-5 text-[#1a5276]" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold text-[#102129]">{banks.length}</div>
-                            <div className="text-xs text-[#64748b]">Total de Bancos</div>
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
+                <div className="bg-white border border-[#e2e8f0]/60 rounded-xl p-2 sm:p-4 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-1 sm:gap-3 hover:shadow-md transition-all">
+                    <div className="w-7 h-7 sm:w-10 sm:h-10 bg-[#e9f5f8] rounded-full sm:rounded-lg flex items-center justify-center shrink-0 mb-1 sm:mb-0">
+                        <FolderOpen className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#1a5276]" />
+                    </div>
+                    <div className="flex flex-col items-center sm:items-start w-full">
+                        <div className="text-[10px] sm:text-xs text-[#64748b] leading-tight order-2 sm:order-1 mt-1 sm:mt-0">Total</div>
+                        <div className="text-xl sm:text-2xl font-bold text-[#102129] leading-none order-1 sm:order-2">{banks.length}</div>
+                    </div>
+                </div>
+                <div className="bg-white border border-[#e2e8f0]/60 rounded-xl p-2 sm:p-4 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-1 sm:gap-3 hover:shadow-md transition-all">
+                    <div className="w-7 h-7 sm:w-10 sm:h-10 bg-green-50 rounded-full sm:rounded-lg flex items-center justify-center shrink-0 mb-1 sm:mb-0">
+                        <CheckCircle className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-green-600" />
+                    </div>
+                    <div className="flex flex-col items-center sm:items-start w-full">
+                        <div className="text-[10px] sm:text-xs text-[#64748b] leading-tight order-2 sm:order-1 mt-1 sm:mt-0">Validados</div>
+                        <div className="text-xl sm:text-2xl font-bold text-[#102129] leading-none order-1 sm:order-2">
+                            {banks.filter(b => b.isCompleted).length}
                         </div>
                     </div>
                 </div>
-                <div className="bg-white border border-[#e2e8f0] rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center">
-                            <CheckCircle className="w-5 h-5 text-green-600" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold text-[#102129]">
-                                {banks.filter(b => b.isCompleted).length}
-                            </div>
-                            <div className="text-xs text-[#64748b]">Completados</div>
-                        </div>
+                <div className="bg-white border border-[#e2e8f0]/60 rounded-xl p-2 sm:p-4 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-1 sm:gap-3 hover:shadow-md transition-all">
+                    <div className="w-7 h-7 sm:w-10 sm:h-10 bg-amber-50 rounded-full sm:rounded-lg flex items-center justify-center shrink-0 mb-1 sm:mb-0">
+                        <Clock className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-amber-600" />
                     </div>
-                </div>
-                <div className="bg-white border border-[#e2e8f0] rounded-lg p-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-amber-600" />
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold text-[#102129]">
-                                {banks.filter(b => !b.isCompleted).length}
-                            </div>
-                            <div className="text-xs text-[#64748b]">En Progreso</div>
+                    <div className="flex flex-col items-center sm:items-start w-full">
+                        <div className="text-[10px] sm:text-xs text-[#64748b] leading-tight order-2 sm:order-1 mt-1 sm:mt-0">Pendientes</div>
+                        <div className="text-xl sm:text-2xl font-bold text-[#102129] leading-none order-1 sm:order-2">
+                            {banks.filter(b => !b.isCompleted).length}
                         </div>
                     </div>
                 </div>
@@ -199,8 +193,8 @@ export default function MyBanksPage() {
                     {filteredBanks.map((bank) => (
                         <div
                             key={bank.id}
-                            className="bg-white border border-[#e2e8f0] rounded-lg p-4 sm:p-6 hover:shadow-md transition-all"
-                         Pall-6>
+                            className="bg-white border border-[#e2e8f0]/60 rounded-2xl p-4 sm:p-6 shadow-sm hover:shadow-md transition-all"
+                        >
                             <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
                                 <div className="flex-1 w-full">
                                     <div className="flex items-center gap-3 mb-2">

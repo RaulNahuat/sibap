@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../context/ToastContext';
+import { toast } from 'react-hot-toast';
 import {
     getProfile as getCurrentUserApi,
     updateProfile as updateProfileApi,
@@ -18,11 +18,9 @@ import {
     CheckCircle,
     Save,
 } from 'lucide-react';
-
 export default function MyProfile() {
     const navigate = useNavigate();
     const { user, update, logout } = useAuth();
-    const { showToast } = useToast();
     const [formData, setFormData] = useState({
         name: user?.name || '',
         lastName: user?.last_name || '',
@@ -83,11 +81,11 @@ export default function MyProfile() {
 
             update(response);
 
-            showToast('Perfil actualizado correctamente', 'success');
+            toast.success('Perfil actualizado correctamente');
         } catch (error) {
             console.error('Error al actualizar el perfil:', error);
             const errorMessage = getErrorMessage(error);
-            showToast(errorMessage, 'error');
+            toast.error(errorMessage);
         }
     };
 
@@ -112,22 +110,22 @@ export default function MyProfile() {
             }));
 
             setShowPasswordModal(false);
-            showToast('Contraseña actualizada correctamente', 'success');
+            toast.success('Contraseña actualizada correctamente');
         } catch (error) {
             console.error('Error al actualizar la contraseña:', error);
             const errorMessage = getErrorMessage(error);
-            showToast(errorMessage, 'error');
+            toast.error(errorMessage);
         }
     };
 
     const confirmUpdatePassword = () => {
         if (formData.newPassword !== formData.confirmPassword) {
-            showToast('Las contraseñas no coinciden', 'warning');
+            toast.error('Las contraseñas no coinciden', { icon: '⚠️' });
             return;
         }
 
         if (!formData.currentPassword || !formData.newPassword) {
-            showToast('Por favor completa todos los campos de contraseña', 'warning');
+            toast.error('Por favor completa todos los campos de contraseña', { icon: '⚠️' });
             return;
         }
 
@@ -136,7 +134,7 @@ export default function MyProfile() {
 
     const handleDeleteAccount = async () => {
         if (!deletePassword) {
-            showToast('Por favor ingresa tu contraseña para confirmar', 'warning');
+            toast.error('Por favor ingresa tu contraseña para confirmar', { icon: '⚠️' });
             return;
         }
 
@@ -147,15 +145,14 @@ export default function MyProfile() {
 
             const response = await requestAccountDeletionApi(payload);
 
-
-            showToast('Tu cuenta ha sido marcada para eliminación', 'info');
+            toast.success('Tu cuenta ha sido marcada para eliminación', { icon: 'ℹ️' });
 
             logout();
             navigate('/login', { replace: true });
         } catch (error) {
             console.error('Error al eliminar la cuenta:', error);
             const errorMessage = getErrorMessage(error);
-            showToast(errorMessage, 'error');
+            toast.error(errorMessage);
         } finally {
             setDeletePassword('');
             setShowDeleteModal(false);
@@ -216,7 +213,7 @@ export default function MyProfile() {
                         </div>
 
                         {/* Form Grid */}
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             {/* First Name */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-[13px] font-medium text-[#102129]">
@@ -246,7 +243,7 @@ export default function MyProfile() {
                             </div>
 
                             {/* Email - Full Width */}
-                            <div className="col-span-2 flex flex-col gap-2">
+                            <div className="sm:col-span-2 flex flex-col gap-2">
                                 <label className="text-[13px] font-medium text-[#102129]">
                                     Correo
                                 </label>
@@ -308,7 +305,7 @@ export default function MyProfile() {
                         </div>
 
                         {/* Form Grid */}
-                        <div className="grid grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                             {/* Current Password */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-[13px] font-medium text-[#102129]">
@@ -324,8 +321,8 @@ export default function MyProfile() {
                                 />
                             </div>
 
-                            {/* Spacer */}
-                            <div></div>
+                            {/* Spacer - Hidden on mobile */}
+                            <div className="hidden sm:block"></div>
 
                             {/* New Password */}
                             <div className="flex flex-col gap-2">
@@ -380,7 +377,7 @@ export default function MyProfile() {
                         </div>
 
                         {/* Content */}
-                        <div className="flex justify-between items-center gap-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
                             <div>
                                 <p className="text-sm text-[#7f1d1d] font-medium mb-1">
                                     Solicitar eliminación permanente de la cuenta

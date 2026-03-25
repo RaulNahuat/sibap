@@ -7,10 +7,13 @@
 @plugin "@tailwindcss/typography";
 
 html,
+html,
 body,
 #root {
   height: 100%;
   margin: 0;
+  overflow: hidden;
+  background-color: #f4f7f6;
 }
 
 /* Custom CSS Variables */
@@ -29,7 +32,6 @@ body,
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  background-color: white;
 }
 
 code {

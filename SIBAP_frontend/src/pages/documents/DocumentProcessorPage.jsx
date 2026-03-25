@@ -381,8 +381,8 @@ const DocumentProcessorPage = () => {
 
             {/* Tabla de documentos */}
             <div className="bg-white rounded-lg border border-[#00000014] overflow-hidden shadow-sm">
-                {/* Header de tabla */}
-                <div className="grid grid-cols-12 gap-4 px-4 py-2.5 bg-[#e6eceb] border-b border-[#00000014]">
+                {/* Header de tabla - Hidden on Mobile */}
+                <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2.5 bg-[#e6eceb] border-b border-[#00000014]">
                     <div className="col-span-1 flex items-center">
                         <input
                             type="checkbox"
@@ -395,7 +395,7 @@ const DocumentProcessorPage = () => {
                         Nombre del documento
                     </div>
                     <div className="col-span-2 text-xs font-medium text-[#7b8a8a]">
-                        Tipo
+                        Tipo / Estado
                     </div>
                     <div className="col-span-2 text-xs font-medium text-[#7b8a8a]">
                         Fecha de carga
@@ -423,27 +423,29 @@ const DocumentProcessorPage = () => {
                     filteredDocuments.map((doc) => (
                         <div
                             key={doc.id}
-                            className="grid grid-cols-12 gap-4 px-4 py-3 border-b border-[#00000014] hover:bg-[#f4f7f6] transition-colors items-center group"
+                            className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 px-4 py-4 md:py-3 border-b border-[#00000014] hover:bg-[#f4f7f6] transition-colors md:items-center group"
                         >
-                            {/* Checkbox */}
-                            <div className="col-span-1">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedDocs.includes(doc.id)}
-                                    onChange={() => toggleSelectDoc(doc.id)}
-                                    className="w-4 h-4 rounded border-[#00000014] text-[#1a5276] focus:ring-[#1a5276]"
-                                />
-                            </div>
-
-                            {/* Nombre */}
-                            <div className="col-span-5">
-                                <div className="flex flex-col gap-0.5 mt-2 mb-2">
-                                    <p className="text-sm font-medium text-[#0b2540] truncate pr-4" title={doc.filename}>
+                            {/* Checkbox & Name (Responsive Pair) */}
+                            <div className="col-span-6 flex items-start gap-3">
+                                <div className="mt-1">
+                                    <input
+                                        type="checkbox"
+                                        checked={selectedDocs.includes(doc.id)}
+                                        onChange={() => toggleSelectDoc(doc.id)}
+                                        className="w-4 h-4 rounded border-[#00000014] text-[#1a5276] focus:ring-[#1a5276]"
+                                    />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-bold md:font-medium text-[#0b2540] truncate pr-4" title={doc.filename}>
                                         {doc.filename}
                                     </p>
                                     <div className="flex flex-wrap items-center gap-2 mt-1">
                                         <p className="text-[11px] text-[#7b8a8a]">
                                             {doc.characters?.toLocaleString()} caracteres
+                                        </p>
+                                        <span className="md:hidden"> · </span>
+                                        <p className="md:hidden text-[11px] text-[#7b8a8a]">
+                                            {formatDate(doc.uploaded_at)}
                                         </p>
                                         {getStorageBadge(doc)}
                                     </div>
@@ -451,42 +453,37 @@ const DocumentProcessorPage = () => {
                             </div>
 
                             {/* Estado y Tipo */}
-                            <div className="col-span-2 flex flex-col gap-1 items-start">
+                            <div className="col-span-2 flex flex-row md:flex-col gap-2 md:gap-1 items-center md:items-start ml-7 md:ml-0">
                                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getFileTypeBadge(doc.file_type)}`}>
                                     {doc.file_type}
                                 </span>
                                 {getStatusBadge(doc.status, doc.error_message)}
                             </div>
 
-                            {/* Fecha */}
-                            <div className="col-span-2">
+                            {/* Fecha - Hidden on small screens (moved to subtitle) */}
+                            <div className="hidden md:block col-span-2">
                                 <p className="text-sm text-[#7b8a8a]">
                                     {formatDate(doc.uploaded_at)}
                                 </p>
                             </div>
 
                             {/* Acciones */}
-                            <div className="col-span-2 flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                            <div className="col-span-2 flex items-center justify-end gap-3 md:gap-2 mt-2 md:mt-0 pt-3 md:pt-0 border-t md:border-0 border-[#f1f5f9] md:opacity-60 group-hover:opacity-100 transition-opacity">
                                 <button
                                     onClick={() => handleViewDocument(doc)}
-                                    className="p-1.5 text-gray-500 hover:text-[#1a5276] hover:bg-[#eaf3f7] rounded-md transition-colors"
+                                    className="p-1.5 text-[#1a5276] md:text-gray-500 hover:text-[#1a5276] hover:bg-[#eaf3f7] rounded-md transition-colors flex items-center gap-1.5 md:block"
                                     title="Visualizar contenido"
                                 >
                                     <Eye className="w-4 h-4" />
-                                </button>
-                                <button
-                                    onClick={() => alert('Funcionalidad de IA pendiente')}
-                                    className="p-1.5 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-md transition-colors"
-                                    title="Usar con IA"
-                                >
-                                    <Sparkles className="w-4 h-4" />
+                                    <span className="md:hidden text-xs font-medium">Ver</span>
                                 </button>
                                 <button
                                     onClick={() => handleDelete(doc.id)}
-                                    className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                                    className="p-1.5 text-red-500 md:text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors flex items-center gap-1.5 md:block"
                                     title="Eliminar"
                                 >
                                     <Trash2 className="w-4 h-4" />
+                                    <span className="md:hidden text-xs font-medium">Eliminar</span>
                                 </button>
                             </div>
                         </div>
