@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-    UploadCloud,
     Play, Sparkles, AlertCircle, FileText, CheckCircle, Save, Download, RefreshCw, Loader2, Info, BookOpen, BrainCircuit, GripVertical, Plus, Trash2, X, RotateCcw, UploadCloud, MessageSquare, Library
 } from 'lucide-react';
 import DocumentSelectionModal from '../../components/documents/DocumentSelectionModal';
