@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -15,6 +15,7 @@ from app.schemas.question import (
     QuestionUpdateRequest,
     BatchUpdateResponse,
     ManualQuestionRequest,
+    QuestionStatusResponse,
 )
 from app.services import question_service, moodle_export_service
 from fastapi.responses import PlainTextResponse, Response
@@ -27,23 +28,35 @@ router = APIRouter(
 @router.post(
     "/generate",
     response_model=QuestionGenerationResponse,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_202_ACCEPTED
 )
 async def generate_questions(
     request: QuestionGenerationRequest,
+    background_tasks: BackgroundTasks,
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     try:
-        config, questions = await question_service.generate_questions(
+        # 1. Crear la configuración inicial (PENDING)
+        config = question_service.create_generation_config(
             db=db,
             request=request,
             user_id=current_user.id
         )
         
+        # 2. Lanzar la tarea en segundo plano
+        request_data = request.model_dump()
+        background_tasks.add_task(
+            question_service.process_question_generation_task,
+            config_id=config.id,
+            request_data=request_data,
+            user_id=current_user.id
+        )
+        
+        # 3. Responder de inmediato con el ID
         return QuestionGenerationResponse(
             config_id=config.id,
-            questions=questions
+            questions=[] # Inicialmente vacío
         )
     except ValueError as e:
         raise HTTPException(
@@ -51,11 +64,41 @@ async def generate_questions(
             detail=str(e)
         )
     except Exception as e:
-        print(f"Error al generar las preguntas: {e}")
+        print(f"Error al iniciar generación: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error al generar las preguntas: {str(e)}"
+            detail=f"Error al iniciar generación: {str(e)}"
         )
+
+
+@router.get(
+    "/status/{config_id}",
+    response_model=QuestionStatusResponse,
+    status_code=status.HTTP_200_OK
+)
+def get_generation_status(
+    config_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    config = db.query(ConfiguracionGeneracion).join(Documento).filter(
+        ConfiguracionGeneracion.id == config_id,
+        Documento.user_id == current_user.id
+    ).first()
+    
+    if not config:
+        raise HTTPException(status_code=404, detail="Configuración no encontrada")
+    
+    # Contar cuántas preguntas se han generado ya
+    question_count = db.query(Reactivo).filter(Reactivo.config_id == config_id).count()
+    
+    return QuestionStatusResponse(
+        config_id=config.id,
+        status=config.status.value,
+        question_count=question_count,
+        total_requested=config.num_questions,
+        error_message=config.error_message
+    )
 
 
 @router.post(

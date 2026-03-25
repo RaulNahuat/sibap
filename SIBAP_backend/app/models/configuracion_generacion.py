@@ -1,7 +1,7 @@
 import enum
 from datetime import datetime
 from typing import Optional, List, TYPE_CHECKING
-from sqlalchemy import String, Enum, Integer, DateTime, ForeignKey, func
+from sqlalchemy import String, Enum, Integer, DateTime, ForeignKey, func, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
@@ -25,6 +25,12 @@ class DifficultyLevel(enum.Enum):
     MEDIUM = "MEDIUM"
     HARD = "HARD"
 
+class GenerationStatus(enum.Enum):
+    PENDING = "PENDING"
+    PROCESSING = "PROCESSING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+
 class ConfiguracionGeneracion(Base):
     __tablename__ = "generation_configs"
 
@@ -44,6 +50,15 @@ class ConfiguracionGeneracion(Base):
     num_mcq: Mapped[int] = mapped_column(Integer, default=0)
     num_matching: Mapped[int] = mapped_column(Integer, default=0)
     num_calculated: Mapped[int] = mapped_column(Integer, default=0)
+    
+    # New columns for async processing
+    status: Mapped[GenerationStatus] = mapped_column(
+        Enum(GenerationStatus, name="generationstatus"), 
+        default=GenerationStatus.PENDING,
+        server_default="PENDING",
+        nullable=False
+    )
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
 

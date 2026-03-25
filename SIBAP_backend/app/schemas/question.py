@@ -78,3 +78,10 @@ class BatchUpdateResponse(BaseModel):
 class QuestionGenerationResponse(BaseModel):
     config_id: int
     questions: List[QuestionResponse]
+
+class QuestionStatusResponse(BaseModel):
+    config_id: int
+    status: str
+    question_count: int
+    total_requested: int
+    error_message: Optional[str] = None
