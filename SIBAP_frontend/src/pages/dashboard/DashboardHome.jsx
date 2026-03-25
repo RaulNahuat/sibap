@@ -77,7 +77,7 @@ export default function DashboardHome() {
 
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-6 mb-10">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-10">
                 {stats.map((stat, index) => {
                     const Icon = stat.icon;
                     const TrendIcon = stat.trendIcon;
@@ -110,19 +110,19 @@ export default function DashboardHome() {
             </div>
 
             {/* CTA Banner */}
-            <div className="bg-gradient-to-br from-[#1a5276] to-[#154360] rounded-lg p-8 flex items-center justify-between mb-10 shadow-[0_4px_12px_rgba(26,82,118,0.15)]">
+            <div className="bg-gradient-to-br from-[#1a5276] to-[#154360] rounded-lg p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-8 sm:mb-10 shadow-[0_4px_12px_rgba(26,82,118,0.15)]">
                 <div className="text-white">
-                    <h3 className="text-xl font-bold mb-2">
+                    <h3 className="text-lg sm:text-xl font-bold mb-2">
                         Crear un Nuevo Banco de Preguntas
                     </h3>
-                    <p className="text-[15px] opacity-90">
+                    <p className="text-sm sm:text-[15px] opacity-90">
                         Sube tus materiales (PDF, DOCX) y deja que la IA genere
                         reactivos personalizados.
                     </p>
                 </div>
                 <button
                     onClick={() => navigate('/dashboard/new-bank')}
-                    className="bg-white text-[#1a5276] px-6 py-3 rounded-md font-semibold text-sm flex items-center gap-2 hover:-translate-y-0.5 transition-transform"
+                    className="w-full sm:w-auto bg-white text-[#1a5276] px-6 py-3 rounded-md font-semibold text-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform"
                 >
                     <Sparkles className="w-[18px] h-[18px]" />
                     Comenzar ahora
@@ -142,8 +142,8 @@ export default function DashboardHome() {
                 </button>
             </div>
 
-            <div className="bg-white border border-[#e2e8f0] rounded-lg overflow-hidden shadow-sm">
-                <table className="w-full border-collapse">
+            <div className="bg-white border border-[#e2e8f0] rounded-lg overflow-hidden shadow-sm overflow-x-auto custom-scrollbar">
+                <table className="w-full border-collapse min-w-[600px]">
                     <thead>
                         <tr className="bg-[#f8fafc]">
                             <th className="text-left px-6 py-4 text-[13px] font-semibold text-[#64748b] border-b border-[#e2e8f0]">

@@ -74,7 +74,7 @@ export default function QuestionCard({
 
     return (
         <div
-            className={`bg-white border-2 ${status.borderColor} rounded-lg p-6 transition-all hover:shadow-md`}
+            className={`bg-white border-2 ${status.borderColor} rounded-lg p-4 sm:p-6 transition-all hover:shadow-md`}
         >
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
@@ -207,7 +207,7 @@ export default function QuestionCard({
 
                 /* ── CALCULATED: tarjetas de opción con fórmula destacada ── */
                 ) : question.questionType === 'CALCULATED' ? (
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {question.answers.map((answer) => {
                             const isCorrect = answer.id === question.correctAnswerId;
                             return (
@@ -293,8 +293,8 @@ export default function QuestionCard({
                                         </div>
                                     </div>
                                     {answer.feedback && (
-                                        <div className="ml-8 px-3 py-1.5 bg-blue-50/50 border-l-2 border-blue-200 rounded-r-md">
-                                            <div className="text-[11px] text-[#1a5276] italic prose prose-sm max-w-none prose-p:m-0 prose-p:inline flex gap-1">
+                                        <div className="ml-6 sm:ml-8 px-3 py-1.5 bg-blue-50/50 border-l-2 border-blue-200 rounded-r-md">
+                                            <div className="text-[10px] sm:text-[11px] text-[#1a5276] italic prose prose-sm max-w-none prose-p:m-0 prose-p:inline flex gap-1">
                                                 <span className="font-bold uppercase tracking-tighter shrink-0">Nota:</span>
                                                 <ReactMarkdown
                                                     remarkPlugins={[remarkGfm, remarkMath]}

@@ -354,41 +354,41 @@ export default function NewBankPage() {
     return (
         <div className="max-w-5xl mx-auto">
             {/* Header */}
-            <div className="mb-8 flex items-center justify-between">
+            <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#102129] mb-2">
+                    <h1 className="text-xl sm:text-2xl font-bold text-[#102129] mb-1 sm:mb-2">
                         Nuevo Banco de Preguntas
                     </h1>
-                    <p className="text-[15px] text-[#64748b]">
-                        Completa los 3 pasos para que la Inteligencia Artificial genere tu examen automáticamente.
+                    <p className="text-sm sm:text-[15px] text-[#64748b]">
+                        Completa los 3 pasos para generar tu examen.
                     </p>
                 </div>
                 <button
                     onClick={handleClearAll}
-                    className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#64748b] hover:text-[#1a5276] hover:bg-white rounded-md transition-all border border-transparent hover:border-[#e2e8f0]"
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#64748b] hover:text-[#1a5276] hover:bg-white rounded-md transition-all border border-transparent hover:border-[#e2e8f0] self-end sm:self-auto"
                 >
                     <RotateCcw className="w-4 h-4" />
-                    Limpiar Formulario
+                    Limpiar
                 </button>
             </div>
 
             {/* Step 1: Carga de Insumos */}
             <div className="bg-white border border-[#e2e8f0] rounded-xl overflow-hidden shadow-sm mb-6">
-                <div className="p-5 border-b border-[#f1f5f9] flex items-center gap-3 bg-[#f8fafc]">
-                    <div className="w-8 h-8 rounded-full bg-[#1a5276] text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                <div className="p-4 sm:p-5 border-b border-[#f1f5f9] flex items-center gap-3 bg-[#f8fafc]">
+                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#1a5276] text-white flex items-center justify-center font-bold text-sm shadow-sm">
                         1
                     </div>
-                    <h2 className="text-lg font-bold text-[#102129]">Carga de Insumos</h2>
+                    <h2 className="text-base sm:text-lg font-bold text-[#102129]">Carga de Insumos</h2>
                 </div>
 
-                <div className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+                <div className="p-4 sm:p-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
                         {/* Left Side: Upload Controls */}
-                        <div className="md:col-span-2 space-y-4">
+                        <div className="lg:col-span-2 space-y-4">
                             <div
                                 onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
                                 onDrop={(e) => { e.preventDefault(); e.stopPropagation(); handleFileUpload(e); }}
-                                className="relative flex flex-col items-center justify-center aspect-[4/3] w-full border-2 border-dashed border-[#cbd5e1] rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] hover:border-[#1a5276] transition-all cursor-pointer group"
+                                className="relative flex flex-col items-center justify-center aspect-square sm:aspect-[4/3] w-full border-2 border-dashed border-[#cbd5e1] rounded-xl bg-[#f8fafc] hover:bg-[#f1f5f9] hover:border-[#1a5276] transition-all cursor-pointer group"
                             >
                                 <input
                                     type="file"
@@ -420,7 +420,7 @@ export default function NewBankPage() {
                                 className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-[#e2e8f0] rounded-xl text-sm font-semibold text-[#1a5276] hover:bg-[#f1f5f9] transition-all shadow-sm"
                             >
                                 <Library className="w-4 h-4" />
-                                Seleccionar de Mis Documentos
+                                <span className="hidden xs:inline">Seleccionar de</span> Mis Documentos
                             </button>
 
                             <div className="bg-blue-50 border border-blue-100 rounded-lg p-3">
@@ -431,7 +431,7 @@ export default function NewBankPage() {
                         </div>
 
                         {/* Right Side: Selected Documents & External Refs */}
-                        <div className="md:col-span-3 flex flex-col gap-4">
+                        <div className="lg:col-span-3 flex flex-col gap-4">
                             <div className="flex-1 flex flex-col">
                                 <div className="flex items-center justify-between mb-2 px-1">
                                     <h3 className="text-[11px] font-bold text-[#94a3b8] uppercase tracking-wider">
@@ -520,17 +520,17 @@ export default function NewBankPage() {
             </div>
 
             {/* Step 2: Parámetros Académicos */}
-            <div className="bg-white border border-[#e2e8f0] rounded-xl p-8 mb-6">
+            <div className="bg-white border border-[#e2e8f0] rounded-xl p-5 sm:p-8 mb-6">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-[#1a5276] text-white flex items-center justify-center text-base font-semibold flex-shrink-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#1a5276] text-white flex items-center justify-center text-sm sm:text-base font-semibold flex-shrink-0">
                         2
                     </div>
-                    <h2 className="text-lg font-semibold text-[#102129]">
+                    <h2 className="text-base sm:text-lg font-semibold text-[#102129]">
                         Parámetros Académicos
                     </h2>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
                     {/* Programa Educativo */}
                     <div>
                         <label className="block text-sm font-medium text-[#102129] mb-2">
@@ -727,13 +727,13 @@ export default function NewBankPage() {
                     </div>
 
                     {/* Número de Preguntas por Tipo */}
-                    <div className="col-span-2">
+                    <div className="col-span-1 md:col-span-2">
                         <label className="block text-sm font-medium text-[#102129] mb-3">
                             Número de Preguntas por Tipo
                         </label>
-                        <div className="grid grid-cols-3 gap-4">
-                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4">
-                                <label className="block text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-3 sm:p-4">
+                                <label className="block text-[10px] sm:text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
                                     Opción Múltiple
                                 </label>
                                 <input
@@ -746,8 +746,8 @@ export default function NewBankPage() {
                                 />
                                 <p className="text-[10px] text-[#94a3b8] mt-1 text-center">4 opciones, 1 correcta</p>
                             </div>
-                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4">
-                                <label className="block text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
+                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-3 sm:p-4">
+                                <label className="block text-[10px] sm:text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
                                     Relacionar Columnas
                                 </label>
                                 <input
@@ -760,8 +760,8 @@ export default function NewBankPage() {
                                 />
                                 <p className="text-[10px] text-[#94a3b8] mt-1 text-center">4–6 pares de conceptos</p>
                             </div>
-                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-4">
-                                <label className="block text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
+                            <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-3 sm:p-4">
+                                <label className="block text-[10px] sm:text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
                                     Calculada
                                 </label>
                                 <input

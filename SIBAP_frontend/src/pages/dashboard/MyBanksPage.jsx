@@ -111,7 +111,7 @@ export default function MyBanksPage() {
 
             {/* Filters and Search */}
             <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 mb-6">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center gap-4">
                     {/* Search */}
                     <div className="flex-1 relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
@@ -141,7 +141,7 @@ export default function MyBanksPage() {
             </div>
 
             {/* Stats Summary */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="bg-white border border-[#e2e8f0] rounded-lg p-4">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-[#e9f5f8] rounded-lg flex items-center justify-center">
@@ -199,10 +199,10 @@ export default function MyBanksPage() {
                     {filteredBanks.map((bank) => (
                         <div
                             key={bank.id}
-                            className="bg-white border border-[#e2e8f0] rounded-lg p-6 hover:shadow-md transition-all"
-                        >
-                            <div className="flex items-start justify-between mb-4">
-                                <div className="flex-1">
+                            className="bg-white border border-[#e2e8f0] rounded-lg p-4 sm:p-6 hover:shadow-md transition-all"
+                         Pall-6>
+                            <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
+                                <div className="flex-1 w-full">
                                     <div className="flex items-center gap-3 mb-2">
                                         <h3 className="text-lg font-semibold text-[#102129]">
                                             {bank.name}
@@ -219,11 +219,11 @@ export default function MyBanksPage() {
                                             </span>
                                         )}
                                     </div>
-                                    <div className="flex items-center gap-4 text-sm text-[#64748b]">
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm text-[#64748b]">
                                         <span>📚 {bank.subject}</span>
-                                        <span>•</span>
+                                        <span className="hidden xs:inline">•</span>
                                         <span>Dificultad: {bank.difficulty}</span>
-                                        <span>•</span>
+                                        <span className="hidden xs:inline">•</span>
                                         <span className="flex items-center gap-1">
                                             <Calendar className="w-3.5 h-3.5" />
                                             {formatDate(bank.lastModified)}
@@ -232,7 +232,7 @@ export default function MyBanksPage() {
                                 </div>
 
                                 {/* Actions */}
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1 sm:gap-2 self-end sm:self-auto">
                                     {bank.isCompleted && (
                                         <button
                                             onClick={() => handleExport(bank)}

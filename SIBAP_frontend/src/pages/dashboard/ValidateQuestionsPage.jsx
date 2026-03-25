@@ -315,25 +315,25 @@ export default function ValidateQuestionsPage() {
                     Mis Bancos
                 </button>
                 <ChevronRight className="w-4 h-4" />
-                <span className="text-[#102129] font-medium">
+                <span className="text-[#102129] font-medium truncate max-w-[150px] sm:max-w-none">
                     {bankData?.name || 'Historia Universal - Rev. Industrial'}
                 </span>
             </div>
 
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-[#102129] mb-2">
+            <div className="mb-6 sm:mb-8">
+                <h1 className="text-xl sm:text-2xl font-bold text-[#102129] mb-1 sm:mb-2">
                     Validación de Reactivos
                 </h1>
-                <p className="text-[15px] text-[#64748b]">
+                <p className="text-sm sm:text-[15px] text-[#64748b]">
                     Revise y edite las preguntas generadas antes de exportar.
                 </p>
             </div>
 
             {/* Bank Info Card - Sticky */}
-            <div className="sticky top-0 z-10 bg-[#f4f7f6] pb-4 -mx-8 px-8">
-                <div className="bg-white border border-[#e2e8f0] rounded-lg p-6 shadow-sm">
-                    <div className="grid grid-cols-4 gap-6">
+            <div className="sticky top-0 z-10 bg-[#f4f7f6] pb-4 -mx-4 sm:-mx-8 px-4 sm:px-8">
+                <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 sm:p-6 shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                         <div>
                             <div className="text-xs font-medium text-[#64748b] mb-1">
                                 MATERIA
@@ -358,22 +358,22 @@ export default function ValidateQuestionsPage() {
                         <div className="col-span-2">
                             <div className="flex items-center justify-between mb-2">
                                 <div className="text-xs font-medium text-[#64748b]">
-                                    PROGRESO DE VALIDACIÓN
+                                    PROGRESO
                                 </div>
-                                <div className="flex items-center gap-1.5 text-xs text-green-600">
-                                    <CheckCircle className="w-3.5 h-3.5" />
-                                    <span>Guardado automáticamente</span>
+                                <div className="hidden sm:flex items-center gap-1.5 text-[10px] text-green-600">
+                                    <CheckCircle className="w-3 h-3" />
+                                    <span>Auto-guardado</span>
                                 </div>
                             </div>
-                            <div className="flex items-center gap-3">
-                                <div className="flex-1 h-2 bg-[#e2e8f0] rounded-full overflow-hidden">
+                            <div className="flex items-center gap-2 sm:gap-3">
+                                <div className="flex-1 h-1.5 sm:h-2 bg-[#e2e8f0] rounded-full overflow-hidden">
                                     <div
                                         className="h-full bg-green-500 transition-all duration-500"
                                         style={{ width: `${progressPercentage}%` }}
                                     />
                                 </div>
-                                <span className="text-sm font-semibold text-green-600 whitespace-nowrap">
-                                    {validatedCount}/{totalCount} Completado
+                                <span className="text-xs sm:text-sm font-semibold text-green-600 whitespace-nowrap">
+                                    {validatedCount}/{totalCount}
                                 </span>
                             </div>
                         </div>
@@ -407,43 +407,43 @@ export default function ValidateQuestionsPage() {
             </button>
 
             {/* Export Section at the Bottom */}
-            <div className={`mt-8 p-5 rounded-xl border-2 ${isValidated ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'} transition-all`}>
-                <div className="flex items-center justify-between gap-6">
+            <div className={`mt-8 p-4 sm:p-5 rounded-xl border-2 ${isValidated ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'} transition-all`}>
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
                     {/* Left: status text */}
                     <div className="min-w-0">
-                        <h3 className={`font-bold text-base ${isValidated ? 'text-green-800' : 'text-gray-700'}`}>
+                        <h3 className={`font-bold text-sm sm:text-base ${isValidated ? 'text-green-800' : 'text-gray-700'}`}>
                             {isValidated ? '¡Banco de Preguntas Validado!' : 'Validación en Progreso'}
                         </h3>
-                        <p className={`text-sm mt-0.5 ${isValidated ? 'text-green-700' : 'text-gray-500'}`}>
+                        <p className={`text-xs sm:text-sm mt-0.5 ${isValidated ? 'text-green-700' : 'text-gray-500'}`}>
                             {isValidated
-                                ? 'Todas las preguntas se guardaron automáticamente. Ya puedes exportar tu examen.'
-                                : `Valida las preguntas para habilitar la exportación — ${validatedCount}/${totalCount} completadas.`
+                                ? 'Ya puedes exportar tu examen.'
+                                : `Valida las preguntas para habilitar la exportación (${validatedCount}/${totalCount}).`
                             }
                         </p>
                     </div>
                     {/* Right: export buttons */}
-                    <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                         <button
                             onClick={() => handleExport('XML')}
                             disabled={!isValidated}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-md border font-medium text-sm transition-all ${isValidated
+                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-md border font-medium text-xs sm:text-sm transition-all ${isValidated
                                 ? 'border-[#e2e8f0] text-[#64748b] hover:bg-white hover:text-[#102129] hover:border-[#cbd5e1]'
                                 : 'border-gray-200 text-gray-300 cursor-not-allowed bg-transparent'
                                 }`}
                         >
                             <FileText className="w-4 h-4" />
-                            Exportar XML
+                            XML
                         </button>
                         <button
                             onClick={() => handleExport('GIFT')}
                             disabled={!isValidated}
-                            className={`flex items-center gap-2 px-4 py-2.5 rounded-md text-white font-semibold text-sm transition-all shadow-sm ${isValidated
+                            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-md text-white font-semibold text-xs sm:text-sm transition-all shadow-sm ${isValidated
                                 ? 'bg-[#1a5276] hover:bg-[#154360] hover:shadow'
                                 : 'bg-gray-300 cursor-not-allowed'
                                 }`}
                         >
                             <Download className="w-4 h-4" />
-                            Exportar a Moodle (GIFT)
+                            Exportar GIFT
                         </button>
                     </div>
                 </div>
