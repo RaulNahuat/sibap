@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
     Play, Sparkles, AlertCircle, FileText, CheckCircle, Save, Download, RefreshCw, Loader2, Info, BookOpen, BrainCircuit, GripVertical, Plus, Trash2, X, RotateCcw, UploadCloud, MessageSquare, Library
 } from 'lucide-react';
@@ -15,6 +15,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 
 export default function NewBankPage() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
 
     const [showClearModal, setShowClearModal] = useState(false);
@@ -72,6 +73,16 @@ export default function NewBankPage() {
             .finally(() => setIsLoadingPrograms(false));
     }, []);
 
+    // Handle incoming state with selected documents
+    useEffect(() => {
+        const state = location.state;
+        if (state?.selectedDocuments && state.selectedDocuments.length > 0) {
+            handleLibrarySelect(state.selectedDocuments);
+            // Limpiar el estado para evitar recargas infinitas si el usuario navega de nuevo
+            window.history.replaceState({}, document.title);
+        }
+    }, [location.state]);
+
     // Load semesters when program is selected
     useEffect(() => {
         if (formData.program) {
@@ -87,14 +98,12 @@ export default function NewBankPage() {
         }
     }, [formData.program]);
 
-    // Load subjects when semester changes
     useEffect(() => {
         if (formData.program && selectedSemesterNum !== '') {
             setIsLoadingSubjects(true);
             getCurriculumSubjects(formData.program, Number(selectedSemesterNum))
                 .then(subjects => {
                     setAvailableSubjects(subjects);
-                    // Clear subject when semester changes
                     setFormData(prev => ({ ...prev, subject: '', subject_id: null }));
                 })
                 .catch(() => setAvailableSubjects([]))
@@ -284,14 +293,28 @@ export default function NewBankPage() {
     const handleLibrarySelect = async (selectedIds) => {
         setIsUploading(true);
         try {
+            // Obtener IDs que NO están ya en la lista
             const existingIds = new Set(uploadedFiles.map(f => f.id));
             const idsToFetch = selectedIds.filter(id => !existingIds.has(id));
 
-            const fetchedDocs = await Promise.all(idsToFetch.map(id => getDocument(id)));
+            // Solo buscar si hay IDs nuevos
+            let fetchedDocs = [];
+            if (idsToFetch.length > 0) {
+                fetchedDocs = await Promise.all(idsToFetch.map(id => getDocument(id)));
+            }
 
             setUploadedFiles(prev => {
+                // Mantener solo los archivos que están en la selección actual
                 const filtered = prev.filter(f => selectedIds.includes(f.id));
-                return [...filtered, ...fetchedDocs];
+                
+                // Añadir los nuevos, asegurando unicidad final por si acaso
+                const combined = [...filtered, ...fetchedDocs];
+                const seenIds = new Set();
+                return combined.filter(doc => {
+                    if (seenIds.has(doc.id)) return false;
+                    seenIds.add(doc.id);
+                    return true;
+                });
             });
         } catch (err) {
             const msg = 'Error al cargar documentos seleccionados';
@@ -349,7 +372,7 @@ export default function NewBankPage() {
     };
 
     return (
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-5xl mx-auto pb-12 sm:pb-24 px-1 sm:px-0">
             {/* Header */}
             <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
@@ -654,7 +677,7 @@ export default function NewBankPage() {
                         ) : (
                             <input
                                 type="text"
-                                placeholder="Ej. Historia Universal"
+                                placeholder="Ej. Programación Orientada a Objetos"
                                 value={formData.subject}
                                 onChange={(e) => setFormData({ ...formData, subject: e.target.value, subject_id: null })}
                                 className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
@@ -669,7 +692,7 @@ export default function NewBankPage() {
                         </label>
                         <input
                             type="text"
-                            placeholder="Ej. Revolución Francesa"
+                            placeholder="Ej. Herencia"
                             value={formData.topic}
                             onChange={(e) => setFormData({ ...formData, topic: e.target.value })}
                             className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
@@ -683,7 +706,7 @@ export default function NewBankPage() {
                         </label>
                         <input
                             type="text"
-                            placeholder="Ej. Causas sociales y económicas"
+                            placeholder="Ej. Herencia simple"
                             value={formData.subtopic}
                             onChange={(e) => setFormData({ ...formData, subtopic: e.target.value })}
                             className="w-full px-4 py-3 border border-[#e2e8f0] rounded-md text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent"
@@ -835,7 +858,7 @@ export default function NewBankPage() {
                         </label>
                         <textarea
                             className="w-full px-4 py-3 border border-[#e2e8f0] rounded-lg text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent bg-[#f8fafc] min-h-[100px] transition-all resize-y"
-                            placeholder="Ej: 'Usa un tono formal y técnico', 'Todas las preguntas deben incluir ejemplos de la vida real', 'Enfócate en aspectos legales'..."
+                            placeholder="Ej: 'Usa un tono formal y técnico', 'Todas las preguntas deben incluir ejemplos de la vida real', 'Enfócate en aspectos'..."
                             value={formData.customInstructions}
                             onChange={(e) => setFormData({ ...formData, customInstructions: e.target.value })}
                         />

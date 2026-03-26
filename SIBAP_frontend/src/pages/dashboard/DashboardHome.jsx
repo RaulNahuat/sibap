@@ -70,8 +70,7 @@ export default function DashboardHome() {
                     Hola, {user.name} 👋
                 </h1>
                 <p className="text-[15px] text-[#64748b]">
-                    Aquí tienes un resumen de tu actividad reciente y bancos de
-                    preguntas.
+                    Bienvenido a SIBAP. Aquí tienes un resumen de tu actividad y bancos de preguntas.
                 </p>
             </div>
 
@@ -121,8 +120,7 @@ export default function DashboardHome() {
                         Crear un Nuevo Banco de Preguntas
                     </h3>
                     <p className="text-xs sm:text-[15px] text-blue-100">
-                        Sube tus materiales (PDF, DOCX) y deja que la IA genere
-                        reactivos personalizados.
+                        Sube tus materiales (PDF, DOCX. TXT, PPTX) y deja que la IA genere tus reactivos personalizados.
                     </p>
                 </div>
                 <button

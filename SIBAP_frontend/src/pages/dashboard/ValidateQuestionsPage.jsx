@@ -305,7 +305,7 @@ export default function ValidateQuestionsPage() {
     };
 
     return (
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto pb-24">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-[#64748b] mb-6">
                 <button

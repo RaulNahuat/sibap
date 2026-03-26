@@ -129,7 +129,7 @@ const DocumentViewerPage = () => {
             {/* Header */}
             <div className="bg-white border-b border-[#00000014] sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between py-3 sm:h-16 gap-4">
                         <div className="flex items-center gap-4">
                             <button
                                 onClick={() => navigate('/dashboard/documents')}
@@ -160,13 +160,12 @@ const DocumentViewerPage = () => {
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
                             {document.has_physical_file && (
                                 <button
                                     onClick={handleDownloadOriginal}
                                     disabled={isDownloading}
                                     className="flex items-center gap-1.5 px-3 py-2 text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors text-sm font-medium mr-2 disabled:opacity-50"
-                                    title="Descargar archivo original"
                                 >
                                     {isDownloading ? (
                                         <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
@@ -206,8 +205,8 @@ const DocumentViewerPage = () => {
                             </button>
                             <div className="h-6 w-px bg-gray-200 mx-1"></div>
                             <button
-                                onClick={() => alert('Funcionalidad de IA pendiente')}
-                                className="flex items-center gap-2 px-4 py-2 bg-[#1a5276] text-white rounded-md hover:bg-[#145a86] transition-colors font-medium text-sm shadow-sm"
+                                onClick={() => navigate('/dashboard/new-bank', { state: { selectedDocuments: [document.id] } })}
+                                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-[#1a5276] text-white rounded-md hover:bg-[#145a86] transition-colors font-medium text-sm shadow-sm whitespace-nowrap"
                             >
                                 <Sparkles className="w-4 h-4" />
                                 Usar con IA
@@ -218,7 +217,7 @@ const DocumentViewerPage = () => {
             </div>
 
             {/* Content */}
-            <div className="flex-1 max-w-5xl w-full mx-auto p-6 md:p-8">
+            <div className="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-6 md:p-8">
                 {/* Anchor for scrolling */}
                 <div ref={contentTopRef} className="scroll-mt-24" />
 
@@ -238,7 +237,7 @@ const DocumentViewerPage = () => {
                         </div>
                     ) : (
                         <>
-                            <div className="p-8 md:p-12 prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-[#0b2540] prose-p:text-[#334155] prose-li:text-[#334155] prose-strong:text-[#0b2540] prose-table:w-full prose-table:text-sm prose-thead:bg-slate-50 prose-th:p-3 prose-td:p-3 prose-th:text-left prose-td:border-b prose-td:border-slate-100 flex-1">
+                            <div className="p-4 sm:p-8 md:p-12 prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-[#0b2540] prose-p:text-[#334155] prose-li:text-[#334155] prose-strong:text-[#0b2540] prose-table:w-full prose-table:text-sm prose-thead:bg-slate-50 prose-th:p-3 prose-td:p-3 prose-th:text-left prose-td:border-b prose-td:border-slate-100 flex-1 overflow-x-auto">
                                 <ReactMarkdown
                                     remarkPlugins={[remarkGfm, [remarkMath, { singleDollarTextMath: false }]]}
                                     rehypePlugins={[

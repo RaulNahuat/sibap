@@ -18,6 +18,7 @@ import {
     AlignLeft
 } from 'lucide-react';
 import FileUploader from '../../components/documents/FileUploader';
+import ConfirmModal from '../../components/ui/ConfirmModal';
 import { uploadDocument, getDocuments, deleteDocument, uploadFromDrive } from '../../api/documents';
 import { getErrorMessage } from '../../utils/errorHandler';
 
@@ -41,6 +42,9 @@ const DocumentProcessorPage = () => {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalDocs, setTotalDocs] = useState(0);
+    const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
+    const [isConfirmBulkDeleteOpen, setIsConfirmBulkDeleteOpen] = useState(false);
+    const [docToDelete, setDocToDelete] = useState(null);
     const limit = 10;
 
     useEffect(() => {
@@ -123,23 +127,32 @@ const DocumentProcessorPage = () => {
         }
     };
 
-    const handleDelete = async (id) => {
-        if (!confirm('¿Estás seguro de eliminar este documento?')) return;
+    const handleDelete = (id) => {
+        setDocToDelete(id);
+        setIsConfirmDeleteOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!docToDelete) return;
 
         try {
-            await deleteDocument(id);
+            await deleteDocument(docToDelete);
             setSuccess('Documento eliminado exitosamente');
             await loadDocuments();
         } catch (err) {
             const errorMessage = getErrorMessage(err);
             setError(errorMessage);
+        } finally {
+            setDocToDelete(null);
         }
     };
 
-    const handleDeleteSelected = async () => {
+    const handleDeleteSelected = () => {
         if (selectedDocs.length === 0) return;
-        if (!confirm(`¿Eliminar ${selectedDocs.length} documento(s) seleccionado(s)?`)) return;
+        setIsConfirmBulkDeleteOpen(true);
+    };
 
+    const confirmBulkDelete = async () => {
         try {
             await Promise.all(selectedDocs.map(id => deleteDocument(id)));
             setSuccess(`${selectedDocs.length} documento(s) eliminado(s)`);
@@ -164,18 +177,21 @@ const DocumentProcessorPage = () => {
         }
     };
 
-    // Filtrar y ordenar documentos
-    const filteredDocuments = documents
+    // Filtrar y ordenar documentos - Más robusto
+    const filteredDocuments = (documents || [])
         .filter(doc => {
-            const matchesSearch = doc.filename.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesType = filterType === 'all' || doc.file_type === filterType;
-            return matchesSearch && matchesType;
+            if (!searchTerm) return true;
+            return doc.filename.toLowerCase().includes(searchTerm.toLowerCase().trim());
+        })
+        .filter(doc => {
+            if (filterType === 'all') return true;
+            return doc.file_type && doc.file_type.toUpperCase() === filterType.toUpperCase();
         })
         .sort((a, b) => {
             if (sortBy === 'recent') {
-                return new Date(b.uploaded_at) - new Date(a.uploaded_at);
+                return new Date(b.uploaded_at || 0) - new Date(a.uploaded_at || 0);
             }
-            return a.filename.localeCompare(b.filename);
+            return (a.filename || "").localeCompare(b.filename || "");
         });
 
     const formatDate = (dateString) => {
@@ -254,22 +270,22 @@ const DocumentProcessorPage = () => {
     };
 
     return (
-        <div className="w-full">
-            {/* Header */}
-            <div className="mb-8 flex items-start justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24">
+            {/* Header section with upload button */}
+            <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h1 className="text-2xl font-bold text-[#1a5276] mb-1">
-                        Insumos cargados
+                    <h1 className="text-3xl font-extrabold text-[#1a5276] tracking-tight mb-2">
+                        Mis Documentos
                     </h1>
-                    <p className="text-sm text-[#7b8a8a]">
-                        Gestiona los archivos que usas para generar bancos de preguntas con IA
+                    <p className="text-[#64748b] text-[15px] max-w-lg">
+                        Gestiona y procesa tus archivos para generar bancos de preguntas con inteligencia artificial.
                     </p>
                 </div>
                 <button
                     onClick={() => setShowUploadModal(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-[#1a5276] text-white rounded-md hover:bg-[#145a86] transition-colors font-medium text-sm shadow-sm"
+                    className="flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 bg-[#1a5276] text-white rounded-xl hover:bg-[#154360] transition-all font-semibold shadow-md active:scale-95"
                 >
-                    <Upload className="w-4 h-4" />
+                    <Upload className="w-5 h-5" />
                     Subir nuevo documento
                 </button>
             </div>
@@ -379,10 +395,10 @@ const DocumentProcessorPage = () => {
                 </div>
             </div>
 
-            {/* Tabla de documentos */}
-            <div className="bg-white rounded-lg border border-[#00000014] overflow-hidden shadow-sm">
+            {/* Tabla de documentos con Scroll Interno */}
+            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm flex flex-col max-h-[60vh] sm:max-h-[70vh]">
                 {/* Header de tabla - Hidden on Mobile */}
-                <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-2.5 bg-[#e6eceb] border-b border-[#00000014]">
+                <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 border-b border-gray-200 shrink-0">
                     <div className="col-span-1 flex items-center">
                         <input
                             type="checkbox"
@@ -405,149 +421,140 @@ const DocumentProcessorPage = () => {
                     </div>
                 </div>
 
-                {/* Filas de documentos */}
-                {filteredDocuments.length === 0 ? (
-                    <div className="p-12 text-center">
-                        <FileText className="w-12 h-12 text-[#7b8a8a] mx-auto mb-3 opacity-50" />
-                        <p className="text-sm font-medium text-[#0b2540] mb-1">
-                            {searchTerm ? 'No se encontraron documentos' : '¿Aún no tienes documentos cargados?'}
-                        </p>
-                        <p className="text-sm text-[#7b8a8a]">
-                            {searchTerm
-                                ? 'Intenta con otros términos de búsqueda'
-                                : 'Sube un PDF, DOCX, PPTX o TXT de hasta 10 MB para comenzar'
-                            }
-                        </p>
-                    </div>
-                ) : (
-                    filteredDocuments.map((doc) => (
-                        <div
-                            key={doc.id}
-                            className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 px-4 py-4 md:py-3 border-b border-[#00000014] hover:bg-[#f4f7f6] transition-colors md:items-center group"
-                        >
-                            {/* Checkbox & Name (Responsive Pair) */}
-                            <div className="col-span-6 flex items-start gap-3">
-                                <div className="mt-1">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedDocs.includes(doc.id)}
-                                        onChange={() => toggleSelectDoc(doc.id)}
-                                        className="w-4 h-4 rounded border-[#00000014] text-[#1a5276] focus:ring-[#1a5276]"
-                                    />
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-bold md:font-medium text-[#0b2540] truncate pr-4" title={doc.filename}>
-                                        {doc.filename}
-                                    </p>
-                                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                                        <p className="text-[11px] text-[#7b8a8a]">
-                                            {doc.characters?.toLocaleString()} caracteres
-                                        </p>
-                                        <span className="md:hidden"> · </span>
-                                        <p className="md:hidden text-[11px] text-[#7b8a8a]">
-                                            {formatDate(doc.uploaded_at)}
-                                        </p>
-                                        {getStorageBadge(doc)}
+                {/* Filas de documentos - SCROLLABLE AREA */}
+                <div className="flex-1 overflow-y-auto min-h-[50px] scrollbar-thin scrollbar-thumb-slate-200">
+                    {filteredDocuments.length === 0 ? (
+                        <div className="p-12 text-center">
+                            <FileText className="w-12 h-12 text-[#7b8a8a] mx-auto mb-3 opacity-50" />
+                            <p className="text-sm font-medium text-[#0b2540] mb-1">
+                                {searchTerm ? 'No se encontraron documentos' : '¿Aún no tienes documentos cargados?'}
+                            </p>
+                            <p className="text-sm text-[#7b8a8a]">
+                                {searchTerm
+                                    ? 'Intenta con otros términos de búsqueda'
+                                    : 'Sube un PDF, DOCX, PPTX o TXT de hasta 10 MB para comenzar'
+                                }
+                            </p>
+                        </div>
+                    ) : (
+                        filteredDocuments.map((doc) => (
+                            <div
+                                key={doc.id}
+                                className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 px-6 py-4 md:py-3 border-b border-gray-100 hover:bg-slate-50/50 transition-colors md:items-center group"
+                            >
+                                {/* Filename and Meta */}
+                                <div className="col-span-6 flex items-start gap-4">
+                                    <div className="mt-1 flex-shrink-0">
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedDocs.includes(doc.id)}
+                                            onChange={() => toggleSelectDoc(doc.id)}
+                                            className="w-5 h-5 rounded border-gray-300 text-[#1a5276] focus:ring-[#1a5276] transition-transform active:scale-90"
+                                        />
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <h4 className="text-[15px] font-bold text-[#0f172a] truncate mb-1" title={doc.filename}>
+                                            {doc.filename}
+                                        </h4>
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                            <p className="text-xs text-[#64748b] flex items-center gap-1">
+                                                <AlignLeft className="w-3 h-3" />
+                                                {doc.characters?.toLocaleString()} caracteres
+                                            </p>
+                                            <p className="text-xs text-[#64748b]">
+                                                • {formatDate(doc.uploaded_at)}
+                                            </p>
+                                            {getStorageBadge(doc)}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Estado y Tipo */}
-                            <div className="col-span-2 flex flex-row md:flex-col gap-2 md:gap-1 items-center md:items-start ml-7 md:ml-0">
-                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getFileTypeBadge(doc.file_type)}`}>
-                                    {doc.file_type}
-                                </span>
-                                {getStatusBadge(doc.status, doc.error_message)}
-                            </div>
+                                {/* Status */}
+                                <div className="col-span-3 flex flex-row md:flex-col items-center md:items-start gap-2 ml-9 md:ml-0">
+                                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getFileTypeBadge(doc.file_type)}`}>
+                                        {doc.file_type}
+                                    </span>
+                                    {getStatusBadge(doc.status, doc.error_message)}
+                                </div>
 
-                            {/* Fecha - Hidden on small screens (moved to subtitle) */}
-                            <div className="hidden md:block col-span-2">
-                                <p className="text-sm text-[#7b8a8a]">
-                                    {formatDate(doc.uploaded_at)}
-                                </p>
+                                {/* Actions - Always visible and clear buttons */}
+                                <div className="col-span-3 flex items-center justify-end gap-2 mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-0 border-gray-100 w-full md:w-auto">
+                                    <button
+                                        onClick={() => handleViewDocument(doc)}
+                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-slate-50 text-[#1a5276] rounded-lg hover:bg-[#1a5276] hover:text-white transition-all text-xs font-bold border border-slate-200"
+                                    >
+                                        <Eye className="w-4 h-4" />
+                                        Ver
+                                    </button>
+                                    <button
+                                        onClick={() => handleDelete(doc.id)}
+                                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all text-xs font-bold border border-red-100"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                        Borrar
+                                    </button>
+                                </div>
                             </div>
+                        ))
+                    )}
+                </div>
+            </div>
 
-                            {/* Acciones */}
-                            <div className="col-span-2 flex items-center justify-end gap-3 md:gap-2 mt-2 md:mt-0 pt-3 md:pt-0 border-t md:border-0 border-[#f1f5f9] md:opacity-60 group-hover:opacity-100 transition-opacity">
+            {/* Interaction Area (Pagination + Actions) - Normal Flow */}
+            <div className="mt-8 flex flex-col gap-6">
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="px-6 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm flex items-center justify-between transition-all">
+                            <div className="text-xs font-bold text-[#1a5276]">
+                                Página {page} de {totalPages}
+                            </div>
+                            <div className="flex items-center gap-3">
                                 <button
-                                    onClick={() => handleViewDocument(doc)}
-                                    className="p-1.5 text-[#1a5276] md:text-gray-500 hover:text-[#1a5276] hover:bg-[#eaf3f7] rounded-md transition-colors flex items-center gap-1.5 md:block"
-                                    title="Visualizar contenido"
+                                    onClick={() => handlePageChange(page - 1)}
+                                    disabled={page === 1 || loading}
+                                    className="p-1.5 rounded-lg border border-gray-200 text-[#1a5276] hover:bg-[#eaf3f7] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                                 >
-                                    <Eye className="w-4 h-4" />
-                                    <span className="md:hidden text-xs font-medium">Ver</span>
+                                    <ChevronLeft className="w-5 h-5" />
                                 </button>
                                 <button
-                                    onClick={() => handleDelete(doc.id)}
-                                    className="p-1.5 text-red-500 md:text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors flex items-center gap-1.5 md:block"
-                                    title="Eliminar"
+                                    onClick={() => handlePageChange(page + 1)}
+                                    disabled={page === totalPages || loading}
+                                    className="p-1.5 rounded-lg border border-gray-200 text-[#1a5276] hover:bg-[#eaf3f7] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                                 >
-                                    <Trash2 className="w-4 h-4" />
-                                    <span className="md:hidden text-xs font-medium">Eliminar</span>
+                                    <ChevronRight className="w-5 h-5" />
                                 </button>
                             </div>
                         </div>
-                    ))
+                    )}
+
+                {/* Bulk Actions - Ultra Compact Single Row */}
+                {selectedDocs.length > 0 && (
+                    <div className="mt-4 bg-[#1a5276] text-white p-2.5 sm:p-3 rounded-xl shadow-md flex items-center justify-between gap-2 border border-blue-900/30 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="flex items-center gap-2 pl-1">
+                            <div className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center shrink-0">
+                                <CheckCircle className="w-3.5 h-3.5 text-blue-200" />
+                            </div>
+                            <span className="text-xs sm:text-sm font-semibold">{selectedDocs.length} <span className="hidden sm:inline">seleccionado{selectedDocs.length !== 1 ? 's' : ''}</span></span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                onClick={handleDeleteSelected}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white/10 hover:bg-red-500 text-white rounded-lg text-xs font-medium transition-all"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Borrar</span>
+                            </button>
+                            <button
+                                onClick={() => navigate('/dashboard/new-bank', { state: { selectedDocuments: selectedDocs } })}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-[#1a5276] hover:bg-blue-50 rounded-lg text-xs font-bold transition-all shadow-sm"
+                            >
+                                <Sparkles className="w-3.5 h-3.5" />
+                                Generar Reactivos
+                            </button>
+                        </div>
+                    </div>
                 )}
             </div>
-
-            {/* Paginación */}
-            {totalPages > 1 && (
-                <div className="mt-4 flex items-center justify-between border-t border-[#00000014] pt-4">
-                    <div className="text-xs text-[#7b8a8a]">
-                        Mostrando página {page} de {totalPages}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => handlePageChange(page - 1)}
-                            disabled={page === 1 || loading}
-                            className="p-1.5 rounded-md border border-[#00000014] text-[#7b8a8a] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <button
-                            onClick={() => handlePageChange(page + 1)}
-                            disabled={page === totalPages || loading}
-                            className="p-1.5 rounded-md border border-[#00000014] text-[#7b8a8a] hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                </div>
-            )}
-
-            {/* Footer con acciones masivas */}
-            {filteredDocuments.length > 0 && (
-                <div className="mt-4 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-[#7b8a8a]">
-                        {selectedDocs.length > 0 ? (
-                            <span>{selectedDocs.length} seleccionado{selectedDocs.length !== 1 ? 's' : ''}</span>
-                        ) : (
-                            <span>0 seleccionados</span>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        {selectedDocs.length > 0 && (
-                            <>
-                                <button
-                                    onClick={handleDeleteSelected}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 border border-[#00000014] bg-white text-[#d64545] rounded-md hover:bg-[#fee] transition-colors text-sm"
-                                >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    Eliminar seleccionados
-                                </button>
-                                <button
-                                    onClick={() => alert('Funcionalidad pendiente')}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1a5276] text-white rounded-md hover:bg-[#145a86] transition-colors text-sm font-medium"
-                                >
-                                    <Sparkles className="w-3.5 h-3.5" />
-                                    Crear banco con seleccionados
-                                </button>
-                            </>
-                        )}
-                    </div>
-                </div>
-            )}
 
             {/* Modal de upload (Fixed background) */}
             {showUploadModal && (
@@ -675,6 +682,26 @@ const DocumentProcessorPage = () => {
                 </div>
             )}
 
+            {/* Modales de Confirmación */}
+            <ConfirmModal
+                isOpen={isConfirmDeleteOpen}
+                onClose={() => setIsConfirmDeleteOpen(false)}
+                onConfirm={confirmDelete}
+                title="Eliminar documento"
+                message="¿Estás seguro de que deseas eliminar este documento? Esta acción no se puede deshacer."
+                confirmText="Eliminar"
+                danger={true}
+            />
+
+            <ConfirmModal
+                isOpen={isConfirmBulkDeleteOpen}
+                onClose={() => setIsConfirmBulkDeleteOpen(false)}
+                onConfirm={confirmBulkDelete}
+                title="Eliminar documentos"
+                message={`¿Estás seguro de que deseas eliminar los ${selectedDocs.length} documentos seleccionados?`}
+                confirmText="Eliminar todos"
+                danger={true}
+            />
 
         </div>
     );

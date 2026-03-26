@@ -156,7 +156,7 @@ export default function DashboardPage() {
         </header>
 
         {/* Content Scroll */}
-        <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <div className="flex-1 overflow-y-auto px-4 pt-6 pb-20 sm:px-6 sm:pt-6 sm:pb-10 lg:px-8 lg:py-8">
           <Outlet />
         </div>
       </main>

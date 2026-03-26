@@ -9,6 +9,7 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                 "/auth/login", 
                 "/auth/register", 
                 "/auth/logout",
+                "/auth/refresh",
                 "/api/documents/from-drive"
             ]:
                 return await call_next(request)
