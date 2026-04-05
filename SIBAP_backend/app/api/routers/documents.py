@@ -161,9 +161,9 @@ def list_documents(
         DocumentListResponse(
             id=doc.id,
             filename=doc.filename,
-            file_type=doc.file_type.value,
+            file_type=doc.file_type.value if hasattr(doc.file_type, "value") else doc.file_type,
             characters=len(doc.content_text) if doc.content_text else 0,
-            status=doc.status.value,
+            status=doc.status.value if hasattr(doc.status, "value") else doc.status,
             error_message=doc.error_message,
             uploaded_at=doc.uploaded_at
         )
@@ -199,9 +199,9 @@ def get_document(
     return DocumentDetailResponse(
         id=documento.id,
         filename=documento.filename,
-        file_type=documento.file_type.value,
+        file_type=documento.file_type.value if hasattr(documento.file_type, "value") else documento.file_type,
         content_text=documento.content_text,
-        status=documento.status.value,
+        status=documento.status.value if hasattr(documento.status, "value") else documento.status,
         error_message=documento.error_message,
         uploaded_at=documento.uploaded_at
     )

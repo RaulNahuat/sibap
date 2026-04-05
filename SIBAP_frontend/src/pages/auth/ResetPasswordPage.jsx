@@ -3,323 +3,153 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { verifyResetToken, completePasswordReset } from '../../api/auth';
 import { getErrorMessage } from '../../utils/errorHandler';
 import {
-    Eye,
-    EyeOff,
-    ArrowRight,
-    GraduationCap,
-    KeyRound,
-    CheckCircle2,
-    AlertCircle,
+  Eye, EyeOff, ArrowRight, GraduationCap,
+  KeyRound, CheckCircle2, AlertCircle, ShieldCheck,
 } from 'lucide-react';
 
 export default function ResetPasswordPage() {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const token = searchParams.get('token');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
 
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [verifying, setVerifying] = useState(true);
-    const [tokenValid, setTokenValid] = useState(false);
-    const [success, setSuccess] = useState(false);
-    const [userEmail, setUserEmail] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(true);
+  const [tokenValid, setTokenValid] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
-    // Verificar token al cargar
-    useEffect(() => {
-        const verifyToken = async () => {
-            if (!token) {
-                setError('No se proporcionó un token de recuperación');
-                setVerifying(false);
-                return;
-            }
-
-            try {
-                const response = await verifyResetToken(token);
-                setTokenValid(true);
-                setUserEmail(response.email);
-            } catch (err) {
-                setError(getErrorMessage(err));
-                setTokenValid(false);
-            } finally {
-                setVerifying(false);
-            }
-        };
-
-        verifyToken();
-    }, [token]);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError('');
-
-        // Validar que las contraseñas coincidan
-        if (newPassword !== confirmPassword) {
-            setError('Las contraseñas no coinciden');
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            await completePasswordReset(token, newPassword);
-            setSuccess(true);
-        } catch (err) {
-            setError(getErrorMessage(err));
-        } finally {
-            setLoading(false);
-        }
+  useEffect(() => {
+    const verifyToken = async () => {
+      if (!token) {
+        setError('Token no válido');
+        setVerifying(false);
+        return;
+      }
+      try {
+        const response = await verifyResetToken(token);
+        setTokenValid(true);
+        setUserEmail(response.email);
+      } catch (err) {
+        setError(getErrorMessage(err));
+        setTokenValid(false);
+      } finally {
+        setVerifying(false);
+      }
     };
+    verifyToken();
+  }, [token]);
 
-    // Estado de verificación
-    if (verifying) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-white">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-[#1a5276] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                    <p className="text-gray-600">Verificando enlace...</p>
-                </div>
-            </div>
-        );
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (newPassword !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return;
     }
-
-    // Token inválido o expirado
-    if (!tokenValid) {
-        return (
-            <div className="min-h-screen flex bg-white font-sans">
-                <section className="w-full lg:w-[42%] flex items-center justify-center px-6 sm:px-8">
-                    <div className="w-full max-w-[420px] text-center">
-                        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <AlertCircle className="w-8 h-8 text-red-600" />
-                        </div>
-
-                        <h2 className="text-2xl font-bold text-[#1a5276] mb-3">
-                            Enlace Inválido o Expirado
-                        </h2>
-
-                        <p className="text-gray-600 mb-6">
-                            {error || 'El enlace de recuperación no es válido o ha expirado.'}
-                        </p>
-
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6 text-left">
-                            <p className="text-sm text-yellow-900">
-                                <strong>⏱️ Los enlaces expiran en 15 minutos</strong>
-                            </p>
-                            <p className="text-sm text-yellow-800 mt-2">
-                                Solicita un nuevo enlace de recuperación desde la página de
-                                inicio de sesión.
-                            </p>
-                        </div>
-
-                        <button
-                            onClick={() => navigate('/forgot-password')}
-                            className="w-full bg-[#1a5276] text-white py-3 rounded-md font-semibold hover:opacity-95"
-                        >
-                            Solicitar nuevo enlace
-                        </button>
-
-                        <button
-                            onClick={() => navigate('/login')}
-                            className="w-full text-[#1a5276] py-3 rounded-md font-medium hover:bg-gray-50 mt-3"
-                        >
-                            Volver al inicio de sesión
-                        </button>
-                    </div>
-                </section>
-
-                <section className="hidden lg:flex w-[58%] bg-gradient-to-br from-[#1a5276] to-[#154360] px-16 py-16 text-white relative overflow-hidden">
-                    <div className="absolute w-[600px] h-[600px] bg-white/5 rounded-full -top-24 -right-24" />
-                    <div className="absolute w-[300px] h-[300px] bg-white/5 rounded-full bottom-16 -left-16" />
-                </section>
-            </div>
-        );
+    setLoading(true);
+    try {
+      await completePasswordReset(token, newPassword);
+      setSuccess(true);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
     }
+  };
 
-    // Éxito
-    if (success) {
-        return (
-            <div className="min-h-screen flex bg-white font-sans">
-                <section className="w-full lg:w-[42%] flex items-center justify-center px-6 sm:px-8">
-                    <div className="w-full max-w-[420px] text-center">
-                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                            <CheckCircle2 className="w-8 h-8 text-green-600" />
-                        </div>
+  const styleTag = (
+    <style>{`
+      @keyframes orb1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(24px,-32px) scale(1.08); } }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
 
-                        <h2 className="text-2xl font-bold text-[#1a5276] mb-3">
-                            ¡Contraseña Actualizada!
-                        </h2>
+      .orb-1 { animation: orb1 10s ease-in-out infinite; }
+      .rp-input { width: 100%; border: 1.5px solid #dde3ec; border-radius: 12px; padding: 11px 42px 11px 14px; font-size: 14px; outline: none; transition: all 0.18s ease; }
+      .rp-input:focus { border-color: #1a5276; box-shadow: 0 0 0 3px rgba(26,82,118,0.10); }
+      .rp-btn { width: 100%; background: #1a5276; color: #fff; border-radius: 12px; padding: 13px 20px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(26,82,118,0.32); transition: all 0.18s ease; }
+      .rp-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,82,118,0.38); }
+      .rp-btn:disabled { opacity: 0.58; }
+      .spinner { width: 17px; height: 17px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    `}</style>
+  );
 
-                        <p className="text-gray-600 mb-6">
-                            Tu contraseña ha sido actualizada exitosamente. Ya puedes iniciar
-                            sesión con tu nueva contraseña.
-                        </p>
-
-                        <button
-                            onClick={() => navigate('/login')}
-                            className="w-full bg-[#1a5276] text-white py-3 rounded-md font-semibold flex items-center justify-center gap-2 hover:opacity-95"
-                        >
-                            Ir al inicio de sesión
-                            <ArrowRight className="w-4 h-4" />
-                        </button>
-                    </div>
-                </section>
-
-                <section className="hidden lg:flex w-[58%] bg-gradient-to-br from-[#1a5276] to-[#154360] px-16 py-16 text-white relative overflow-hidden">
-                    <div className="absolute w-[600px] h-[600px] bg-white/5 rounded-full -top-24 -right-24" />
-                    <div className="absolute w-[300px] h-[300px] bg-white/5 rounded-full bottom-16 -left-16" />
-
-                    <div className="relative z-10 flex flex-col justify-center items-center w-full text-center">
-                        <div className="w-20 h-20 bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur mb-6">
-                            <CheckCircle2 className="w-10 h-10" />
-                        </div>
-
-                        <h1 className="text-4xl font-bold mb-4">¡Todo listo!</h1>
-                        <p className="text-white/90 text-lg max-w-md">
-                            Tu cuenta está segura nuevamente. Inicia sesión para continuar
-                            trabajando.
-                        </p>
-                    </div>
-                </section>
-            </div>
-        );
-    }
-
-    // Formulario de nueva contraseña
-    return (
-        <div className="min-h-screen flex bg-white font-sans">
-            {/* MOBILE HEADER */}
-            <header className="lg:hidden fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200/70">
-                <div className="flex items-center gap-3 h-14 px-5">
-                    <div className="w-9 h-9 bg-[#1a5276] rounded-xl flex items-center justify-center shadow-sm">
-                        <GraduationCap className="w-5 h-5 text-white" />
-                    </div>
-
-                    <div className="flex flex-col leading-tight">
-                        <span className="text-base font-semibold text-[#1a5276]">
-                            SIBAP
-                        </span>
-                        <span className="text-[11px] text-gray-500">
-                            Transforma tus materiales en evaluaciones inteligentes
-                        </span>
-                    </div>
-                </div>
-            </header>
-
-            {/* RIGHT PANEL */}
-            <section className="w-full lg:w-[42%] flex items-center justify-center px-6 sm:px-8 pt-24 pb-8 lg:pt-0 lg:pb-0">
-                <div className="w-full max-w-[420px]">
-                    {/* FORM HEADER */}
-                    <div className="text-center mb-8">
-                        <div className="w-12 h-12 bg-[#e9f5f8] rounded-xl flex items-center justify-center mx-auto mb-4">
-                            <KeyRound className="w-6 h-6 text-[#1a5276]" />
-                        </div>
-                        <h2 className="text-2xl font-bold text-[#1a5276]">
-                            Nueva Contraseña
-                        </h2>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Crea una contraseña segura para {userEmail}
-                        </p>
-                    </div>
-
-                    {error && (
-                        <div className="mb-5 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md p-3">
-                            {error}
-                        </div>
-                    )}
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        {/* Nueva Contraseña */}
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                Nueva Contraseña
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={newPassword}
-                                    onChange={(e) => setNewPassword(e.target.value)}
-                                    required
-                                    className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#e9f5f8] focus:border-[#1a5276]"
-                                    placeholder="••••••••"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                                >
-                                    {showPassword ? (
-                                        <EyeOff className="w-4 h-4" />
-                                    ) : (
-                                        <Eye className="w-4 h-4" />
-                                    )}
-                                </button>
-                            </div>
-                            <p className="text-xs text-gray-500 mt-1">
-                                Mínimo 8 caracteres, incluye mayúsculas, minúsculas, números y
-                                caracteres especiales
-                            </p>
-                        </div>
-
-                        {/* Confirmar Contraseña */}
-                        <div>
-                            <label className="block text-sm font-medium mb-2">
-                                Confirmar Contraseña
-                            </label>
-                            <div className="relative">
-                                <input
-                                    type={showConfirmPassword ? 'text' : 'password'}
-                                    value={confirmPassword}
-                                    onChange={(e) => setConfirmPassword(e.target.value)}
-                                    required
-                                    className="w-full border border-gray-200 rounded-md px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#e9f5f8] focus:border-[#1a5276]"
-                                    placeholder="••••••••"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
-                                >
-                                    {showConfirmPassword ? (
-                                        <EyeOff className="w-4 h-4" />
-                                    ) : (
-                                        <Eye className="w-4 h-4" />
-                                    )}
-                                </button>
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-[#1a5276] text-white py-3 rounded-md font-semibold flex items-center justify-center gap-2 hover:opacity-95 disabled:opacity-50"
-                        >
-                            {loading ? 'Actualizando…' : 'Actualizar contraseña'}
-                            <ArrowRight className="w-4 h-4" />
-                        </button>
-                    </form>
-                </div>
-            </section>
-
-            {/* LEFT PANEL (DESKTOP) */}
-            <section className="hidden lg:flex w-[58%] bg-gradient-to-br from-[#1a5276] to-[#154360] px-16 py-16 text-white relative overflow-hidden">
-                <div className="absolute w-[600px] h-[600px] bg-white/5 rounded-full -top-24 -right-24" />
-                <div className="absolute w-[300px] h-[300px] bg-white/5 rounded-full bottom-16 -left-16" />
-
-                <div className="relative z-10 flex flex-col justify-center items-center w-full text-center">
-                    <div className="w-20 h-20 bg-white/15 rounded-2xl flex items-center justify-center backdrop-blur mb-6">
-                        <KeyRound className="w-10 h-10" />
-                    </div>
-
-                    <h1 className="text-4xl font-bold mb-4">Casi listo</h1>
-                    <p className="text-white/90 text-lg max-w-md">
-                        Crea una contraseña segura para proteger tu cuenta y todos tus
-                        bancos de preguntas.
-                    </p>
-                </div>
-            </section>
+  const Layout = ({ content, panelContent }) => (
+    <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'Inter, sans-serif' }}>
+      {styleTag}
+      <section className="w-full lg:w-[42%] flex items-center justify-center px-6 pt-24 pb-10 lg:pt-0 lg:pb-0" style={{ background: 'linear-gradient(160deg, #f4f7fa 0%, #eef2f7 100%)' }}>
+        <div style={{ background: '#fff', borderRadius: 20, padding: '36px 32px 32px', boxShadow: '0 20px 48px -8px rgba(26,82,118,0.12)', border: '1px solid rgba(26,82,118,0.07)', width: '100%', maxWidth: 400 }}>{content}</div>
+      </section>
+      <section className="hidden lg:flex w-[58%] px-16 py-16 text-white relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #1a5276 0%, #154360 60%, #0d2d42 100%)' }}>
+        <div className="orb-1" style={{ position: 'absolute', width: 620, height: 620, background: 'radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)', borderRadius: '50%', top: -120, right: -100 }} />
+        <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 22, fontWeight: 700 }}><GraduationCap />SIBAP</div>
+            <div style={{ marginTop: 80, maxWidth: 500 }}>{panelContent}</div>
+          </div>
+          <p style={{ fontSize: 12, opacity: 0.5 }}>© 2026 SIBAP</p>
         </div>
-    );
+      </section>
+    </div>
+  );
+
+  if (verifying) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Verificando...</div>;
+
+  if (!tokenValid) return (
+    <Layout
+      content={
+        <div style={{ textAlign: 'center' }}>
+          <AlertCircle style={{ color: '#dc2626', margin: '0 auto 16px', width: 56, height: 56 }} />
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#1a5276' }}>Enlace expirado</h2>
+          <p style={{ color: '#7a8b9a', marginBottom: 20 }}>El enlace ya no es válido.</p>
+          <button onClick={() => navigate('/forgot-password')} className="rp-btn">Solicitar nuevo</button>
+        </div>
+      }
+      panelContent={<h1>Seguridad primero</h1>}
+    />
+  );
+
+  if (success) return (
+    <Layout
+      content={
+        <div style={{ textAlign: 'center' }}>
+          <CheckCircle2 style={{ color: '#16a34a', margin: '0 auto 16px', width: 56, height: 56 }} />
+          <h2 style={{ fontSize: 22, fontWeight: 700, color: '#1a5276' }}>Actualizada</h2>
+          <p style={{ color: '#7a8b9a', marginBottom: 20 }}>Ya puedes iniciar sesión.</p>
+          <button onClick={() => navigate('/login')} className="rp-btn">Ir al inicio de sesión</button>
+        </div>
+      }
+      panelContent={<h1>¡Todo listo!</h1>}
+    />
+  );
+
+  return (
+    <Layout
+      content={
+        <>
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
+            <KeyRound style={{ color: '#1a5276', margin: '0 auto 14px', width: 52, height: 52 }} />
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#1a5276' }}>Nueva contraseña</h2>
+            <p style={{ color: '#7a8b9a' }}>Crea una nueva contraseña para {userEmail}</p>
+          </div>
+          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ position: 'relative' }}>
+              <input type={showPassword ? 'text' : 'password'} required className="rp-input" placeholder="Contraseña" onChange={e => setNewPassword(e.target.value)} />
+              <button type="button" style={{ position: 'absolute', right: 13, top: 12, background: 'none', border: 'none', color: '#b8c4cc' }} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff /> : <Eye />}</button>
+            </div>
+            <div style={{ position: 'relative' }}>
+              <input type={showConfirmPassword ? 'text' : 'password'} required className="rp-input" placeholder="Confirmar" onChange={e => setConfirmPassword(e.target.value)} />
+              <button type="button" style={{ position: 'absolute', right: 13, top: 12, background: 'none', border: 'none', color: '#b8c4cc' }} onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? <EyeOff /> : <Eye />}</button>
+            </div>
+            <button type="submit" disabled={loading} className="rp-btn">{loading ? <span className="spinner" /> : 'Actualizar'}</button>
+          </form>
+        </>
+      }
+      panelContent={<h1>Casi terminamos</h1>}
+    />
+  );
 }
