@@ -61,33 +61,6 @@ _TYPE_LABELS = {
     QuestionType.CALCULATED: "Calculada (CALCULATED)",
 }
 
-_TYPE_INSTRUCTIONS = {
-    QuestionType.MCQ: """
-        REGLAS PARA OPCIÓN MÚLTIPLE:
-        - El enunciado plantea una pregunta o situación concreta.
-        - Genera exactamente 1 opción correcta y 3 distractores plausibles.
-        - Cada opción debe ser texto breve y claro.
-        - "is_correct": true SOLO para la opción correcta.
-    """,
-    QuestionType.MATCHING: """
-        REGLAS PARA RELACIONAR COLUMNAS:
-        - El enunciado introduce el contexto y pide relacionar pares de conceptos.
-        - Cada "opción" representa UN PAR con formato: "Término | Definición o concepto relacionado".
-        - Genera entre 4 y 6 pares. Todos los pares son "correctos" (is_correct: true).
-        - Los pares deben ser relaciones directas e inequívocas del contenido.
-        - Ejemplo de opción: "Polimorfismo | Capacidad de un objeto de tomar múltiples formas"
-    """,
-    QuestionType.CALCULATED: """
-        REGLAS PARA PREGUNTA CALCULADA:
-        - El enunciado plantea un problema numérico o cuantitativo con valores concretos.
-        - Genera 1 opción correcta con el resultado numérico correcto (is_correct: true).
-        - Genera 3 distractores con resultados incorrectos pero plausibles.
-        - Incluye la fórmula o procedimiento en el feedback de la opción correcta.
-        - CRÍTICO FORMATO JSON: Usa ÚNICAMENTE $...$ para fórmulas (ej: $F = ma$).
-          JAMÁS uses \\( \\) \\[ \\] pues rompen el JSON. Solo usar signo de dólar $...$.
-    """,
-}
-
 
 def _build_prompt(
     count: int,
@@ -101,7 +74,35 @@ def _build_prompt(
     ambiguity_rule: str,
 ) -> str:
     type_label = _TYPE_LABELS[q_type]
-    type_instructions = _TYPE_INSTRUCTIONS[q_type]
+    
+    if q_type == QuestionType.MCQ:
+        type_instructions = f"""
+        REGLAS PARA OPCIÓN MÚLTIPLE:
+        - El enunciado plantea una pregunta o situación concreta.
+        - Genera exactamente 1 opción correcta y {request.wrong_option_count} distractores.
+        - Cada opción debe ser texto breve y claro.
+        - "is_correct": true SOLO para la opción correcta.
+        """
+    elif q_type == QuestionType.MATCHING:
+        type_instructions = """
+        REGLAS PARA RELACIONAR COLUMNAS:
+        - El enunciado introduce el contexto y pide relacionar pares de conceptos.
+        - IMPORTANTE (UX UI): Para una óptima experiencia visual en plataformas como Moodle, la parte izquierda (premisa estática en pantalla) debe ser la descripción o frase larga, y la parte derecha (opción que va dentro de la caja desplegable) debe ser de texto muy corto (1 a 4 palabras máximo).
+        - Cada "opción" representa UN PAR con formato exacto: "Definición, descripción o escenario largo | Término corto asociado".
+        - Genera entre 4 y 6 pares. Todos los pares son "correctos" (is_correct: true).
+        - Los pares deben ser relaciones directas e inequívocas del contenido.
+        - Ejemplo de opción: "Capacidad de un objeto en programación orientada a objetos de tomar múltiples comportamientos al heredar | Polimorfismo"
+        """
+    else: # CALCULATED
+        type_instructions = f"""
+        REGLAS PARA PREGUNTA CALCULADA:
+        - El enunciado plantea un problema numérico o cuantitativo con valores concretos.
+        - Genera 1 opción correcta con el resultado numérico correcto (is_correct: true).
+        - Genera {request.wrong_option_count} distractores con resultados incorrectos pero plausibles.
+        - Incluye la fórmula o procedimiento en el feedback de la opción correcta.
+        - CRÍTICO FORMATO JSON: Usa ÚNICAMENTE $...$ para fórmulas (ej: $F = ma$).
+          JAMÁS uses \\( \\) \\[ \\] pues rompen el JSON. Solo usar signo de dólar $...$.
+        """
 
     return f"""
     Eres un experto pedagogo diseñando evaluaciones académicas de alta calidad.
@@ -111,7 +112,9 @@ def _build_prompt(
     - Programa: {request.program or "No especificado"}
     - Materia: {request.subject or "No especificada"}
     - Tema: {request.topic or "No especificado"}
-    - Nivel de dificultad: {request.difficulty.value}
+    {f"- Niveles cognitivos evaluados (Taxonomía de Bloom): {request.cognitive_level}" if getattr(request, 'cognitive_level', None) else ""}
+    {f"- Competencia General: {request.general_competence}" if getattr(request, 'general_competence', None) else ""}
+    {f"- Competencia Específica: {request.specific_competence}" if getattr(request, 'specific_competence', None) else ""}
     {f"- Objetivos de aprendizaje del tema: {request.learning_objectives}" if request.learning_objectives else ""}
     {custom_rules}
     PREGUNTAS EXISTENTES (ESTRICTAMENTE NO REPETIR NI COPIAR ESTILO):
@@ -242,6 +245,11 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
             existing_formatted = "\n".join([f"- {t}" for t in existing_texts]) if existing_texts else "Ninguna aún."
 
             custom_rules = f"\n        INSTRUCCIONES ADICIONALES DEL USUARIO (PRIORIDAD ALTA):\n        {request.custom_instructions}\n" if request.custom_instructions else ""
+            
+            if not request.generate_general_feedback:
+                custom_rules += "\n        - IMPORTANTE: NO generes ninguna retroalimentación general (deja feedback_correct y feedback_incorrect en null o vacíos).\n"
+            if not request.generate_specific_feedback:
+                custom_rules += "\n        - IMPORTANTE: NO generes retroalimentación específica por opción (deja feedback en null o vacío dentro del arreglo options).\n"
             distractor_rule = "- Generar 1 opción correcta y distractores plausibles (evitar opciones obvias)." if request.plausible_distractors else "- Generar 1 opción correcta y distractores claramente incorrectos."
             ambiguity_rule = "- Evitar estrictamente ambigüedades en enunciados y opciones." if request.avoid_ambiguity else ""
 
@@ -306,11 +314,7 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
 async def generate_questions(db: Session, request: QuestionGenerationRequest, user_id: int):
     """Método original conservado por compatibilidad o simulación, pero ahora el flujo principal irá por BackgroundTasks."""
     # Nota: Este método ya no es el punto de entrada principal desde el router de generación asíncrona
-    # pero lo mantenemos para no romper posibles tests existentes que lo llamen directamente.
-    
-    # ... (podríamos refactorizarlo para llamar a la nueva lógica, pero por ahora lo dejamos como está)
-    # Sin embargo, para cumplir con el requerimiento de "Aislamiento de Sesión", es mejor que el 
-    # router llame directamente a las nuevas funciones.
+    # pero lo mantenemos para no romper posibles tests existentes que lo llamen directamente
     pass
 
 

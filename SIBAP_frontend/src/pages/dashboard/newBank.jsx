@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-    Play, Sparkles, AlertCircle, FileText, CheckCircle, Save, Download, RefreshCw, Loader2, Info, BookOpen, BrainCircuit, GripVertical, Plus, Trash2, X, RotateCcw, UploadCloud, MessageSquare, Library
+    Play, Sparkles, AlertCircle, FileText, CheckCircle, Save, Download, RefreshCw, Loader2, Info, BookOpen, BrainCircuit, GripVertical, Plus, Trash2, X, RotateCcw, UploadCloud, MessageSquare, Library, ChevronDown, ChevronUp
 } from 'lucide-react';
 import DocumentSelectionModal from '../../components/documents/DocumentSelectionModal';
 import { uploadDocument, getDocument } from '../../api/documents';
@@ -33,16 +33,21 @@ export default function NewBankPage() {
         topic: '',
         subtopic: '',
         learningObjectives: '',
+        generalCompetence: '',
+        specificCompetence: '',
+        cognitiveLevel: ['Comprender'],
         difficulty: 'Intermedio',
         numMCQ: 5,
         numMatching: 2,
         numCalculated: 1,
         wrongOptionCount: 3,
-        plausibleDistractors: false,
+        plausibleDistractors: true,
         avoidAmbiguity: true,
         customInstructions: '',
         externalReferences: '',
         aiModel: 'gemini-flash-latest',
+        generateGeneralFeedback: true,
+        generateSpecificFeedback: true,
     });
 
     const [isGenerating, setIsGenerating] = useState(false);
@@ -51,6 +56,7 @@ export default function NewBankPage() {
     const [isUploading, setIsUploading] = useState(false);
     const [showLibraryModal, setShowLibraryModal] = useState(false);
     const [error, setError] = useState('');
+    const [showAdvancedAcademic, setShowAdvancedAcademic] = useState(false);
 
     // Curriculum cascading state
     const IS_PROGRAM = 'Licenciatura en Ingeniería de Software';
@@ -153,6 +159,9 @@ export default function NewBankPage() {
                 topic: formData.topic,
                 subtopic: formData.subtopic || null,
                 learning_objectives: formData.learningObjectives || null,
+                general_competence: formData.generalCompetence || null,
+                specific_competence: formData.specificCompetence || null,
+                cognitive_level: Array.isArray(formData.cognitiveLevel) ? formData.cognitiveLevel.join(', ') : formData.cognitiveLevel,
                 question_type: 'MIXED',
                 difficulty: difficultyMapping[formData.difficulty] || 'MEDIUM',
                 num_mcq,
@@ -163,6 +172,8 @@ export default function NewBankPage() {
                 wrong_option_count: formData.wrongOptionCount,
                 plausible_distractors: formData.plausibleDistractors,
                 avoid_ambiguity: formData.avoidAmbiguity,
+                generate_general_feedback: formData.generateGeneralFeedback,
+                generate_specific_feedback: formData.generateSpecificFeedback,
                 custom_instructions: formData.customInstructions || null,
                 external_references: formData.externalReferences || null
             };
@@ -481,7 +492,7 @@ export default function NewBankPage() {
                                                     className="flex items-center justify-between bg-white border border-[#e2e8f0] p-2 rounded-lg shadow-sm hover:border-[#1a5276] transition-all group border-l-4 border-l-[#1a5276]/20 hover:border-l-[#1a5276]"
                                                 >
                                                     <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                        <div className="w-7 h-7 rounded bg-[#f1f5f9] flex items-center justify-center flex-shrink-0">
+                                                        <div className="w-7 h-7 rounded bg-[#f1f5f9] flex items-center justify-center shrink-0">
                                                             <FileText className="w-3.5 h-3.5 text-[#1a5276]" />
                                                         </div>
                                                         <div className="min-w-0">
@@ -542,7 +553,7 @@ export default function NewBankPage() {
             {/* Step 2: Parámetros Académicos */}
             <div className="bg-white border border-[#e2e8f0]/60 rounded-2xl p-6 sm:p-8 mb-6 shadow-md">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#1a5276] text-white flex items-center justify-center text-sm sm:text-base font-semibold flex-shrink-0">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-[#1a5276] text-white flex items-center justify-center text-sm sm:text-base font-semibold shrink-0">
                         2
                     </div>
                     <h2 className="text-lg font-bold text-slate-800">
@@ -713,55 +724,51 @@ export default function NewBankPage() {
                         />
                     </div>
 
-                    {/* Objetivos de Aprendizaje */}
-                    <div className="lg:col-span-12">
-                        <label className="block text-sm font-medium text-[#102129] mb-2">
-                            Objetivos de Aprendizaje del Tema
-                            <span className="ml-2 text-xs font-normal text-[#94a3b8]">(Opcional)</span>
-                        </label>
-                        <textarea
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] bg-slate-50 min-h-[90px] resize-y transition-all"
-                            placeholder="Ej: El estudiante identificará las fases del ciclo de vida del software y justificará su orden lógico..."
-                            value={formData.learningObjectives}
-                            onChange={(e) => setFormData({ ...formData, learningObjectives: e.target.value })}
-                        />
-                        <p className="mt-1 text-[11px] text-[#64748b] italic">
-                            Las preguntas se alinearán a estos objetivos para medir exactamente lo que deseas evaluar.
-                        </p>
-                    </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-y-5 gap-x-6 mb-6">
                     {/* Nivel de Dificultad */}
-                    <div>
-                        <label className="block text-sm font-medium text-[#102129] mb-2">
-                            Nivel de Dificultad
+                    <div className="lg:col-span-2">
+                        <label className="block text-sm font-medium text-[#102129] mb-3">
+                            Niveles cognitivos (Selecciona uno o más)
                         </label>
-                        <select
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] bg-white transition-all"
-                            value={formData.difficulty}
-                            onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
-                        >
-                            <option>Básico</option>
-                            <option>Intermedio</option>
-                            <option>Avanzado</option>
-                        </select>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {['Recordar', 'Comprender', 'Aplicar', 'Analizar', 'Evaluar', 'Crear'].map(level => {
+                                const cognitiveLevels = Array.isArray(formData.cognitiveLevel) ? formData.cognitiveLevel : [formData.cognitiveLevel].filter(Boolean);
+                                const isSelected = cognitiveLevels.includes(level);
+                                return (
+                                    <button
+                                        key={level}
+                                        type="button"
+                                        onClick={() => {
+                                            const newLevels = isSelected 
+                                                ? cognitiveLevels.filter(l => l !== level)
+                                                : [...cognitiveLevels, level];
+                                            
+                                            let newDifficulty = 'Básico';
+                                            if (newLevels.some(l => ['Evaluar', 'Crear'].includes(l))) newDifficulty = 'Avanzado';
+                                            else if (newLevels.some(l => ['Aplicar', 'Analizar'].includes(l))) newDifficulty = 'Intermedio';
+
+                                            setFormData({ 
+                                                ...formData, 
+                                                cognitiveLevel: newLevels,
+                                                difficulty: newDifficulty
+                                            });
+                                        }}
+                                        className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all border ${
+                                            isSelected 
+                                                ? 'bg-[#1a5276] text-white border-[#1a5276] shadow-sm' 
+                                                : 'bg-white text-[#64748b] border-[#e2e8f0] hover:bg-[#f1f5f9] hover:text-[#102129]'
+                                        }`}
+                                    >
+                                        {level}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
-                    {/* Número de Opciones Incorrectas */}
-                    <div>
-                        <label className="block text-sm font-medium text-[#102129] mb-2">
-                            Opciones Incorrectas por Pregunta
-                        </label>
-                        <input
-                            type="number"
-                            min="1"
-                            max="5"
-                            value={formData.wrongOptionCount}
-                            onChange={(e) => setFormData({ ...formData, wrongOptionCount: parseInt(e.target.value) })}
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] bg-white transition-all"
-                        />
-                    </div>
+                    {/* Selectores de opciones incorrectas movidos debajo */}
                 </div>
 
                 {/* Número de Preguntas por Tipo */}
@@ -782,7 +789,30 @@ export default function NewBankPage() {
                                 onChange={(e) => setFormData({ ...formData, numMCQ: parseInt(e.target.value) || 0 })}
                                 className="w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-[#e2e8f0] rounded-xl text-sm focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] text-center font-semibold text-slate-800 bg-white transition-all"
                             />
-                            <p className="text-[9px] sm:text-[10px] text-[#94a3b8] mt-1.5 text-center">4 opciones, 1 correcta</p>
+                            {formData.numMCQ > 0 ? (
+                                <p className="text-[9px] sm:text-[10px] text-[#94a3b8] mt-1.5 text-center leading-tight">
+                                    {(parseInt(formData.wrongOptionCount) || 0) + 1} opciones totales<br/>(1 correcta, {parseInt(formData.wrongOptionCount) || 0} incorrectas)
+                                </p>
+                            ) : (
+                                <p className="text-[9px] sm:text-[10px] text-[#94a3b8] mt-1.5 text-center leading-tight">
+                                    Configurable al elegir 1 o más
+                                </p>
+                            )}
+                            {formData.numMCQ > 0 && (
+                                <div className="mt-3 pt-3 border-t border-[#e2e8f0]/80">
+                                    <label className="block text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 text-center">
+                                        Distractores p/pregunta
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="5"
+                                        value={formData.wrongOptionCount}
+                                        onChange={(e) => setFormData({ ...formData, wrongOptionCount: parseInt(e.target.value) || 1 })}
+                                        className="w-full px-2 py-1 border border-[#e2e8f0] rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-[#1a5276]/10 focus:border-[#1a5276] text-center font-semibold text-slate-700 bg-white transition-all"
+                                    />
+                                </div>
+                            )}
                         </div>
                         <div className="bg-slate-50 border border-[#e2e8f0]/80 rounded-xl p-3 sm:p-5 transition-all hover:border-[#1a5276]/30 hover:bg-slate-100/50 shadow-sm">
                             <label className="block text-[10px] sm:text-xs font-bold text-[#1a5276] uppercase tracking-wider mb-2">
@@ -820,59 +850,88 @@ export default function NewBankPage() {
                     </p>
                 </div>
 
-                {/* Restricciones Pedagógicas */}
-                <div className="mt-8 border-t border-[#e2e8f0] pt-6">
-                    <h3 className="text-sm font-semibold text-[#102129] mb-4">
-                        Restricciones Pedagógicas
-                    </h3>
-                    <div className="flex flex-col gap-3">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={formData.plausibleDistractors}
-                                onChange={(e) => setFormData({ ...formData, plausibleDistractors: e.target.checked })}
-                                className="w-4 h-4 text-[#1a5276] border-gray-300 rounded focus:ring-[#1a5276]"
-                            />
-                            <span className="text-sm text-[#475569]">
-                                Generar distractores plausibles (evitar opciones obvias)
-                            </span>
-                        </label>
+                <div className="mt-8 pt-6">
+                    <button
+                        type="button"
+                        onClick={() => setShowAdvancedAcademic(!showAdvancedAcademic)}
+                        className="flex items-center justify-between w-full p-4 bg-slate-50 border border-[#e2e8f0] rounded-xl hover:bg-slate-100 transition-all font-medium text-[#102129]"
+                    >
+                        <div className="flex items-center gap-2">
+                            <BookOpen className="w-5 h-5 text-[#1a5276]" />
+                            <span>Opciones Pedagógicas Avanzadas (Opcional)</span>
+                        </div>
+                        {showAdvancedAcademic ? <ChevronUp className="w-5 h-5 text-[#64748b]" /> : <ChevronDown className="w-5 h-5 text-[#64748b]" />}
+                    </button>
 
-                        <label className="flex items-center gap-3 cursor-pointer">
-                            <input
-                                type="checkbox"
-                                checked={formData.avoidAmbiguity}
-                                onChange={(e) => setFormData({ ...formData, avoidAmbiguity: e.target.checked })}
-                                className="w-4 h-4 text-[#1a5276] border-gray-300 rounded focus:ring-[#1a5276]"
-                            />
-                            <span className="text-sm text-[#475569]">
-                                Verificar y evitar ambigüedades en los enunciados
-                            </span>
-                        </label>
-                    </div>
+                    {showAdvancedAcademic && (
+                        <div className="mt-4 p-5 sm:p-6 border border-[#e2e8f0] rounded-xl bg-white shadow-sm animate-in slide-in-from-top-2 duration-200">
+                            
+                            {/* Objetivos de Aprendizaje */}
+                            <div className="lg:col-span-12">
+                                <label className="block text-sm font-medium text-[#102129] mb-2">
+                                    Resultados de aprendizaje
+                                </label>
+                                <textarea
+                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] bg-slate-50 min-h-[90px] resize-y transition-all"
+                                    placeholder="Ej: El estudiante identificará las fases del ciclo de vida del software y justificará su orden lógico..."
+                                    value={formData.learningObjectives}
+                                    onChange={(e) => setFormData({ ...formData, learningObjectives: e.target.value })}
+                                />
+                                <p className="mt-1 text-[11px] text-[#64748b] italic">
+                                    Las preguntas se alinearán a estos resultados para medir exactamente lo que deseas evaluar.
+                                </p>
+                            </div>
 
-                    <div className="mt-6">
-                        <label className="block text-sm font-semibold text-[#102129] mb-3 flex items-center gap-2">
-                            <MessageSquare className="w-4 h-4 text-[#1a5276]" />
-                            Instrucciones Especiales (Opcional)
-                        </label>
-                        <textarea
-                            className="w-full px-4 py-3 border border-[#e2e8f0] rounded-lg text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent bg-[#f8fafc] min-h-[100px] transition-all resize-y"
-                            placeholder="Ej: 'Usa un tono formal y técnico', 'Todas las preguntas deben incluir ejemplos de la vida real', 'Enfócate en aspectos'..."
-                            value={formData.customInstructions}
-                            onChange={(e) => setFormData({ ...formData, customInstructions: e.target.value })}
-                        />
-                        <p className="mt-2 text-[11px] text-[#64748b] leading-tight italic">
-                            Estas reglas se sumarán a los estándares pedagógicos del sistema.
-                        </p>
-                    </div>
+                            {/* Competencia general */}
+                            <div className="mt-6 lg:col-span-12">
+                                <label className="block text-sm font-medium text-[#102129] mb-2">
+                                    Competencia general
+                                </label>
+                                <textarea
+                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] bg-slate-50 min-h-[90px] resize-y transition-all"
+                                    placeholder="Ej: Diseña y desarrolla sistemas de software de calidad internacional..."
+                                    value={formData.generalCompetence}
+                                    onChange={(e) => setFormData({ ...formData, generalCompetence: e.target.value })}
+                                />
+                            </div>
+
+                            {/* Competencia específica */}
+                            <div className="mt-6 lg:col-span-12">
+                                <label className="block text-sm font-medium text-[#102129] mb-2">
+                                    Competencia específica
+                                </label>
+                                <textarea
+                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-xl text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-4 focus:ring-[#1a5276]/10 focus:border-[#1a5276] bg-slate-50 min-h-[90px] resize-y transition-all"
+                                    placeholder="Ej: Aplica conceptos de orientación a objetos para resolver problemas complejos..."
+                                    value={formData.specificCompetence}
+                                    onChange={(e) => setFormData({ ...formData, specificCompetence: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="mt-6">
+                                <label className="flex text-sm font-semibold text-[#102129] mb-3 items-center gap-2">
+                                    <MessageSquare className="w-4 h-4 text-[#1a5276]" />
+                                    Instrucciones Especiales
+                                </label>
+                                <textarea
+                                    className="w-full px-4 py-3 border border-[#e2e8f0] rounded-lg text-sm placeholder:text-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#1a5276] focus:border-transparent bg-[#f8fafc] min-h-[100px] transition-all resize-y"
+                                    placeholder="Ej: 'Usa un tono formal y técnico', 'Todas las preguntas deben incluir ejemplos de la vida real'..."
+                                    value={formData.customInstructions}
+                                    onChange={(e) => setFormData({ ...formData, customInstructions: e.target.value })}
+                                />
+                                <p className="mt-2 text-[11px] text-[#64748b] leading-tight italic">
+                                    Estas reglas se sumarán a los estándares pedagógicos del sistema.
+                                </p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
 
             {/* Step 3: Configuración de IA */}
             <div className="bg-white border border-[#e2e8f0]/60 rounded-2xl p-6 sm:p-8 mb-6 shadow-md">
                 <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-full bg-[#1a5276] text-white flex items-center justify-center text-base font-semibold flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-[#1a5276] text-white flex items-center justify-center text-base font-semibold shrink-0">
                         3
                     </div>
                     <h2 className="text-lg font-bold text-slate-800">
@@ -882,7 +941,7 @@ export default function NewBankPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div>
-                        <label className="block text-sm font-medium text-[#102129] mb-2 flex items-center gap-2">
+                        <label className="flex text-sm font-medium text-[#102129] mb-2 items-center gap-2">
                             <Sparkles className="w-4 h-4 text-amber-500" />
                             Modelo de Inteligencia Artificial
                         </label>
@@ -909,6 +968,41 @@ export default function NewBankPage() {
                             ¿Problemas con el modelo? Restablecer por defecto
                         </button>
                     </div>
+                </div>
+
+                <div className="flex flex-col gap-3 mb-8 border-t border-[#e2e8f0] pt-6">
+                    <h3 className="text-sm font-semibold text-[#102129] mb-1">
+                        Retroalimentación Autogenerada
+                    </h3>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <input
+                            type="checkbox"
+                            checked={formData.generateGeneralFeedback}
+                            onChange={(e) => setFormData({ ...formData, generateGeneralFeedback: e.target.checked })}
+                            className="w-4 h-4 text-[#1a5276] border-gray-300 rounded focus:ring-[#1a5276]"
+                        />
+                        <div className="flex flex-col">
+                            <span className="text-sm font-medium text-[#475569] group-hover:text-[#102129] transition-colors">
+                                Generar retroalimentación general
+                            </span>
+                            <span className="text-[11px] text-[#94a3b8]">Una explicación global para la pregunta al atinar o fallar.</span>
+                        </div>
+                    </label>
+
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <input
+                            type="checkbox"
+                            checked={formData.generateSpecificFeedback}
+                            onChange={(e) => setFormData({ ...formData, generateSpecificFeedback: e.target.checked })}
+                            className="w-4 h-4 text-[#1a5276] border-gray-300 rounded focus:ring-[#1a5276]"
+                        />
+                        <div className="flex flex-col">
+                            <span className="text-sm font-medium text-[#475569] group-hover:text-[#102129] transition-colors">
+                                Generar retroalimentación específica por opción
+                            </span>
+                            <span className="text-[11px] text-[#94a3b8]">Una justificación detallada para cada opción/distractor.</span>
+                        </div>
+                    </label>
                 </div>
 
                 {/* Tipo de Reactivo Principal */}

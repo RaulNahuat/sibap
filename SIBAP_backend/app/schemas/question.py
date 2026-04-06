@@ -40,6 +40,9 @@ class QuestionGenerationRequest(BaseModel):
     topic: Optional[str] = None
     subtopic: Optional[str] = None
     learning_objectives: Optional[str] = None
+    general_competence: Optional[str] = None
+    specific_competence: Optional[str] = None
+    cognitive_level: Optional[str] = "Comprender"
     question_type: Optional[QuestionType] = QuestionType.MIXED
     difficulty: DifficultyLevel
     num_questions: int = 10
@@ -50,6 +53,8 @@ class QuestionGenerationRequest(BaseModel):
     model_name: Optional[str] = "gemini-2.0-flash"
     plausible_distractors: bool = False
     avoid_ambiguity: bool = True
+    generate_general_feedback: bool = True
+    generate_specific_feedback: bool = True
     custom_instructions: Optional[str] = None
     external_references: Optional[str] = None
 

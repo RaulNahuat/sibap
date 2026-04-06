@@ -200,7 +200,8 @@ def export_to_xml(db: Session, config_id: int) -> str:
                     left = right = opcion.option_text.strip()
                 subq = ET.SubElement(q, "subquestion", format="html")
                 sq_text = ET.SubElement(subq, "text")
-                sq_text.text = f"<![CDATA[{format_moodle_text(left)}]]>"
+                styled_left = f'<div style="margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px dashed #e2e8f0;">{format_moodle_text(left)}</div>'
+                sq_text.text = f"<![CDATA[{styled_left}]]>"
                 ans = ET.SubElement(subq, "answer")
                 ans_text = ET.SubElement(ans, "text")
                 ans_text.text = f"<![CDATA[{format_moodle_text(right)}]]>"
