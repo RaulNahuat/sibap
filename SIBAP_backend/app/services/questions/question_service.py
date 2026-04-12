@@ -9,9 +9,9 @@ from app.models.configuracion_generacion import ConfiguracionGeneracion, Questio
 from app.models.reactivo import Reactivo
 from app.models.opcion import Opcion
 from app.schemas.question import QuestionGenerationRequest
-from app.services import vector_service
-from app.services.curriculum_service import CurriculumService
-from app.services.ai_generation_service import AiGenerationService
+from app.services.rag import vector_service
+from app.services.curriculum.curriculum_service import CurriculumService
+from app.services.questions.ai_generation_service import AiGenerationService
 from app.repositories.question_repository import QuestionRepository
 from app.repositories.document_repository import DocumentRepository
 

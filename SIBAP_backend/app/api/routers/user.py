@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.core.config import COOKIE_NAME
 
 from app.schemas.user import UserResponse, UserUpdate, UserUpdatePassword, UserDeleteRequest
-from app.services.user_service import get_user_profile, update_user_profile, update_user_password, request_account_deletion
+from app.services.auth.user_service import get_user_profile, update_user_profile, update_user_password, request_account_deletion
 from app.db.session import get_db
 from app.utils.dependencies import get_current_user
 from app.models.usuario import Usuario
@@ -15,17 +15,6 @@ def get_profile(
     current_user: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Obtiene el perfil del usuario autenticado.
-    
-    La autenticación se valida automáticamente mediante get_current_user:
-    - Token JWT válido y no expirado
-    - Usuario existe en base de datos
-    - Usuario está activo
-    
-    Returns:
-        UserResponse: Datos del usuario actual
-    """
     user = get_user_profile(db, current_user.id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")

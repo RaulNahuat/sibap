@@ -24,7 +24,6 @@ def get_text_from_file(extension: str, file_path: str, content: bytes) -> Tuple[
         
     result = parser(file_path)
     
-    # Manejar tanto retornos de tipo Tuple[str, bool] como de tipo str
     if isinstance(result, tuple):
         text, p_is_complex = result
     else:

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from datetime import timedelta
 from app.schemas.user import UserCreate, UserLogin, UserLoginResponse
 from app.schemas import user as schemas
-from app.services.auth_service import register_user, authenticate_user
+from app.services.auth.auth_service import register_user, authenticate_user
 from app.core.security import create_access_token, create_refresh_token, verify_token
 from app.core.config import ACCESS_TOKEN_EXPIRE_MINUTES, COOKIE_NAME, ENVIRONMENT, REFRESH_TOKEN_EXPIRE_DAYS, REFRESH_COOKIE_NAME
 from app.db.session import get_db
@@ -161,7 +161,7 @@ def request_password_reset(
     db: Session = Depends(get_db)
 ):
 
-    from app.services.password_reset_service import request_password_reset
+    from app.services.auth.password_reset_service import request_password_reset
     
     request_password_reset(db, data.email)
     
@@ -176,7 +176,7 @@ def verify_reset_token(
     db: Session = Depends(get_db)
 ):
 
-    from app.services.password_reset_service import verify_password_reset_token
+    from app.services.auth.password_reset_service import verify_password_reset_token
     
     email = verify_password_reset_token(db, data.token)
     
@@ -197,7 +197,7 @@ def complete_password_reset(
     data: schemas.PasswordResetComplete,
     db: Session = Depends(get_db)
 ):
-    from app.services.password_reset_service import complete_password_reset
+    from app.services.auth.password_reset_service import complete_password_reset
     
     success = complete_password_reset(db, data.token, data.new_password)
     

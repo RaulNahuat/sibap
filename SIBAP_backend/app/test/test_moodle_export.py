@@ -10,7 +10,7 @@ from app.db.base import Base
 from app.models.configuracion_generacion import ConfiguracionGeneracion, QuestionType, DifficultyLevel
 from app.models.reactivo import Reactivo
 from app.models.opcion import Opcion
-from app.services import moodle_export_service
+from app.services.questions import moodle_export_service
 
 # Configuración de DB temporal para test
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_temp.db"

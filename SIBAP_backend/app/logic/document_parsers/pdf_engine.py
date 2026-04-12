@@ -97,7 +97,6 @@ def extract_tables_from_page(plumber_page) -> str:
 from typing import Tuple
 
 # ── Función principal de extracción ──────────────────────────────────────────
-
 def extract_pdf_with_layout(temp_path: str) -> Tuple[str, bool]:
     start_time = time.time()
 

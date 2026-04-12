@@ -17,7 +17,7 @@ from app.schemas.question import (
     ManualQuestionRequest,
     QuestionStatusResponse,
 )
-from app.services import question_service, moodle_export_service
+from app.services.questions import question_service, moodle_export_service
 from fastapi.responses import PlainTextResponse, Response
 
 router = APIRouter(
@@ -37,14 +37,12 @@ async def generate_questions(
     db: Session = Depends(get_db)
 ):
     try:
-        # 1. Crear la configuración inicial (PENDING)
         config = question_service.create_generation_config(
             db=db,
             request=request,
             user_id=current_user.id
         )
         
-        # 2. Lanzar la tarea en segundo plano
         request_data = request.model_dump()
         background_tasks.add_task(
             question_service.process_question_generation_task,
@@ -53,10 +51,9 @@ async def generate_questions(
             user_id=current_user.id
         )
         
-        # 3. Responder de inmediato con el ID
         return QuestionGenerationResponse(
             config_id=config.id,
-            questions=[] # Inicialmente vacío
+            questions=[]
         )
     except ValueError as e:
         raise HTTPException(
@@ -89,7 +86,6 @@ def get_generation_status(
     if not config:
         raise HTTPException(status_code=404, detail="Configuración no encontrada")
     
-    # Contar cuántas preguntas se han generado ya
     question_count = db.query(Reactivo).filter(Reactivo.config_id == config_id).count()
     
     return QuestionStatusResponse(

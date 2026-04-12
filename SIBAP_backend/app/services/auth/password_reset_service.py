@@ -5,7 +5,7 @@ from typing import Optional
 from app.models.usuario import Usuario
 from app.core.security import create_reset_token, verify_reset_token, hash_password
 from app.core.config import RESET_TOKEN_EXPIRE_MINUTES
-from app.services.email_service import send_password_reset_email
+from app.services.notifications.email_service import send_password_reset_email
 
 
 def request_password_reset(db: Session, email: str) -> bool:

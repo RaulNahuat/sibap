@@ -10,15 +10,6 @@ WINDOW_MINUTES = 1
 
 
 def get_client_ip(request: Request) -> str:
-    """
-    Obtiene la dirección IP del cliente.
-    
-    Args:
-        request: Request de FastAPI
-        
-    Returns:
-        str: Dirección IP del cliente
-    """
     forwarded = request.headers.get("X-Forwarded-For")
     if forwarded:
         return forwarded.split(",")[0].strip()
@@ -27,12 +18,6 @@ def get_client_ip(request: Request) -> str:
 
 
 def clean_old_attempts(ip_address: str):
-    """
-    Limpia intentos antiguos fuera de la ventana de tiempo.
-    
-    Args:
-        ip_address: Dirección IP a limpiar
-    """
     if ip_address not in login_attempts:
         return
     
@@ -47,16 +32,6 @@ def clean_old_attempts(ip_address: str):
 
 
 def check_rate_limit(request: Request, endpoint: str = "/auth/login"):
-    """
-    Verifica si la IP ha excedido el límite de intentos.
-    
-    Args:
-        request: Request de FastAPI
-        endpoint: Nombre del endpoint (para logging)
-        
-    Raises:
-        HTTPException: Si se excede el límite de intentos
-    """
     ip_address = get_client_ip(request)
     
     clean_old_attempts(ip_address)
@@ -78,12 +53,6 @@ def check_rate_limit(request: Request, endpoint: str = "/auth/login"):
 
 
 def reset_rate_limit(request: Request):
-    """
-    Reinicia el contador de intentos para una IP (usado después de login exitoso).
-    
-    Args:
-        request: Request de FastAPI
-    """
     ip_address = get_client_ip(request)
     
     if ip_address in login_attempts:

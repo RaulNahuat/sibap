@@ -6,7 +6,7 @@ from app.db.session import get_db
 from app.utils.dependencies import get_current_user
 from app.models.usuario import Usuario
 from app.schemas.dashboard import DashboardStats, BankListItem
-from app.services.dashboard_service import DashboardService
+from app.services.dashboard.dashboard_service import DashboardService
 
 router = APIRouter(
     prefix="/dashboard",

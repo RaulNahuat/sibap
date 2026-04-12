@@ -19,14 +19,14 @@ import shutil
 
 def test_chunking_empty_text():
     """Texto vacío debe devolver lista vacía."""
-    from app.services.chunk_service import split_text
+    from app.services.rag.chunk_service import split_text
     assert split_text("") == []
     assert split_text("   ") == []
 
 
 def test_chunking_short_text():
     """Texto corto debe devolver lista con 1 elemento."""
-    from app.services.chunk_service import split_text
+    from app.services.rag.chunk_service import split_text
     result = split_text("Este es un texto corto.")
     assert len(result) == 1
     assert "texto corto" in result[0]
@@ -34,7 +34,7 @@ def test_chunking_short_text():
 
 def test_chunking_long_text():
     """Texto largo debe producir múltiples chunks."""
-    from app.services.chunk_service import split_text
+    from app.services.rag.chunk_service import split_text
     paragraph = "La programación orientada a objetos es un paradigma de programación. " * 20
     long_text = (paragraph + "\n\n") * 15
     chunks = split_text(long_text, chunk_size=600, overlap=100)
@@ -43,7 +43,7 @@ def test_chunking_long_text():
 
 def test_chunking_preserves_content():
     """Una palabra clave debe aparecer en algún chunk."""
-    from app.services.chunk_service import split_text
+    from app.services.rag.chunk_service import split_text
     keyword = "PALABRA_CLAVE_UNICA_12345"
     text = ("Relleno. " * 300) + keyword + (" Más relleno. " * 300)
     chunks = split_text(text, chunk_size=400, overlap=80)
@@ -55,7 +55,7 @@ def test_chunking_preserves_content():
 
 def test_embeddings_empty_list():
     """Lista vacía no debe llamar a la API y devolver lista vacía."""
-    from app.services.embedding_service import get_embeddings
+    from app.services.rag.embedding_service import get_embeddings
     result = get_embeddings([])
     assert result == []
 
@@ -66,7 +66,7 @@ def test_embeddings_empty_list():
 )
 def test_embeddings_count_and_dimension():
     """Debe devolver un embedding de 768 dims por texto."""
-    from app.services.embedding_service import get_embeddings
+    from app.services.rag.embedding_service import get_embeddings
     texts = ["Hola mundo", "Ingeniería de software"]
     result = get_embeddings(texts)
     assert len(result) == len(texts)
@@ -79,7 +79,7 @@ def test_embeddings_count_and_dimension():
 )
 def test_query_embedding_dimension():
     """El embedding de consulta debe tener 768 dimensiones."""
-    from app.services.embedding_service import get_query_embedding
+    from app.services.rag.embedding_service import get_query_embedding
     result = get_query_embedding("herencia en programación orientada a objetos")
     assert len(result) == 768
 
@@ -91,7 +91,7 @@ def temp_chroma(monkeypatch):
     """Directorio temporal de ChromaDB para tests aislados."""
     tmp_dir = tempfile.mkdtemp()
     monkeypatch.setenv("CHROMA_PERSIST_DIR", tmp_dir)
-    import app.services.vector_service as vs
+    import app.services.rag.vector_service as vs
     monkeypatch.setattr(vs, "_client", None)
     monkeypatch.setattr(vs, "_collection", None)
     monkeypatch.setattr("app.core.config.settings.CHROMA_PERSIST_DIR", tmp_dir)
@@ -105,9 +105,9 @@ def temp_chroma(monkeypatch):
 )
 def test_vector_store_add_and_search(temp_chroma):
     """Añadir chunks y recuperarlos por similitud semántica."""
-    from app.services.chunk_service import split_text
-    from app.services.embedding_service import get_embeddings
-    import app.services.vector_service as vs
+    from app.services.rag.chunk_service import split_text
+    from app.services.rag.embedding_service import get_embeddings
+    import app.services.rag.vector_service as vs
 
     doc_id = 9999
     content = (
@@ -133,8 +133,8 @@ def test_vector_store_add_and_search(temp_chroma):
 )
 def test_vector_store_idempotency(temp_chroma):
     """document_has_chunks() debe funcionar correctamente."""
-    from app.services.embedding_service import get_embeddings
-    import app.services.vector_service as vs
+    from app.services.rag.embedding_service import get_embeddings
+    import app.services.rag.vector_service as vs
 
     doc_id = 8888
     chunks = ["Chunk de prueba."]
@@ -151,8 +151,8 @@ def test_vector_store_idempotency(temp_chroma):
 )
 def test_vector_store_delete(temp_chroma):
     """Eliminar chunks debe limpiar el vector store."""
-    from app.services.embedding_service import get_embeddings
-    import app.services.vector_service as vs
+    from app.services.rag.embedding_service import get_embeddings
+    import app.services.rag.vector_service as vs
 
     doc_id = 7777
     chunks = ["Chunk para eliminar."]

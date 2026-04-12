@@ -121,7 +121,7 @@ def search_similar(
         return ""
 
     try:
-        from app.services.embedding_service import get_query_embedding
+        from app.services.rag.embedding_service import get_query_embedding
 
         collection = _get_collection()
         if not collection:

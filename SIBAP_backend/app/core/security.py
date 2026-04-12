@@ -32,10 +32,6 @@ def verify_token(token: str) -> Optional[dict]:
         return None
 
 def create_reset_token(email: str) -> str:
-    """
-    Crea un token seguro para reset de contraseña.
-    El token expira según RESET_TOKEN_EXPIRE_MINUTES configurado.
-    """
     from app.core.config import RESET_TOKEN_EXPIRE_MINUTES
     
     expire = datetime.now(timezone.utc) + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
@@ -47,9 +43,6 @@ def create_reset_token(email: str) -> str:
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 def verify_reset_token(token: str) -> Optional[str]:
-    """
-    Verifica un token de reset de contraseña y retorna el email si es válido.
-    """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         

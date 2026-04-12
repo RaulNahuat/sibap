@@ -7,8 +7,8 @@ import os
 import re
 from pydantic import BaseModel
 
-from app.services.document_service import DocumentService, get_document_service
-from app.services.drive_manager import download_from_drive
+from app.services.documents.document_service import DocumentService, get_document_service
+from app.services.documents.drive_manager import download_from_drive
 from app.schemas.document import (
     DocumentExtractionResponse,
     DocumentListResponse,

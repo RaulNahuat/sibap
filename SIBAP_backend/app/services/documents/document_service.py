@@ -186,7 +186,7 @@ class DocumentService:
             return False
 
         try:
-            from app.services import vector_service
+            from app.services.rag import vector_service
             vector_service.delete_document_chunks(document_id)
         except Exception as e:
             logger.warning(f"RAG: Error al limpiar vectores del documento {document_id}: {e}")
@@ -196,9 +196,9 @@ class DocumentService:
 
     def _index_document_rag(self, document_id: int, content_text: str) -> None:
         try:
-            from app.services.chunk_service import split_text
-            from app.services.embedding_service import get_embeddings
-            from app.services import vector_service
+            from app.services.rag.chunk_service import split_text
+            from app.services.rag.embedding_service import get_embeddings
+            from app.services.rag import vector_service
             from app.core.config import settings
 
             if not getattr(settings, "ENABLE_RAG", False):
