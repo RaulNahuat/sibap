@@ -89,7 +89,7 @@ def _stream_download(file_id: str, params: dict) -> bytes:
                 if confirm_match:
                     confirm_url = "https://drive.google.com" + confirm_match.group(1).replace("&amp;", "&")
                     logger.info(f"Drive: siguiendo URL de confirmación para {file_id}")
-                    return _stream_download(file_id, {})  # re-intento sería con la URL directa
+                    return _stream_download(file_id, {})  
                 raise HTTPException(
                     status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                     detail=(

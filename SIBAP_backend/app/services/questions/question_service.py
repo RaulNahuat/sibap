@@ -18,7 +18,7 @@ from app.repositories.document_repository import DocumentRepository
 logger = logging.getLogger(__name__)
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Helpers
+# Herramientas
 # ──────────────────────────────────────────────────────────────────────────────
 
 def _get_existing_question_texts(db: Session, topic_id: int, document_id: int, limit: int = 20) -> List[str]:
@@ -52,7 +52,7 @@ def _get_rag_context(query: str, document_ids: List[int], fallback_text: str, to
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Per-type prompt builders
+# Generadores de indicaciones por tipo
 # ──────────────────────────────────────────────────────────────────────────────
 
 _TYPE_LABELS = {
@@ -93,7 +93,7 @@ def _build_prompt(
         - Los pares deben ser relaciones directas e inequívocas del contenido.
         - Ejemplo de opción: "Capacidad de un objeto en programación orientada a objetos de tomar múltiples comportamientos al heredar | Polimorfismo"
         """
-    else: # CALCULATED
+    else: # CALCULADA
         type_instructions = f"""
         REGLAS PARA PREGUNTA CALCULADA:
         - El enunciado plantea un problema numérico o cuantitativo con valores concretos.
@@ -166,7 +166,7 @@ def _build_prompt(
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Main generation function
+# Función principal de generación
 # ──────────────────────────────────────────────────────────────────────────────
 
 def create_generation_config(db: Session, request: QuestionGenerationRequest, user_id: int) -> ConfiguracionGeneracion:
@@ -214,7 +214,6 @@ def create_generation_config(db: Session, request: QuestionGenerationRequest, us
 
 async def process_question_generation_task(config_id: int, request_data: dict, user_id: int):
     """Tarea en segundo plano para generar preguntas de forma asíncrona."""
-    # REGLA: Sesión independiente para tarea de fondo
     with SessionLocal() as db_session:
         q_repo = QuestionRepository(db_session)
         ai_service = AiGenerationService()
@@ -225,11 +224,10 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
             return
 
         try:
-            # 1. Marcar como procesando
+            # Marcar como procesando
             config.status = GenerationStatus.PROCESSING
             db_session.commit()
 
-            # Re-vincular request de data dict (para mayor seguridad en segundo plano)
             request = QuestionGenerationRequest(**request_data)
             
             from app.core.config import GOOGLE_AI_MODEL, EMBEDDING_MODEL, GOOGLE_API_KEY
@@ -275,7 +273,7 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
             tasks = [run_batch(qt, ct, i) for (qt, ct, i) in type_batches]
             results = await asyncio.gather(*tasks)
 
-            # 3. Guardar resultados
+            # Guardar resultados
             for q_type, res in results:
                 if not res or not isinstance(res, dict): continue
                 for q_data in res.get("questions", []):
@@ -298,7 +296,7 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
                             feedback=opt_data.get("feedback")
                         ))
             
-            # 4. Éxito
+            # Éxito
             config.status = GenerationStatus.COMPLETED
             db_session.commit()
             logger.info(f"Task: Generación exitosa para config {config_id}")
@@ -310,16 +308,14 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
             config.error_message = str(e)
             db_session.commit()
 
-
+'''
 async def generate_questions(db: Session, request: QuestionGenerationRequest, user_id: int):
     """Método original conservado por compatibilidad o simulación, pero ahora el flujo principal irá por BackgroundTasks."""
-    # Nota: Este método ya no es el punto de entrada principal desde el router de generación asíncrona
-    # pero lo mantenemos para no romper posibles tests existentes que lo llamen directamente
     pass
-
+'''
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Regenerate / helpers
+# Regenerar / Helpers
 # ──────────────────────────────────────────────────────────────────────────────
 
 async def regenerate_question(db: Session, question_id: int, user_id: int, model_name: str = None):

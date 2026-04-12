@@ -113,7 +113,6 @@ class DocumentService:
             )
 
     def upload_and_process_document(self, user_id: int, filename: str, content: bytes) -> Documento:
-        """ Método sincrónico original (conservado por compatibilidad de otras partes si es usado) """
         extension = validate_file(filename, content)
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=extension) as temp_file:

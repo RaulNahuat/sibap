@@ -17,17 +17,12 @@ def format_moodle_text(text: str) -> str:
     if not text:
         return ""
     
-    # 1. Proteger signos de moneda escapados (\$195,000 -> ESCAPED_DOLLAR_SIGN195,000)
     text = text.replace(r"\$", "ESCAPED_DOLLAR_SIGN")
     
-    # 2. Transformar $...$ a \(...\) (Filtro MathJax de Moodle para bloque en línea)
     text = re.sub(r'\$([^$]+)\$', r'\\(\1\\)', text)
     
-    # 3. Restaurar los signos de dólar protegidos (símbolo de moneda literal)
     text = text.replace("ESCAPED_DOLLAR_SIGN", "$")
     
-    # 4. Escapar cualquier $ restante (ej: $30,000 sin escapar) como entidad HTML
-    #    para que Moodle no lo interprete como inicio de fórmula.
     text = text.replace("$", "&#36;")
     
     return text
@@ -62,9 +57,7 @@ def export_to_gift(db: Session, config_id: int) -> str:
 
     for reactivo in config.reactivos:
         name = reactivo.name or f"Pregunta_{reactivo.id}"
-        # Determine per-reactivo type (falls back to config type for legacy data)
         r_type = reactivo.question_type or config.question_type
-        # Solo escapamos los caracteres de control Moodle en el contenido, no en los metadatos de formato
         question_text = escape_gift_text(format_moodle_text(reactivo.question_text))
         
         gift_str = f"::{name}:: [html]{question_text} {{"
@@ -87,7 +80,6 @@ def export_to_gift(db: Session, config_id: int) -> str:
             gift_str += val
 
         elif r_type == QuestionType.MATCHING:
-            # Each option is formatted as "Término | Definición"
             for opcion in reactivo.opciones:
                 parts = opcion.option_text.split("|", 1)
                 if len(parts) == 2:
@@ -99,7 +91,6 @@ def export_to_gift(db: Session, config_id: int) -> str:
                 gift_str += f"\n    ={left} -> {right}"
 
         elif r_type in (QuestionType.CALCULATED, QuestionType.OPEN):
-            # Export as short answer / essay
             correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
             if correct_opt:
                 opt_text = escape_gift_text(format_moodle_text(correct_opt.option_text))
@@ -124,7 +115,6 @@ def export_to_xml(db: Session, config_id: int) -> str:
 
     quiz = ET.Element("quiz")
     
-    # Categoría
     question_cat = ET.SubElement(quiz, "question", type="category")
     category = ET.SubElement(question_cat, "category")
     text_cat = ET.SubElement(category, "text")
@@ -133,7 +123,6 @@ def export_to_xml(db: Session, config_id: int) -> str:
     text_cat.text = f"$course$/{sub_name}/{top_name}"
 
     for reactivo in config.reactivos:
-        # Determine per-reactivo type
         r_type = reactivo.question_type or config.question_type
 
         if r_type == QuestionType.MCQ:

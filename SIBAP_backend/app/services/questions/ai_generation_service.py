@@ -94,7 +94,6 @@ class AiGenerationService:
             
         except Exception as e:
             logger.warning(f"Error generando contenido con {model} en modo JSON: {e}")
-            # Si el error fue por formato o filtro, intentamos en texto plano como último recurso para este modelo
             response = await self.client.aio.models.generate_content(
                 model=model,
                 contents=prompt + "\n\nIMPORTANTE: Responde ÚNICAMENTE con el crudo o raw array JSON, nada más.",
@@ -108,7 +107,6 @@ class AiGenerationService:
 
         models_to_try = FALLBACK_CHAIN.get(model, [model] + DEFAULT_FALLBACK)
         
-        # Eliminar duplicados manteniendo orden en caso de configuraciones raras
         models_to_try = list(dict.fromkeys(models_to_try))
 
         ultima_excepcion = None
@@ -117,7 +115,7 @@ class AiGenerationService:
             try:
                 if idx > 0:
                     logger.info(f"Iniciando intento de fallback usando modelo: {current_model}")
-                    await asyncio.sleep(1.5)  # Breve pausa antes del reintento (backoff)
+                    await asyncio.sleep(1.5)
                     
                 result = await self._attempt_generation_single_model(current_model, prompt)
                 return result
@@ -127,9 +125,6 @@ class AiGenerationService:
                 logger.error(f"El modelo {current_model} falló al generar: {error_msg}")
                 ultima_excepcion = e
                 
-                # Verificamos si es un error de API que amerita reintento (no cuesta tokens)
-                # 429: Too Many Requests / Quota / Rate limit
-                # 50X: Server Errors (500, 502, 503, 504)
                 retriable_keywords = [
                     "429", "500", "502", "503", "504", 
                     "rate limit", "quota", "internal error", 
@@ -140,7 +135,6 @@ class AiGenerationService:
                 
                 if not is_retriable_api_error:
                     logger.warning("Abortando cadena de fallback. El error es de parseo JSON o filtro de seguridad, evitando gasto innecesario de tokens.")
-                    raise e  # Abortamos inmediatamente
+                    raise e  
                 
-        # Si llegamos aquí, todos los modelos de la cadena fallaron
         raise ValueError(f"Todos los modelos de respaldo fallaron. Error final: {ultima_excepcion}")
