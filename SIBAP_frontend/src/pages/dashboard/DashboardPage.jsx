@@ -43,7 +43,6 @@ export default function DashboardPage() {
     { path: '/dashboard/new-bank', label: 'Nuevo Banco', icon: PlusCircle, title: 'Nuevo Banco de Preguntas' },
     { path: '/dashboard/banks', label: 'Mis Bancos', icon: FolderOpen, title: 'Mis Bancos' },
     { path: '/dashboard/documents', label: 'Mis documentos', icon: FileText, title: 'Mis Documentos' },
-    { path: '/dashboard/settings', label: 'Configuración', icon: Settings, title: 'Configuración' },
     { path: '/dashboard/profile', label: 'Mi perfil', icon: User, title: 'Mi perfil' },
   ];
 
@@ -117,7 +116,7 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Topbar */}
-        <header className="h-16 bg-white border-b border-[#e2e8f0] flex items-center justify-between px-4 sm:px-8 flex-shrink-0">
+        <header className="h-16 bg-white border-b border-[#e2e8f0] flex items-center justify-between px-4 sm:px-8 shrink-0">
           <div className="flex items-center gap-4">
             <button
               onClick={toggleSidebar}
@@ -143,7 +142,7 @@ export default function DashboardPage() {
                 Estado: {user.is_active ? 'Activo' : 'Inactivo'}
               </div>
             </div>
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#1a5276] to-[#154360] flex items-center justify-center border-2 border-[#e2e8f0] text-white font-semibold text-sm">
+            <div className="w-10 h-10 rounded-full bg-linear-to-br from-[#1a5276] to-[#154360] flex items-center justify-center border-2 border-[#e2e8f0] text-white font-semibold text-sm">
               {user.name?.[0]?.toUpperCase()}{user.last_name?.[0]?.toUpperCase()}
             </div>
             <button

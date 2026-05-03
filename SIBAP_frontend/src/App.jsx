@@ -42,7 +42,6 @@ function App() {
               <Route path="validate" element={<ValidateQuestionsPage />} />
               <Route path="documents" element={<DocumentProcessorPage />} />
               <Route path="documents/:id" element={<DocumentViewerPage />} />
-              <Route path="settings" element={<div className="p-8">Sección en construcción</div>} />
             </Route>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
