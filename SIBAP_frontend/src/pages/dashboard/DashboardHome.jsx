@@ -64,7 +64,7 @@ export default function DashboardHome() {
 
     return (
         <>
-            {/* Welcome Header */}
+            {/* Encabezado de bienvenida */}
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-[#102129] mb-2">
                     Hola, {user.name} 👋
@@ -75,7 +75,7 @@ export default function DashboardHome() {
             </div>
 
 
-            {/* Stats Grid */}
+            {/* Grid de estadísticas */}
             <div className="grid grid-cols-3 gap-2 sm:gap-6 mb-6 sm:mb-10">
                 {stats.map((stat, index) => {
                     const Icon = stat.icon;
@@ -113,8 +113,8 @@ export default function DashboardHome() {
                 })}
             </div>
 
-            {/* CTA Banner */}
-            <div className="bg-gradient-to-br from-[#1a5276] to-[#154360] rounded-2xl p-5 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-10 shadow-lg">
+            {/* Banner CTA */}
+            <div className="bg-linear-to-br from-[#1a5276] to-[#154360] rounded-2xl p-5 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6 mb-8 sm:mb-10 shadow-lg">
                 <div className="text-white">
                     <h3 className="text-base sm:text-xl font-bold mb-1 sm:mb-2 text-white">
                         Crear un Nuevo Banco de Preguntas
@@ -132,7 +132,7 @@ export default function DashboardHome() {
                 </button>
             </div>
 
-            {/* Recent Activity */}
+            {/* Actividad reciente */}
             <div className="mb-4 flex items-center justify-between">
                 <div className="text-lg font-semibold text-[#102129]">
                     Actividad Reciente

@@ -20,6 +20,8 @@ export const getUserBanks = async () => {
         throw error;
     }
 };
+
+
 export const deleteUserBank = async (configId) => {
     try {
         const response = await apiClient.delete(`/dashboard/banks/${configId}`);

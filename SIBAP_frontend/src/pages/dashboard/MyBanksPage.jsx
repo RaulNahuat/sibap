@@ -113,7 +113,7 @@ export default function MyBanksPage() {
         }
     };
 
-    // Filter banks
+    // Filtra los bancos
     const filteredBanks = banks.filter(bank => {
         const matchesSearch = bank.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             bank.subject.toLowerCase().includes(searchTerm.toLowerCase());
@@ -149,7 +149,7 @@ export default function MyBanksPage() {
                 </p>
             </div>
 
-            {/* Filters and Search */}
+            {/* Filtros y búsqueda */}
             <div className="bg-white border border-[#e2e8f0]/60 rounded-2xl p-4 mb-6 shadow-sm">
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
                     {/* Search */}
@@ -164,7 +164,7 @@ export default function MyBanksPage() {
                         />
                     </div>
 
-                    {/* Status Filter */}
+                    {/* Filtro de estado */}
                     <div className="flex items-center gap-2">
                         <Filter className="w-4 h-4 text-[#64748b]" />
                         <select
@@ -180,7 +180,7 @@ export default function MyBanksPage() {
                 </div>
             </div>
 
-            {/* Stats Summary */}
+            {/* Resumen de estadísticas */}
             <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-6">
                 <div className="bg-white border border-[#e2e8f0]/60 rounded-xl p-2 sm:p-4 shadow-sm flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-1 sm:gap-3 hover:shadow-md transition-all">
                     <div className="w-7 h-7 sm:w-10 sm:h-10 bg-[#e9f5f8] rounded-full sm:rounded-lg flex items-center justify-center shrink-0 mb-1 sm:mb-0">
@@ -215,7 +215,7 @@ export default function MyBanksPage() {
                 </div>
             </div>
 
-            {/* Banks List with Internal Scroll */}
+            {/* Lista de bancos con scroll interno */}
             <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col max-h-[60vh] sm:max-h-[70vh]">
                 <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin scrollbar-thumb-slate-200">
                     {filteredBanks.length === 0 ? (
@@ -236,7 +236,7 @@ export default function MyBanksPage() {
                                 key={bank.id}
                                 className={`group relative bg-white border ${selectedBanks.includes(bank.id) ? 'border-[#1a5276] bg-[#eaf3f7]/30' : 'border-gray-100'} rounded-2xl p-4 sm:p-5 hover:shadow-md transition-all flex flex-col sm:flex-row gap-4`}
                             >
-                                {/* Selection Checkbox */}
+                                {/* Selección de casilla */}
                                 <div className="sm:pt-1">
                                     <input
                                         type="checkbox"
@@ -280,7 +280,7 @@ export default function MyBanksPage() {
                                         </span>
                                     </div>
                                     
-                                    {/* Progress Bar Inside Card */}
+                                    {/* Barra de progreso dentro de la tarjeta */}
                                     <div className="mt-4">
                                         <div className="flex items-center justify-between mb-1.5 px-1">
                                             <span className="text-[10px] font-bold text-[#64748b] uppercase tracking-tighter">
@@ -299,7 +299,7 @@ export default function MyBanksPage() {
                                     </div>
                                 </div>
 
-                                {/* Actions - Desktop Side / Mobile Bottom */}
+                                {/* Acciones - Lado de escritorio / Parte inferior móvil */}
                                 <div className="flex items-center justify-end gap-2 sm:flex-col sm:justify-start pt-3 sm:pt-0 border-t sm:border-0 border-gray-50">
                                     <div className="flex items-center gap-1">
                                         {bank.isCompleted && (
@@ -333,7 +333,7 @@ export default function MyBanksPage() {
                 </div>
             </div>
 
-            {/* Actions Bar for Selected Banks - Ultra Compact */}
+            {/* Barra de acciones para bancos seleccionados - Ultra Compacta */}
             {selectedBanks.length > 0 && (
                 <div className="mt-4 px-0 sm:px-4 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="max-w-6xl mx-auto">
@@ -356,7 +356,7 @@ export default function MyBanksPage() {
                 </div>
             )}
 
-            {/* Delete Confirmation */}
+            {/* Modal de confirmación de eliminación */}
             {deletingBank && (
                 <ConfirmModal
                     isOpen={!!deletingBank}

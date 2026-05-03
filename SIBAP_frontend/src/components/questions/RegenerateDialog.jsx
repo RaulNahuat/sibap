@@ -54,7 +54,7 @@ export default function RegenerateDialog({ isOpen, onClose, onConfirm, isRegener
                     </button>
                 </div>
 
-                {/* Body */}
+                {/* Cuerpo */}
                 <div className="p-6 space-y-4">
                     <p className="text-sm text-gray-600">
                         Selecciona el modelo de Inteligencia Artificial que deseas utilizar para generar la nueva versión de esta pregunta.

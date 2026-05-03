@@ -165,7 +165,7 @@ export default function MyProfile() {
 
     return (
         <div className="max-w-[1000px] w-full mx-auto">
-            {/* Loading State */}
+            {/* Estado de carga */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
                     <div className="text-center">
@@ -175,7 +175,7 @@ export default function MyProfile() {
                 </div>
             ) : (
                 <>
-                    {/* Section Header */}
+                    {/* Encabezado de la sección */}
                     <div className="mb-6">
                         <h2 className="text-2xl font-bold text-[#1a5276] mb-2">
                             Información Personal
@@ -185,9 +185,9 @@ export default function MyProfile() {
                         </p>
                     </div>
 
-                    {/* Profile Edit Card */}
+                    {/* Tarjeta de edición de perfil */}
                     <div className="bg-white border border-[#e2e8f0] rounded-lg p-6 mb-6">
-                        {/* Card Header */}
+                        {/* Encabezado de la tarjeta */}
                         <div className="flex justify-between items-start mb-6 pb-4 border-b border-[#e2e8f0]">
                             <h3 className="text-base font-semibold text-[#102129]">
                                 Datos del Docente
@@ -195,10 +195,10 @@ export default function MyProfile() {
                             <User className="w-5 h-5 text-[#64748b]" />
                         </div>
 
-                        {/* Avatar Section */}
+                        {/* Sección de avatar */}
                         <div className="flex items-center gap-5 mb-6">
                             <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#e2e8f0]">
-                                <div className="w-full h-full bg-gradient-to-br from-[#1a5276] to-[#154360] flex items-center justify-center text-white font-semibold text-2xl">
+                                <div className="w-full h-full bg-linear-to-br from-[#1a5276] to-[#154360] flex items-center justify-center text-white font-semibold text-2xl">
                                     {user?.name?.[0]?.toUpperCase()}{user?.last_name?.[0]?.toUpperCase()}
                                 </div>
                             </div>
@@ -212,9 +212,9 @@ export default function MyProfile() {
                             </div>
                         </div>
 
-                        {/* Form Grid */}
+                        {/* Rejilla de formularios */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                            {/* First Name */}
+                            {/* Primer Nombre */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-[13px] font-medium text-[#102129]">
                                     Nombre(s)
@@ -228,7 +228,7 @@ export default function MyProfile() {
                                 />
                             </div>
 
-                            {/* Last Name */}
+                            {/* Apellido */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-[13px] font-medium text-[#102129]">
                                     Apellidos
@@ -242,7 +242,7 @@ export default function MyProfile() {
                                 />
                             </div>
 
-                            {/* Email - Full Width */}
+                            {/* Correo - Ancho completo */}
                             <div className="sm:col-span-2 flex flex-col gap-2">
                                 <label className="text-[13px] font-medium text-[#102129]">
                                     Correo
@@ -264,7 +264,7 @@ export default function MyProfile() {
                                 </span>
                             </div>
 
-                            {/* Role */}
+                            {/* Rol */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-[13px] font-medium text-[#102129]">
                                     Rol en el Sistema
@@ -279,7 +279,7 @@ export default function MyProfile() {
                             </div>
                         </div>
 
-                        {/* Card Actions */}
+                        {/* Acciones de la tarjeta */}
                         <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-[#e2e8f0]">
                             <button className="px-4 h-10 border border-[#e2e8f0] bg-white rounded-md text-[#102129] text-sm font-medium hover:bg-[#f1f5f9] transition-colors">
                                 Cancelar
@@ -294,9 +294,9 @@ export default function MyProfile() {
                         </div>
                     </div>
 
-                    {/* Security Card */}
+                    {/* Tarjeta de seguridad */}
                     <div className="bg-white border border-[#e2e8f0] rounded-lg p-6 mb-6">
-                        {/* Card Header */}
+                        {/* Encabezado de la tarjeta */}
                         <div className="flex justify-between items-start mb-6 pb-4 border-b border-[#e2e8f0]">
                             <h3 className="text-base font-semibold text-[#102129]">
                                 Seguridad y Contraseña
@@ -304,9 +304,9 @@ export default function MyProfile() {
                             <ShieldCheck className="w-5 h-5 text-[#64748b]" />
                         </div>
 
-                        {/* Form Grid */}
+                        {/* Rejilla de formularios */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
-                            {/* Current Password */}
+                            {/* Contraseña actual */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-[13px] font-medium text-[#102129]">
                                     Contraseña Actual
@@ -321,10 +321,10 @@ export default function MyProfile() {
                                 />
                             </div>
 
-                            {/* Spacer - Hidden on mobile */}
+                            {/* Espacio - Oculto en móvil */}
                             <div className="hidden sm:block"></div>
 
-                            {/* New Password */}
+                            {/* Nueva Contraseña */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-[13px] font-medium text-[#102129]">
                                     Nueva Contraseña
@@ -339,7 +339,7 @@ export default function MyProfile() {
                                 />
                             </div>
 
-                            {/* Confirm Password */}
+                            {/* Confirmar Nueva Contraseña */}
                             <div className="flex flex-col gap-2">
                                 <label className="text-[13px] font-medium text-[#102129]">
                                     Confirmar Nueva Contraseña
@@ -355,7 +355,7 @@ export default function MyProfile() {
                             </div>
                         </div>
 
-                        {/* Card Actions */}
+                        {/* Acciones de la tarjeta */}
                         <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-[#e2e8f0]">
                             <button
                                 onClick={confirmUpdatePassword}
@@ -366,9 +366,9 @@ export default function MyProfile() {
                         </div>
                     </div>
 
-                    {/* Danger Zone */}
+                    {/* Zona de peligro */}
                     <div className="bg-[#fef2f2] border border-[#fecaca] rounded-lg p-6">
-                        {/* Card Header */}
+                        {/* Encabezado de la tarjeta */}
                         <div className="flex justify-between items-start mb-6 pb-4 border-b border-[#fecaca]">
                             <h3 className="text-base font-semibold text-[#991b1b]">
                                 Eliminar Cuenta
@@ -376,7 +376,7 @@ export default function MyProfile() {
                             <AlertTriangle className="w-5 h-5 text-[#dc2626]" />
                         </div>
 
-                        {/* Content */}
+                        {/* Contenido */}
                         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-6">
                             <div>
                                 <p className="text-sm text-[#7f1d1d] font-medium mb-1">
@@ -389,14 +389,14 @@ export default function MyProfile() {
                             </div>
                             <button
                                 onClick={confirmDeleteAccount}
-                                className="px-4 h-10 bg-[#fee2e2] text-[#dc2626] rounded-md text-sm font-medium whitespace-nowrap flex-shrink-0 hover:bg-[#fecaca] transition-colors"
+                                className="px-4 h-10 bg-[#fee2e2] text-[#dc2626] rounded-md text-sm font-medium whitespace-nowrap shrink-0 hover:bg-[#fecaca] transition-colors"
                             >
                                 Solicitar Eliminación
                             </button>
                         </div>
                     </div>
 
-                    {/* Profile Edit Confirmation Modal */}
+                    {/* Modal de confirmación de edición de perfil */}
                     <ConfirmModal
                         isOpen={showProfileModal}
                         onClose={() => setShowProfileModal(false)}
@@ -408,7 +408,7 @@ export default function MyProfile() {
                         danger={false}
                     />
 
-                    {/* Password Change Confirmation Modal */}
+                    {/* Modal de confirmación de cambio de contraseña */}
                     <ConfirmModal
                         isOpen={showPasswordModal}
                         onClose={() => setShowPasswordModal(false)}
@@ -420,13 +420,13 @@ export default function MyProfile() {
                         danger={false}
                     />
 
-                    {/* Account Deletion Confirmation Modal */}
+                    {/* Modal de confirmación de eliminación de cuenta */}
                     {showDeleteModal && (
                         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                             <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-                                {/* Modal Header */}
+                                {/* Encabezado del modal */}
                                 <div className="flex items-center gap-3 mb-4">
-                                    <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center flex-shrink-0">
+                                    <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center shrink-0">
                                         <AlertTriangle className="w-6 h-6 text-red-600" />
                                     </div>
                                     <h3 className="text-lg font-semibold text-[#102129]">
@@ -434,7 +434,7 @@ export default function MyProfile() {
                                     </h3>
                                 </div>
 
-                                {/* Modal Content */}
+                                {/* Contenido del modal */}
                                 <div className="mb-6">
                                     <p className="text-sm text-[#475569] mb-4">
                                         Esta acción es <strong>permanente</strong> y no se puede deshacer.
@@ -453,7 +453,7 @@ export default function MyProfile() {
                                     />
                                 </div>
 
-                                {/* Modal Actions */}
+                                {/* Acciones del modal */}
                                 <div className="flex justify-end gap-3">
                                     <button
                                         onClick={() => {

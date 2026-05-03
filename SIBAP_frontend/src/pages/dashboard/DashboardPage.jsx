@@ -61,7 +61,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex w-full h-screen bg-[#f4f7f6] overflow-hidden">
-      {/* Mobile Sidebar Overlay */}
+      {/* Overlay de la barra lateral móvil */}
       {isSidebarOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 lg:hidden transition-opacity"
@@ -82,7 +82,7 @@ export default function DashboardPage() {
           SIBAP
         </div>
 
-        {/* Navigation */}
+        {/* Navegación */}
         <nav className="flex flex-col gap-1 flex-1">
           {navItems.map((item) => {
             const Icon = item.icon;
@@ -113,9 +113,9 @@ export default function DashboardPage() {
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* Contenido principal */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Topbar */}
+        {/* Barra superior */}
         <header className="h-16 bg-white border-b border-[#e2e8f0] flex items-center justify-between px-4 sm:px-8 shrink-0">
           <div className="flex items-center gap-4">
             <button
@@ -154,12 +154,13 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {/* Content Scroll */}
+        {/* Scroll del contenido */}
         <div className="flex-1 overflow-y-auto px-4 pt-6 pb-20 sm:px-6 sm:pt-6 sm:pb-10 lg:px-8 lg:py-8">
           <Outlet />
         </div>
       </main>
-      {/* Logout Confirmation Modal */}
+      
+      {/* Modal de confirmación de cierre de sesión */}
       <ConfirmModal
         isOpen={showLogoutModal}
         onClose={() => setShowLogoutModal(false)}

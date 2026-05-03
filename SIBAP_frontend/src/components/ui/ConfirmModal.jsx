@@ -20,7 +20,7 @@ export default function ConfirmModal({
         <Modal isOpen={isOpen} onClose={onClose} title={title}>
             <div className="flex gap-4 mb-6">
                 <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${danger
+                    className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${danger
                             ? 'bg-red-50 text-red-600'
                             : 'bg-amber-50 text-amber-600'
                         }`}

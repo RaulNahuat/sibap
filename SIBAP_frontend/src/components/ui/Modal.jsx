@@ -5,13 +5,13 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
 
     return (
         <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
-            {/* Overlay */}
+            {/* Capa de superposición */}
             <div
                 className='absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity'
                 onClick={onClose}
             />
 
-            {/* Modal */}
+            {/* Ventana Modal */}
             <div className={`relative bg-white rounded-xl shadow-2xl w-full ${maxWidth} transform transition-all scale-100 animate-fadeIn`}>
                 {/* Header */}
                 <div className='flex items-center justify-between px-6 py-4 border-b border-[#e2e8f0]'>
@@ -26,7 +26,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = 'ma
                     </button>
                 </div>
 
-                {/* Content */}
+                {/* Contenido */}
                 <div className='px-6 py-5 overflow-y-auto max-h-[80vh]'>
                     {children}
                 </div>

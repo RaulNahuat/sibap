@@ -13,7 +13,7 @@ const DEFAULT_ANSWERS = () => [
 export default function EditQuestionModal({
     isOpen,
     onClose,
-    question,     // null = create mode, object = edit mode
+    question,
     onSave,
 }) {
     const isCreateMode = !question;
@@ -75,11 +75,10 @@ export default function EditQuestionModal({
             return;
         }
 
-        // Sincronizar el campo is_correct en cada respuesta antes de salvar
         const finalAnswers = editedQuestion.answers.map((ans) => ({
             ...ans,
             is_correct: ans.id === editedQuestion.correctAnswerId,
-            isCorrect: ans.id === editedQuestion.correctAnswerId, // Keep for legacy
+            isCorrect: ans.id === editedQuestion.correctAnswerId, 
         }));
 
         onSave({ 
@@ -98,7 +97,7 @@ export default function EditQuestionModal({
             maxWidth="max-w-3xl"
         >
             <div className="space-y-6">
-                {/* Header Information */}
+                {/* Información del header */}
                 <div className="space-y-4">
                     <div>
                         <label className="block text-[10px] font-bold text-[#64748b] uppercase tracking-widest mb-1.5 ml-1">
@@ -137,7 +136,7 @@ export default function EditQuestionModal({
                     </div>
                 </div>
 
-                {/* General Feedback Section */}
+                {/* Sección de Retroalimentación General */}
                 <div className="space-y-3">
                     <h3 className="text-xs font-bold text-[#64748b] uppercase tracking-widest ml-1">Retroalimentación General</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -174,7 +173,7 @@ export default function EditQuestionModal({
                     </div>
                 </div>
 
-                {/* Answers Section */}
+                {/* Sección de Respuestas */}
                 <div className="space-y-4 pt-2">
                     <div className="flex items-center justify-between px-1">
                         <h3 className="text-xs font-bold text-[#64748b] uppercase tracking-widest">Opciones de Respuesta</h3>
@@ -252,7 +251,7 @@ export default function EditQuestionModal({
                             );
                         })}
 
-                        {/* Add Answer Button */}
+                        {/* Botón de Agregar Opción */}
                         {editedQuestion.answers.length < 6 && (
                             <button
                                 onClick={handleAddAnswer}
@@ -265,7 +264,7 @@ export default function EditQuestionModal({
                     </div>
                 </div>
 
-                {/* Actions */}
+                {/* Acciones */}
                 <div className="flex justify-end gap-3 pt-4 border-t border-[#e2e8f0]">
                     <button
                         onClick={onClose}

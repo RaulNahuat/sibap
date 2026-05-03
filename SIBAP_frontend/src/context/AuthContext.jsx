@@ -5,7 +5,6 @@ import { getCurrentUser } from '../api/auth';
  * Contexto de autenticación
  * Administra el estado global de autenticación del usuario
  */
-
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -13,7 +12,6 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-    // Verifica si el usuario está autenticado
     useEffect(() => {
         checkAuth();
     }, []);
@@ -24,7 +22,6 @@ export const AuthProvider = ({ children }) => {
             setUser(userData);
             setIsAuthenticated(true);
         } catch (error) {
-            // No autenticado o sesión expirada
             setUser(null);
             setIsAuthenticated(false);
         } finally {

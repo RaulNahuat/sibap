@@ -102,7 +102,7 @@ const DocumentSelectionModal = ({ isOpen, onClose, onSelect, selectedIds = [] })
                     </button>
                 </div>
 
-                {/* Search and Upload */}
+                {/* Buscador y subida de documentos */}
                 <div className="p-4 border-b border-[#e2e8f0] bg-[#f8fafc] flex items-center gap-3">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748b]" />
@@ -136,7 +136,7 @@ const DocumentSelectionModal = ({ isOpen, onClose, onSelect, selectedIds = [] })
                     </div>
                 </div>
 
-                {/* Content */}
+                {/* Contenido */}
                 <div className="flex-1 overflow-y-auto p-4 min-h-[300px]">
                     {(loading && documents.length === 0) ? (
                         <div className="flex flex-col items-center justify-center h-full py-12">

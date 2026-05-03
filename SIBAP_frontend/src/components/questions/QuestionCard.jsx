@@ -96,7 +96,7 @@ export default function QuestionCard({
                     </div>
                 </div>
 
-                {/* Actions */}
+                {/* Acciones */}
                 <div className="flex items-center gap-2">
                     <button
                         onClick={() => onEdit(question)}
@@ -126,7 +126,7 @@ export default function QuestionCard({
                 </div>
             </div>
 
-            {/* Question Text */}
+            {/* Texto de la pregunta */}
             <div className="mb-4">
                 <label className="block text-xs font-medium text-[#64748b] mb-2">
                     Pregunta
@@ -148,7 +148,7 @@ export default function QuestionCard({
                 </div>
             </div>
 
-            {/* Answers — layout dinámico por tipo */}
+            {/* Respuestas — layout dinámico por tipo */}
             <div className="mb-6">
                 <label className="block text-xs font-medium text-[#64748b] mb-3">
                     {question.questionType === 'MATCHING' ? 'Pares a Relacionar' :
@@ -310,7 +310,7 @@ export default function QuestionCard({
                 )}
             </div>
 
-            {/* General Feedback */}
+            {/* Retroalimentación general */}
             {(question.feedback_correct || question.feedback_incorrect) && (
                 <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
                     {question.feedback_correct && (
@@ -358,7 +358,7 @@ export default function QuestionCard({
                 </div>
             )}
 
-            {/* Validate Button */}
+            {/* Botón de validar */}
             {question.validationStatus !== 'validated' && (
                 <div className="flex justify-end">
                     <button

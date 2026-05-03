@@ -59,7 +59,7 @@ export default function NewBankPage() {
     const [error, setError] = useState('');
     const [showAdvancedAcademic, setShowAdvancedAcademic] = useState(false);
 
-    // Prompt preview state
+    // Estado del prompt de previsualización
     const [showPromptModal, setShowPromptModal] = useState(false);
     const [previewPromptText, setPreviewPromptText] = useState('');
     const [originalPromptText, setOriginalPromptText] = useState('');
@@ -67,7 +67,7 @@ export default function NewBankPage() {
     const [isPromptEdited, setIsPromptEdited] = useState(false);
     const [copied, setCopied] = useState(false);
 
-    // Curriculum cascading state
+    // Estado en cascada del plan de estudios
     const IS_PROGRAM = 'Licenciatura en Ingeniería de Software';
     const isISProgram = formData.program === IS_PROGRAM;
     const [availablePrograms, setAvailablePrograms] = useState([]);
@@ -79,7 +79,7 @@ export default function NewBankPage() {
     const [isLoadingSubjects, setIsLoadingSubjects] = useState(false);
     const [isManualMode, setIsManualMode] = useState(false);
 
-    // Load programs on mount
+    // Cargar programas al montar
     useEffect(() => {
         setIsLoadingPrograms(true);
         getPrograms()
@@ -88,7 +88,7 @@ export default function NewBankPage() {
             .finally(() => setIsLoadingPrograms(false));
     }, []);
 
-    // Handle incoming state with selected documents
+    // Manejar el estado entrante con documentos seleccionados
     useEffect(() => {
         const state = location.state;
         if (state?.selectedDocuments && state.selectedDocuments.length > 0) {
@@ -98,7 +98,7 @@ export default function NewBankPage() {
         }
     }, [location.state]);
 
-    // Load semesters when program is selected
+    // Cargar semestres cuando se selecciona un programa
     useEffect(() => {
         if (formData.program) {
             setIsLoadingSemesters(true);
@@ -189,17 +189,17 @@ export default function NewBankPage() {
                 custom_prompt: customPrompt || (isPromptEdited ? previewPromptText : null)
             };
 
-            // 1. Iniciar la generación (asíncrona)
+            //Iniciar la generación (asíncrona)
             const initialResponse = await generateQuestions(requestData);
             const { config_id } = initialResponse;
             
-            // 2. Iniciar el sondeo (polling)
+            //Iniciar el sondeo (polling)
             const startTime = Date.now();
             const MAX_POLLING_TIME = 3 * 60 * 1000; // 3 minutos
 
             const pollStatus = async () => {
                 try {
-                    // Verificación de timeout de seguridad
+                    //Verificación de timeout de seguridad
                     if (Date.now() - startTime > MAX_POLLING_TIME) {
                         throw new Error('Tiempo de espera agotado después de 3 minutos. Revisa el Banco de Preguntas más tarde.');
                     }
@@ -210,13 +210,13 @@ export default function NewBankPage() {
                     setProgress({ current: question_count, total: total_requested });
 
                     if (status === 'COMPLETED') {
-                        // Obtener las preguntas finales para navegar
+                        //Obtener las preguntas finales para navegar
                         const finalQuestions = await getBankQuestions(config_id);
                         handleSuccessfulGeneration(finalQuestions, config_id, requestData);
                     } else if (status === 'FAILED') {
                         throw new Error(error_message || 'La IA falló al generar las preguntas.');
                     } else {
-                        // Seguimos procesando: actualizar mensaje y re-agendar
+                        //Seguimos procesando: actualizar mensaje y re-agendar
                         setStatusMessage(`Generando preguntas (${question_count}/${total_requested})...`);
                         setTimeout(pollStatus, 3000); // Polling cada 3 segundos
                     }
@@ -228,7 +228,7 @@ export default function NewBankPage() {
                 }
             };
 
-            // Iniciar el ciclo de polling
+            //Iniciar el ciclo de polling
             pollStatus();
 
         } catch (err) {
@@ -262,7 +262,7 @@ export default function NewBankPage() {
             },
         }));
 
-        // Limpiar el caché del formulario antes de navegar
+        //Limpiar el caché del formulario antes de navegar
         clearFormData();
         clearUploadedFiles();
         setIsPromptEdited(false);
@@ -376,21 +376,21 @@ export default function NewBankPage() {
     const handleLibrarySelect = async (selectedIds) => {
         setIsUploading(true);
         try {
-            // Obtener IDs que NO están ya en la lista
+            //Obtener IDs que NO están ya en la lista
             const existingIds = new Set(uploadedFiles.map(f => f.id));
             const idsToFetch = selectedIds.filter(id => !existingIds.has(id));
 
-            // Solo buscar si hay IDs nuevos
+            //solo buscar si hay IDs nuevos
             let fetchedDocs = [];
             if (idsToFetch.length > 0) {
                 fetchedDocs = await Promise.all(idsToFetch.map(id => getDocument(id)));
             }
 
             setUploadedFiles(prev => {
-                // Mantener solo los archivos que están en la selección actual
+                //Mantener solo los archivos que están en la selección actual
                 const filtered = prev.filter(f => selectedIds.includes(f.id));
                 
-                // Añadir los nuevos, asegurando unicidad final por si acaso
+                //Añadir los nuevos, asegurando unicidad final por si acaso
                 const combined = [...filtered, ...fetchedDocs];
                 const seenIds = new Set();
                 return combined.filter(doc => {
@@ -1076,43 +1076,6 @@ export default function NewBankPage() {
                         </div>
                     </label>
                 </div>
-
-                {/* Tipo de Reactivo Principal */}
-                {/* This section is removed as per the instruction */}
-                {/*
-                <div className="mb-6">
-                    <label className="block text-sm font-medium text-[#102129] mb-4">
-                        Tipo de Reactivo Principal
-                    </label>
-                    <div className="grid grid-cols-3 gap-4">
-                        {questionTypes.map((type) => {
-                            const Icon = type.icon;
-                            const isSelected = selectedQuestionType === type.id;
-                            return (
-                                <button
-                                    key={type.id}
-                                    onClick={() => setSelectedQuestionType(type.id)}
-                                    className={`p-6 rounded-lg border-2 transition-all ${isSelected
-                                        ? 'border-[#1a5276] bg-[#e9f5f8]'
-                                        : 'border-[#e2e8f0] hover:border-[#cbd5e1] bg-white'
-                                        }`}
-                                >
-                                    <Icon
-                                        className={`w-8 h-8 mx-auto mb-3 ${isSelected ? 'text-[#1a5276]' : 'text-[#64748b]'
-                                            }`}
-                                    />
-                                    <p
-                                        className={`text-sm font-medium ${isSelected ? 'text-[#1a5276]' : 'text-[#102129]'
-                                            }`}
-                                    >
-                                        {type.label}
-                                    </p>
-                                </button>
-                            );
-                        })}
-                    </div>
-                </div>
-                */}
 
                 {/* Progress UI */}
                 {isGenerating && (

@@ -34,7 +34,7 @@ export default function Toast({ message, type = 'success', onClose, duration = 3
     };
 
     return (
-        <div className={`fixed top-4 right-4 z-[100] flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg min-w-[300px] max-w-md animate-slideInRight ${styles[type]}`}>
+        <div className={`fixed top-4 right-4 z-100 flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg min-w-[300px] max-w-md animate-slideInRight ${styles[type]}`}>
             <div className={iconStyles[type]}>
                 {icons[type]}
             </div>
