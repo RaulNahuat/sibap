@@ -1186,8 +1186,8 @@ export default function NewBankPage() {
                 title="Previsualizar Prompt de Generación"
                 maxWidth="max-w-4xl"
             >
-                <div className="flex flex-col gap-4">
-                    <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 flex gap-3 items-start">
+                <div className="flex flex-col gap-4 h-[70vh]">
+                    <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 flex gap-3 items-start shrink-0">
                         <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
                         <div className="text-xs text-amber-800 leading-relaxed">
                             <p className="font-bold mb-1">Nota sobre la edición:</p>
@@ -1195,9 +1195,9 @@ export default function NewBankPage() {
                         </div>
                     </div>
 
-                    <div className="relative rounded-xl border border-[#e2e8f0] bg-white shadow-sm flex flex-col">
+                    <div className="relative flex-1 min-h-0 rounded-xl border border-[#e2e8f0] bg-white shadow-sm flex flex-col">
                         {/* Editor Toolbar */}
-                        <div className="flex items-center justify-between px-4 py-3 border-b border-[#e2e8f0] bg-slate-50 rounded-t-xl">
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-[#e2e8f0] bg-slate-50 rounded-t-xl shrink-0">
                             <div className="flex items-center gap-2">
                                 <FileText className="w-4 h-4 text-[#1a5276]" />
                                 <span className="text-sm font-semibold text-slate-700">prompt_unificado.txt</span>
@@ -1235,13 +1235,13 @@ export default function NewBankPage() {
 
                         {/* Editor Area */}
                         {isFetchingPrompt ? (
-                            <div className="h-[400px] flex flex-col items-center justify-center bg-slate-50 rounded-b-xl">
+                            <div className="flex-1 flex flex-col items-center justify-center bg-slate-50 rounded-b-xl">
                                 <Loader2 className="w-10 h-10 text-[#1a5276] animate-spin mb-3" />
                                 <p className="text-sm font-medium text-slate-500">Construyendo el prompt...</p>
                             </div>
                         ) : (
                             <textarea
-                                className="w-full h-[400px] p-5 bg-white text-slate-800 font-mono text-sm leading-relaxed focus:outline-none focus:ring-4 focus:ring-[#1a5276]/5 rounded-b-xl resize-y"
+                                className="w-full flex-1 p-5 bg-white text-slate-800 font-mono text-sm leading-relaxed focus:outline-none focus:ring-4 focus:ring-[#1a5276]/5 rounded-b-xl resize-none"
                                 value={previewPromptText}
                                 onChange={(e) => {
                                     setPreviewPromptText(e.target.value);
@@ -1259,7 +1259,7 @@ export default function NewBankPage() {
                         )}
                     </div>
 
-                    <div className="flex justify-end gap-3 mt-2">
+                    <div className="flex justify-end gap-3 mt-2 shrink-0">
                         <button
                             onClick={() => setShowPromptModal(false)}
                             className="px-5 py-2.5 rounded-xl border border-[#e2e8f0] text-sm font-medium text-[#64748b] hover:bg-[#f1f5f9] transition-all"

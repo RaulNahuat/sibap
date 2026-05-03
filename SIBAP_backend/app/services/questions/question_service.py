@@ -70,11 +70,14 @@ def build_unified_prompt(
     custom_rules: str,
     distractor_rule: str,
     ambiguity_rule: str,
+    gen_feedback_rule: str,
+    spec_feedback_rule: str,
 ) -> str:
     #Secciones opcionales
     semester_line   = f"  • Semestre / Grado  : {request.semester}" if getattr(request, 'semester', None) else ""
     subtopic_line   = f"  • Subtema            : {request.subtopic}" if request.subtopic else ""
     bloom_line      = f"  • Niveles de Bloom   : {request.cognitive_level}" if getattr(request, 'cognitive_level', None) else ""
+
     gen_comp_line   = f"\n  • Competencia General: {request.general_competence}" if getattr(request, 'general_competence', None) else ""
     spec_comp_line  = f"\n  • Comp. Específica   : {request.specific_competence}" if getattr(request, 'specific_competence', None) else ""
     obj_line        = f"\n  • Resultados de aprendizaje:\n    {request.learning_objectives}" if request.learning_objectives else ""
@@ -140,6 +143,8 @@ Genera exactamente {total} reactivos distribuidos así:
   • NO repitas ni parafrasees ninguno de los enunciados existentes.
   • {distractor_rule}
   • {ambiguity_rule if ambiguity_rule else "Sin restricción adicional sobre ambigüedad."}
+  • {gen_feedback_rule}
+  • {spec_feedback_rule}
   • Cada reactivo debe cubrir un ángulo o concepto distinto (variedad pedagógica).
 
 # PREGUNTAS YA EXISTENTES (NO REPETIR)
@@ -254,16 +259,15 @@ async def get_prompt_preview(db: Session, request: QuestionGenerationRequest, us
     existing_formatted = "\n".join([f"- {t}" for t in existing_texts]) if existing_texts else "Ninguna aún."
 
     custom_rules = f"\n        INSTRUCCIONES ADICIONALES DEL USUARIO (PRIORIDAD ALTA):\n        {request.custom_instructions}\n" if request.custom_instructions else ""
-    if not request.generate_general_feedback:
-        custom_rules += "\n        - IMPORTANTE: NO generes ninguna retroalimentación general (deja feedback_correct y feedback_incorrect en null o vacíos).\n"
-    if not request.generate_specific_feedback:
-        custom_rules += "\n        - IMPORTANTE: NO generes retroalimentación específica por opción (deja feedback en null o vacío dentro del arreglo options).\n"
 
-    distractor_rule = "- Generar 1 opción correcta y distractores plausibles (evitar opciones obvias)." if request.plausible_distractors else "- Generar 1 opción correcta y distractores claramente incorrectos."
-    ambiguity_rule = "- Evitar estrictamente ambigüedades en enunciados y opciones." if request.avoid_ambiguity else ""
+    gen_feedback_rule = "Generar retroalimentación general (explicación global para la pregunta al atinar o fallar)." if request.generate_general_feedback else "IMPORTANTE: NO generes ninguna retroalimentación general (deja feedback_correct y feedback_incorrect en null o vacíos)."
+    spec_feedback_rule = "Generar retroalimentación específica por opción (justificación detallada para cada opción/distractor)." if request.generate_specific_feedback else "IMPORTANTE: NO generes retroalimentación específica por opción (deja feedback en null o vacío dentro del arreglo options)."
+
+    distractor_rule = "Generar 1 opción correcta y distractores plausibles (evitar opciones obvias)." if request.plausible_distractors else "Generar 1 opción correcta y distractores claramente incorrectos."
+    ambiguity_rule = "Evitar estrictamente ambigüedades en enunciados y opciones." if request.avoid_ambiguity else ""
 
     # Prompt unificado único para cualquier escenario
-    return build_unified_prompt(request, existing_formatted, context, custom_rules, distractor_rule, ambiguity_rule)
+    return build_unified_prompt(request, existing_formatted, context, custom_rules, distractor_rule, ambiguity_rule, gen_feedback_rule, spec_feedback_rule)
 
 
 async def process_question_generation_task(config_id: int, request_data: dict, user_id: int):
@@ -298,12 +302,11 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
 
             custom_rules = f"\n        INSTRUCCIONES ADICIONALES DEL USUARIO (PRIORIDAD ALTA):\n        {request.custom_instructions}\n" if request.custom_instructions else ""
             
-            if not request.generate_general_feedback:
-                custom_rules += "\n        - IMPORTANTE: NO generes ninguna retroalimentación general (deja feedback_correct y feedback_incorrect en null o vacíos).\n"
-            if not request.generate_specific_feedback:
-                custom_rules += "\n        - IMPORTANTE: NO generes retroalimentación específica por opción (deja feedback en null o vacío dentro del arreglo options).\n"
-            distractor_rule = "- Generar 1 opción correcta y distractores plausibles (evitar opciones obvias)." if request.plausible_distractors else "- Generar 1 opción correcta y distractores claramente incorrectos."
-            ambiguity_rule = "- Evitar estrictamente ambigüedades en enunciados y opciones." if request.avoid_ambiguity else ""
+            gen_feedback_rule = "Generar retroalimentación general (explicación global para la pregunta al atinar o fallar)." if request.generate_general_feedback else "IMPORTANTE: NO generes ninguna retroalimentación general (deja feedback_correct y feedback_incorrect en null o vacíos)."
+            spec_feedback_rule = "Generar retroalimentación específica por opción (justificación detallada para cada opción/distractor)." if request.generate_specific_feedback else "IMPORTANTE: NO generes retroalimentación específica por opción (deja feedback en null o vacío dentro del arreglo options)."
+
+            distractor_rule = "Generar 1 opción correcta y distractores plausibles (evitar opciones obvias)." if request.plausible_distractors else "Generar 1 opción correcta y distractores claramente incorrectos."
+            ambiguity_rule = "Evitar estrictamente ambigüedades en enunciados y opciones." if request.avoid_ambiguity else ""
 
             if request.custom_prompt:
                 logger.info(f"Task: Usando prompt personalizado para config {config_id}")
@@ -314,7 +317,7 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
                 total_q = config.num_mcq + config.num_matching + config.num_calculated
                 types_used = sum(1 for qty in [config.num_mcq, config.num_matching, config.num_calculated] if qty > 0)
                 logger.info(f"Task: Prompt unificado — {total_q} reactivos ({types_used} tipos) para config {config_id}")
-                unified_p = build_unified_prompt(request, existing_formatted, context, custom_rules, distractor_rule, ambiguity_rule)
+                unified_p = build_unified_prompt(request, existing_formatted, context, custom_rules, distractor_rule, ambiguity_rule, gen_feedback_rule, spec_feedback_rule)
                 res = await ai_service.generate_content_json(model_to_use, unified_p)
                 results = [(None, res)]  # None → el tipo viene del campo JSON
 
