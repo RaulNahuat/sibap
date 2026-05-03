@@ -1,8 +1,8 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session, joinedload
-from app.models.reactivo import Reactivo
 from app.models.configuracion_generacion import ConfiguracionGeneracion
 from app.models.opcion import Opcion
+from app.models.reactivo import Reactivo
 
 class QuestionRepository:
     def __init__(self, db: Session):
@@ -53,3 +53,16 @@ class QuestionRepository:
     def delete_config(self, config: ConfiguracionGeneracion) -> None:
         self.db.delete(config)
         self.db.commit()
+
+    def get_existing_question_texts(self, topic_id: int, document_id: int, limit: int = 20) -> List[str]:
+        query = (
+            self.db.query(Reactivo.question_text)
+            .join(ConfiguracionGeneracion)
+            .filter(
+                (ConfiguracionGeneracion.topic_id == topic_id) | 
+                (ConfiguracionGeneracion.document_id == document_id)
+            )
+            .order_by(Reactivo.created_at.desc())
+            .limit(limit)
+        )
+        return [q[0] for q in query.all()]
