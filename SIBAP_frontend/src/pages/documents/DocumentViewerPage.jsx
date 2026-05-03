@@ -187,22 +187,6 @@ const DocumentViewerPage = () => {
                                 <Copy className="w-4 h-4" />
                                 <span className="hidden sm:inline">Copiar</span>
                             </button>
-                            <button
-                                className="flex items-center gap-1.5 px-3 py-2 text-[#7b8a8a] hover:text-[#0b2540] hover:bg-gray-50 rounded-md transition-colors text-sm font-medium"
-                                title="Descargar Markdown"
-                                onClick={() => {
-                                    const blob = new Blob([extractedText], { type: 'text/markdown' });
-                                    const url = URL.createObjectURL(blob);
-                                    const a = document.createElement('a');
-                                    a.href = url;
-                                    a.download = `${document.filename}.md`;
-                                    a.click();
-                                    URL.revokeObjectURL(url);
-                                }}
-                            >
-                                <Download className="w-4 h-4" />
-                                <span className="hidden sm:inline">Descargar MD</span>
-                            </button>
                             <div className="h-6 w-px bg-gray-200 mx-1"></div>
                             <button
                                 onClick={() => navigate('/dashboard/new-bank', { state: { selectedDocuments: [document.id] } })}

@@ -14,6 +14,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useNavigate } from 'react-router-dom';
 import { getUserBanks, deleteUserBank } from '../../api/dashboard';
 import { toast } from 'react-hot-toast';
+import apiClient from '../../api/client';
 
 export default function MyBanksPage() {
     const navigate = useNavigate();
@@ -54,9 +55,27 @@ export default function MyBanksPage() {
         setDeletingBank(bank);
     };
 
-    const handleExport = (bank) => {
-        alert(`Exportando banco: ${bank.name}`);
-        // TODO: Implement export logic
+    const handleExport = async (bank) => {
+        try {
+            const format = 'xml';
+            const endpoint = `/api/questions/bank/${bank.id}/export/${format}`;
+            const response = await apiClient.get(endpoint, {
+                responseType: 'blob'
+            });
+
+            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `banco_${bank.id}.${format}`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            toast.success(`Exportación a XML completada.`);
+        } catch (error) {
+            console.error('Error en la exportación:', error);
+            toast.error('No se pudo exportar el banco de preguntas.');
+        }
     };
 
     const toggleSelectBank = (id) => {

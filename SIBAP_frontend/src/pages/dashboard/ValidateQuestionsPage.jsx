@@ -435,8 +435,7 @@ export default function ValidateQuestionsPage() {
                             GIFT
                         </button>
                         <button
-                            //onClick={() => handleExport('XML')}
-                            onClick={() => console.log("Exportando a XML")}
+                            onClick={() => handleExport('XML')}
                             disabled={!isValidated}
                             className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-md text-white font-semibold text-xs sm:text-sm transition-all shadow-sm ${isValidated
                                 ? 'bg-[#1a5276] hover:bg-[#154360] hover:shadow'

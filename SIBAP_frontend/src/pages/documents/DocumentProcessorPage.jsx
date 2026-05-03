@@ -283,7 +283,7 @@ const DocumentProcessorPage = () => {
                 </div>
                 <button
                     onClick={() => setShowUploadModal(true)}
-                    className="flex-shrink-0 flex items-center justify-center gap-2 px-6 py-3 bg-[#1a5276] text-white rounded-xl hover:bg-[#154360] transition-all font-semibold shadow-md active:scale-95"
+                    className="shrink-0 flex items-center justify-center gap-2 px-6 py-3 bg-[#1a5276] text-white rounded-xl hover:bg-[#154360] transition-all font-semibold shadow-md active:scale-95"
                 >
                     <Upload className="w-5 h-5" />
                     Subir nuevo documento
@@ -444,7 +444,7 @@ const DocumentProcessorPage = () => {
                             >
                                 {/* Filename and Meta */}
                                 <div className="col-span-6 flex items-start gap-4">
-                                    <div className="mt-1 flex-shrink-0">
+                                    <div className="mt-1 shrink-0">
                                         <input
                                             type="checkbox"
                                             checked={selectedDocs.includes(doc.id)}
@@ -612,7 +612,7 @@ const DocumentProcessorPage = () => {
                                 <p className="text-sm text-gray-500 mb-4">
                                     Pega el enlace público de Google Drive. El archivo debe estar
                                     configurado como <strong>«Cualquiera con el enlace»</strong>.
-                                    Máximo <strong>10 MB</strong>. Soporta PDF, Google Docs, Sheets y Slides.
+                                    Máximo <strong>10 MB</strong>. Soporta formatos PDF, DOCX, TXT y PPTX.
                                 </p>
 
                                 {/* Input URL */}
@@ -645,25 +645,6 @@ const DocumentProcessorPage = () => {
                                             'Importar'
                                         )}
                                     </button>
-                                </div>
-
-                                {/* Opciones adicionales */}
-                                <div className="mt-4 flex items-start space-x-2 text-left">
-                                    <div className="flex items-center h-5">
-                                        <input
-                                            id="drive-complex-file"
-                                            type="checkbox"
-                                            checked={driveIsComplex}
-                                            onChange={(e) => setDriveIsComplex(e.target.checked)}
-                                            className="w-4 h-4 text-[#1a5276] bg-gray-100 border-gray-300 rounded focus:ring-[#1a5276] cursor-pointer"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label htmlFor="drive-complex-file" className="text-sm font-medium text-gray-900 cursor-pointer">
-                                            Es un documento complejo
-                                        </label>
-                                        <p className="text-xs text-gray-500">Mantiene el archivo original por 24h para OCR avanzado o si es muy pesado/difícil.</p>
-                                    </div>
                                 </div>
 
                                 {/* Consejos */}
