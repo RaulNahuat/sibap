@@ -61,13 +61,10 @@ export default function QuestionCard({
     const status = getStatusConfig();
     const StatusIcon = status.icon;
 
-    // Helper para evitar que los símbolos de moneda ($50,000) rompan el modo matemático de KaTeX ($...$)
     const cleanText = (text) => {
         if (!text) return '';
         let res = text;
-        // 1. Usamos la entidad HTML &#36; en lugar de \$ para que remark-math lo ignore garantizadamente.
         res = res.replace(/\\(\d+(?:,\d+)*(?:\.\d+)?)/g, '&#36;$1');
-        // 2. Escapar dólares numéricos ($50, $2.5%)
         res = res.replace(/(?<!\\)\$(\d+(?:,\d+)*(?:\.\d+)?(?!\w))/g, '&#36;$1');
         return res;
     };
@@ -79,7 +76,7 @@ export default function QuestionCard({
             {/* Header */}
             <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-[#f1f5f9] text-[#64748b] flex items-center justify-center text-sm font-semibold flex-shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-[#f1f5f9] text-[#64748b] flex items-center justify-center text-sm font-semibold shrink-0">
                         {questionNumber}
                     </div>
                     <div className="flex flex-col gap-1">
@@ -217,7 +214,7 @@ export default function QuestionCard({
                                             ? 'bg-green-50 border-green-300 shadow-sm'
                                             : 'bg-[#f8fafc] border-[#e2e8f0]'
                                     }`}>
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                                             isCorrect ? 'border-green-600 bg-green-600' : 'border-[#cbd5e1]'
                                         }`}>
                                             {isCorrect && <div className="w-2 h-2 rounded-full bg-white" />}
@@ -234,7 +231,7 @@ export default function QuestionCard({
                                             </ReactMarkdown>
                                         </div>
                                         {isCorrect && (
-                                            <span className="text-[10px] font-bold text-green-700 uppercase tracking-wider bg-green-100 px-2 py-0.5 rounded-full flex-shrink-0">
+                                            <span className="text-[10px] font-bold text-green-700 uppercase tracking-wider bg-green-100 px-2 py-0.5 rounded-full shrink-0">
                                                 Correcto
                                             </span>
                                         )}
@@ -268,7 +265,7 @@ export default function QuestionCard({
                                     <div className={`flex items-center gap-3 p-3 rounded-md border transition-all ${
                                         isCorrect ? 'bg-green-50 border-green-200' : 'bg-[#f8fafc] border-[#e2e8f0]'
                                     }`}>
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                                             isCorrect ? 'border-green-600 bg-green-600' : 'border-[#cbd5e1]'
                                         }`}>
                                             {isCorrect && <div className="w-2 h-2 rounded-full bg-white" />}

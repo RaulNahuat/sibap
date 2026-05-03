@@ -68,8 +68,6 @@ export default function ValidateQuestionsPage() {
                         if (questions.length === 0) {
                             setQuestions(mappedQuestions);
                         } else {
-                            // Si ya hay preguntas en estado (ej. de localStorage), 
-                            // actualizar solo los campos de feedback que vienen del servidor
                             const mergedQuestions = questions.map(q => {
                                 const serverQ = mappedQuestions.find(sq => sq.id === q.id);
                                 if (!serverQ) return q;
@@ -421,10 +419,12 @@ export default function ValidateQuestionsPage() {
                             }
                         </p>
                     </div>
-                    {/* Right: export buttons */}
+
+                    {/* Derecha: Botones de exportación */}
                     <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                         <button
-                            onClick={() => handleExport('XML')}
+                            //onClick={() => handleExport('GIFT')}
+                            onClick={() => console.log("Exportando a GIFT")}
                             disabled={!isValidated}
                             className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-md border font-medium text-xs sm:text-sm transition-all ${isValidated
                                 ? 'border-[#e2e8f0] text-[#64748b] hover:bg-white hover:text-[#102129] hover:border-[#cbd5e1]'
@@ -432,10 +432,11 @@ export default function ValidateQuestionsPage() {
                                 }`}
                         >
                             <FileText className="w-4 h-4" />
-                            XML
+                            GIFT
                         </button>
                         <button
-                            onClick={() => handleExport('GIFT')}
+                            //onClick={() => handleExport('XML')}
+                            onClick={() => console.log("Exportando a XML")}
                             disabled={!isValidated}
                             className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-md text-white font-semibold text-xs sm:text-sm transition-all shadow-sm ${isValidated
                                 ? 'bg-[#1a5276] hover:bg-[#154360] hover:shadow'
@@ -443,7 +444,7 @@ export default function ValidateQuestionsPage() {
                                 }`}
                         >
                             <Download className="w-4 h-4" />
-                            Exportar GIFT
+                            Exportar XML
                         </button>
                     </div>
                 </div>
