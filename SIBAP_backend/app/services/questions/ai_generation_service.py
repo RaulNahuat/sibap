@@ -51,6 +51,7 @@ FALLBACK_CHAIN = {
 
 DEFAULT_FALLBACK = ["gemini-1.5-flash", "gemini-1.5-pro"]
 
+
 class AiGenerationService:
     def __init__(self, api_key: str = GOOGLE_API_KEY):
         self.api_key = api_key
@@ -80,6 +81,7 @@ class AiGenerationService:
             
         raise ValueError("No se pudo extraer un JSON válido de la respuesta de la IA.")
 
+
     async def _attempt_generation_single_model(self, model: str, prompt: str) -> Any:
         """Intenta generar contenido con un modelo específico, incluyendo fallback interno a texto plano."""
         try:
@@ -100,6 +102,7 @@ class AiGenerationService:
                 config=types.GenerateContentConfig(response_mime_type="text/plain")
             )
             return self._extract_json(response.text)
+
 
     async def generate_content_json(self, model: str, prompt: str) -> Any:
         if not self.client:

@@ -154,7 +154,7 @@ def get_current_user_info(current_user: Usuario = Depends(get_current_user)):
 
 
 # ========================================
-# Password Reset Endpoints
+# Routers para el restablecimiento de contraseña
 @router.post("/password-reset/request")
 def request_password_reset(
     data: schemas.PasswordResetRequest,

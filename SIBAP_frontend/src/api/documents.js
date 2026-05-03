@@ -66,14 +66,3 @@ export const uploadFromDrive = async (driveUrl, isComplex = false) => {
     return response.data;
 };
 
-/**
- * Descarga el archivo físico original si está disponible
- * @param {number} id - ID del documento
- * @returns {Promise<Blob>} Blob del archivo
- */
-export const downloadOriginalDocument = async (id) => {
-    const response = await apiClient.get(`/api/documents/${id}/download`, {
-        responseType: 'blob'
-    });
-    return response.data;
-};

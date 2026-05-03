@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     COOKIE_NAME: str
-    ENVIRONMENT: str = "development"  # development o production
+    ENVIRONMENT: str = "development" #development o production
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
     
     # Configuración de correo electrónico
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     EMAIL_FROM_NAME: str = "SIBAP"
     EMAIL_USE_TLS: bool = True
     EMAIL_CONSOLE_MODE: bool = True  # True para desarrollo, False para producción
-    
+
     # URL del frontend para enlaces de restablecimiento
     FRONTEND_URL: str = "http://localhost:5173"
     

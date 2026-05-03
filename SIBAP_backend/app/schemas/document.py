@@ -1,4 +1,4 @@
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
@@ -27,14 +27,6 @@ class DocumentListResponse(BaseModel):
     characters: int
     status: str
     is_complex: bool = False
-    
-    # Lo agregamos al schema pero lo podemos ocultar si queremos,
-    # el frontend lo recibirá y sabrá qué hacer.
-    file_path: Optional[str] = None
-    
-    @computed_field
-    def has_physical_file(self) -> bool:
-        return self.file_path is not None
 
     error_message: Optional[str] = None
     uploaded_at: datetime
@@ -49,12 +41,6 @@ class DocumentDetailResponse(BaseModel):
     content_text: Optional[str] = None
     status: str
     is_complex: bool = False
-    
-    file_path: Optional[str] = None
-    
-    @computed_field
-    def has_physical_file(self) -> bool:
-        return self.file_path is not None
 
     error_message: Optional[str] = None
     uploaded_at: datetime

@@ -247,24 +247,6 @@ const DocumentProcessorPage = () => {
         }
     };
 
-    const getStorageBadge = (doc) => {
-        if (doc.status !== 'COMPLETED') return null;
-        
-        if (doc.has_physical_file) {
-            return (
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-[#1a5276] bg-[#eaf3f7] px-1.5 py-0.5 rounded border border-[#1a5276]/20" title="Archivo original complejo conservado (hasta 24h)">
-                    <FileText className="w-3 h-3" /> Físico intacto
-                </span>
-            );
-        } else {
-            return (
-                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200" title="Almacén optimizado: el archivo físico expiró o era simple. Solo texto disponible.">
-                    <AlignLeft className="w-3 h-3" /> Solo texto
-                </span>
-            );
-        }
-    };
-
     const isOcrWarning = (text) => {
         return text && text.includes("[Aviso: Este PDF parece ser una imagen");
     };
@@ -464,7 +446,7 @@ const DocumentProcessorPage = () => {
                                             <p className="text-xs text-[#64748b]">
                                                 • {formatDate(doc.uploaded_at)}
                                             </p>
-                                            {getStorageBadge(doc)}
+
                                         </div>
                                     </div>
                                 </div>

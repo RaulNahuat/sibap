@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 # ──────────────────────────────────────────────────────────────────────────────
 # Herramientas
 # ──────────────────────────────────────────────────────────────────────────────
-
 def _get_existing_question_texts(db: Session, topic_id: int, document_id: int, limit: int = 20) -> List[str]:
     query = (
         db.query(Reactivo.question_text)
@@ -54,7 +53,6 @@ def _get_rag_context(query: str, document_ids: List[int], fallback_text: str, to
 # ──────────────────────────────────────────────────────────────────────────────
 # Generadores de indicaciones por tipo
 # ──────────────────────────────────────────────────────────────────────────────
-
 _TYPE_LABELS = {
     QuestionType.MCQ: "Opción Múltiple (MCQ)",
     QuestionType.MATCHING: "Relacionar Columnas (MATCHING)",

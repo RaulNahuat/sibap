@@ -54,6 +54,7 @@ class DocumentService:
 
         return documento
 
+
     def process_document_background(
         self,
         file_content: bytes,
@@ -83,14 +84,6 @@ class DocumentService:
 
                 final_path = None
                 is_final_complex = user_is_complex or is_complex
-                if is_final_complex:
-                    storage_dir = os.path.join(os.getcwd(), "app", "storage", "documents")
-                    os.makedirs(storage_dir, exist_ok=True)
-                    import uuid
-                    unique_filename = f"{uuid.uuid4().hex}{extension}"
-                    final_path = os.path.join(storage_dir, unique_filename)
-                    with open(final_path, "wb") as f:
-                        f.write(file_content)
 
                 self.update_document_status(
                     document_id=document_id,
@@ -112,6 +105,7 @@ class DocumentService:
                 error_message=str(e)
             )
 
+
     def upload_and_process_document(self, user_id: int, filename: str, content: bytes) -> Documento:
         extension = validate_file(filename, content)
 
@@ -127,14 +121,6 @@ class DocumentService:
                 raise ValueError("No se pudo extraer contenido legible del documento.")
 
             final_path = None
-            if is_complex:
-                storage_dir = os.path.join(os.getcwd(), "app", "storage", "documents")
-                os.makedirs(storage_dir, exist_ok=True)
-                import uuid
-                unique_filename = f"{uuid.uuid4().hex}{extension}"
-                final_path = os.path.join(storage_dir, unique_filename)
-                with open(final_path, "wb") as f:
-                    f.write(content)
 
             documento = self.create_document(
                 user_id=user_id,
@@ -154,14 +140,18 @@ class DocumentService:
             if os.path.exists(temp_path):
                 os.remove(temp_path)
 
+
     def get_user_documents(self, user_id: int, skip: int = 0, limit: int = 10) -> Tuple[List[Documento], int]:
         return self.repo.get_user_documents(user_id, skip, limit)
+
 
     def get_document_by_id(self, document_id: int, user_id: int) -> Optional[Documento]:
         return self.repo.get_by_id(document_id, user_id)
 
+
     def check_duplicate_document(self, user_id: int, filename: str) -> bool:
         return self.repo.get_by_filename(user_id, filename) is not None
+
 
     def update_document_status(
         self, 
@@ -179,6 +169,7 @@ class DocumentService:
 
         return documento
 
+
     def delete_document(self, document_id: int, user_id: int) -> bool:
         documento = self.repo.get_by_id(document_id, user_id)
         if not documento:
@@ -192,6 +183,7 @@ class DocumentService:
 
         self.repo.delete(documento)
         return True
+
 
     def _index_document_rag(self, document_id: int, content_text: str) -> None:
         try:

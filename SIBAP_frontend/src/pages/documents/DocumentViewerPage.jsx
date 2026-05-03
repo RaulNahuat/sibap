@@ -14,7 +14,7 @@ import {
     AlertTriangle,
     Calendar
 } from 'lucide-react';
-import { getDocument, downloadOriginalDocument } from '../../api/documents';
+import { getDocument } from '../../api/documents';
 import { getErrorMessage } from '../../utils/errorHandler';
 
 const ITEMS_PER_PAGE = 3000;
@@ -26,7 +26,7 @@ const DocumentViewerPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [extractedText, setExtractedText] = useState('');
-    const [isDownloading, setIsDownloading] = useState(false);
+
 
     const contentTopRef = useRef(null);
 
@@ -53,23 +53,7 @@ const DocumentViewerPage = () => {
 
 
 
-    const handleDownloadOriginal = async () => {
-        setIsDownloading(true);
-        try {
-            const blob = await downloadOriginalDocument(document.id);
-            const url = URL.createObjectURL(blob);
-            const a = window.document.createElement('a');
-            a.href = url;
-            a.download = document.filename || 'documento_original';
-            a.click();
-            URL.revokeObjectURL(url);
-        } catch (err) {
-            console.error('Error al descargar original:', err);
-            setError('Error al descargar documento físico original. Podría haber sido eliminado.');
-        } finally {
-            setIsDownloading(false);
-        }
-    };
+
 
     const isOcrWarning = (text) => {
         return text && text.includes("[Aviso: Este PDF parece ser una imagen");
@@ -161,22 +145,7 @@ const DocumentViewerPage = () => {
                         </div>
 
                         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-                            {document.has_physical_file && (
-                                <button
-                                    onClick={handleDownloadOriginal}
-                                    disabled={isDownloading}
-                                    className="flex items-center gap-1.5 px-3 py-2 text-white bg-green-600 hover:bg-green-700 rounded-md transition-colors text-sm font-medium mr-2 disabled:opacity-50"
-                                >
-                                    {isDownloading ? (
-                                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                                    ) : (
-                                        <Download className="w-4 h-4" />
-                                    )}
-                                    <span className="hidden sm:inline">
-                                        {isDownloading ? 'Descargando...' : 'Descargar Original'}
-                                    </span>
-                                </button>
-                            )}
+
                             <button
                                 className="flex items-center gap-1.5 px-3 py-2 text-[#7b8a8a] hover:text-[#0b2540] hover:bg-gray-50 rounded-md transition-colors text-sm font-medium"
                                 title="Copiar texto"

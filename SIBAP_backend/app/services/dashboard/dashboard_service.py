@@ -12,6 +12,7 @@ class DashboardService:
         self.db = db
         self.q_repo = QuestionRepository(db)
 
+
     def get_stats(self, user_id: int) -> DashboardStats:
         user_configs_query = (
             self.db.query(ConfiguracionGeneracion)
@@ -88,6 +89,7 @@ class DashboardService:
             recent_activity=activity_items
         )
 
+
     def get_banks(self, user_id: int) -> List[BankListItem]:
         user_configs = (
             self.db.query(ConfiguracionGeneracion)
@@ -120,6 +122,7 @@ class DashboardService:
                 progressPercentage=progress
             ))
         return banks
+
 
     def delete_bank(self, config_id: int, user_id: int) -> bool:
         config = self.q_repo.get_config_by_id(config_id)

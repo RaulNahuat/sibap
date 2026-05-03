@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, Depends, BackgroundTasks, Query, Body, Form
-from fastapi.responses import FileResponse
+
 from sqlalchemy.orm import Session
 from typing import List, Optional
 import math
@@ -223,29 +223,3 @@ def delete_document(
     
     return {"message": "Documento eliminado exitosamente"}
 
-@router.get(
-    "/{document_id}/download",
-    response_class=FileResponse,
-    summary="Descargar el archivo físico original"
-)
-def download_original(
-    document_id: int,
-    current_user: Usuario = Depends(get_current_user),
-    document_service: DocumentService = Depends(get_document_service)
-):
-    documento = document_service.get_document_by_id(document_id, current_user.id)
-    
-    if not documento:
-        raise HTTPException(status_code=404, detail="Documento no encontrado")
-        
-    if not hasattr(documento, 'file_path') or not documento.file_path or not os.path.exists(documento.file_path):
-        raise HTTPException(
-            status_code=404, 
-            detail="El archivo original no está disponible. Posiblemente expiró o era un documento simple."
-        )
-        
-    return FileResponse(
-        path=documento.file_path,
-        filename=documento.filename,
-        media_type='application/octet-stream'
-    )

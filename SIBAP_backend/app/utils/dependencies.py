@@ -7,25 +7,6 @@ from app.models.usuario import Usuario
 from app.utils.security_logger import log_invalid_token
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> Usuario:
-    """
-    Obtiene el usuario actual desde el token JWT en la cookie.
-    
-    Validaciones:
-    - Token presente en cookie
-    - Token válido y no expirado
-    - Usuario existe en base de datos
-    - Usuario está activo
-    
-    Args:
-        request: Request de FastAPI
-        db: Sesión de base de datos
-        
-    Returns:
-        Usuario: Objeto del usuario autenticado
-        
-    Raises:
-        HTTPException: Si el token es inválido o el usuario no existe/inactivo
-    """
     token = request.cookies.get(COOKIE_NAME)
 
     if not token:

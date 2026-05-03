@@ -13,7 +13,7 @@ Pipeline de limpieza en orden:
 
 import re
 
-# ── 1. Normalización de caracteres tipográficos ───────────────────────────────
+# ──Normalización de caracteres tipográficos ───────────────────────────────
 
 _UNICODE_MAP: dict[str, str] = {
     "\u2018": "'",   # comilla simple izquierda
@@ -37,8 +37,7 @@ def _normalize_unicode(text: str) -> str:
     return text
 
 
-# ── 2. Normalización de letras Unicode matemáticas cursivas ───────────────────
-
+# ──Normalización de letras Unicode matemáticas cursivas ───────────────────
 def _normalize_math_italic(text: str) -> str:
     """
     Convierte letras matemáticas cursivas Unicode a su equivalente ASCII.
@@ -67,8 +66,7 @@ def _normalize_math_italic(text: str) -> str:
     return ''.join(result)
 
 
-# ── 3. Eliminación de ruido visual ────────────────────────────────────────────
-
+# ──Eliminación de ruido visual ────────────────────────────────────────────
 _NOISE_LINE_RE = re.compile(
     r"^[ \t]*(?:\|[ \t]*)+[A-Za-z0-9][ \t]*(?:\|[ \t]*)+$"   # | i | y similares
     r"|^[ \t]*[-─│═|~=]{2,}[ \t]*$"                            # reglas horizontales
@@ -82,8 +80,7 @@ def _remove_visual_noise(text: str) -> str:
     return _NOISE_LINE_RE.sub("", text)
 
 
-# ── 4. Unión de encabezados partidos ─────────────────────────────────────────
-
+# ─Unión de encabezados partidos ─────────────────────────────────────────
 _HEADING_CONT_RE = re.compile(
     r"(#{1,3}[ \t][^\n]+[^.!?:\n])\n[ \t]*#{0,3}[ \t]*"
     r"([A-ZÁÉÍÓÚÜÑ\u00c0-\u00ffA-Za-záéíóúüñ][^\n]+)",
@@ -103,18 +100,8 @@ def _join_split_headings(text: str) -> str:
     return text
 
 
-# ── 5. Reconstrucción de fórmulas financieras conocidas ──────────────────────
-#
-# PyMuPDF extrae fórmulas con fracciones de forma LINEAL porque el numerador
-# y denominador son bloques separados en el PDF. Después de normalizar los
-# caracteres Unicode cursivos, estas fórmulas tienen un patrón reconocible.
-#
-# Fórmula objetivo (anualidad / VP):
-#   Texto extraído:  P= R1 -(1 + i)-n i
-#   LaTeX correcto:  $$P = R\left[\frac{1-(1+i)^{-n}}{i}\right]$$
-
+# ──Reconstrucción de fórmulas ──────────────────────
 _FORMULA_PATTERNS = [
-    # ── Valor Presente de anualidad ordinaria: P = R·[1-(1+i)^{-n}]/i ──────
     (
         re.compile(
             r"P\s*=\s*R\s*1\s*-\s*\(?\s*1\s*\+\s*i\s*\)?\s*-?\s*n\s+i",
@@ -122,7 +109,6 @@ _FORMULA_PATTERNS = [
         ),
         r"$$P = R\\left[\\frac{1-(1+i)^{-n}}{i}\\right]$$",
     ),
-    # ── Valor Futuro de anualidad ordinaria: S = R·[(1+i)^n - 1]/i ──────────
     (
         re.compile(
             r"[Ss]\s*=\s*[Rr]\s*\(?\s*1\s*\+\s*[Ii]\s*\)?\s*n\s*-\s*1\s+[Ii]",
@@ -130,7 +116,6 @@ _FORMULA_PATTERNS = [
         ),
         r"$$S = R\\left[\\frac{(1+i)^{n}-1}{i}\\right]$$",
     ),
-    # ── Pago periódico despejado: R = P·i / [1-(1+i)^{-n}] ─────────────────
     (
         re.compile(
             r"[Rr]\s*=\s*[Pp]\s*[Ii]\s*[/÷]?\s*1\s*-\s*\(?\s*1\s*\+\s*[Ii]\s*\)?\s*-?\s*[Nn]",
@@ -138,7 +123,6 @@ _FORMULA_PATTERNS = [
         ),
         r"$$R = \\frac{P \\cdot i}{1-(1+i)^{-n}}$$",
     ),
-    # ── Interés simple: I = C·i·t ─────────────────────────────────────────
     (
         re.compile(
             r"\bI\s*=\s*\(?\s*[Cc]\s*\)?\s*\(?\s*[Ii]\s*\)?\s*\(?\s*[Tt]\s*\)?",
@@ -149,11 +133,6 @@ _FORMULA_PATTERNS = [
 
 
 def _reconstruct_formulas(text: str) -> str:
-    """
-    Detecta patrones lineales de fórmulas financieras y los sustituye
-    por LaTeX estructurado correcto (con fracciones y exponentes).
-    No modifica texto ya dentro de bloques $$ ... $$.
-    """
     segments = re.split(r"(\$\$.*?\$\$)", text, flags=re.DOTALL)
     result = []
     for seg in segments:
@@ -166,8 +145,7 @@ def _reconstruct_formulas(text: str) -> str:
     return "".join(result)
 
 
-# ── 6. Envuelto genérico de expresiones simbólicas residuales ────────────────
-
+# ──Envuelto genérico de expresiones simbólicas residuales ────────────────
 _MATH_LINE_RE = re.compile(
     r"(?m)^[ \t]*"
     r"(?:"
@@ -180,10 +158,6 @@ _MATH_LINE_RE = re.compile(
 
 
 def _wrap_math_blocks(text: str) -> str:
-    """
-    Envuelve ecuaciones simbólicas genéricas residuales en bloques $$ ... $$.
-    No re-envuelve expresiones que ya están dentro de $$ ... $$.
-    """
     segments = re.split(r"(\$\$.*?\$\$)", text, flags=re.DOTALL)
     result = []
     for seg in segments:
@@ -196,8 +170,7 @@ def _wrap_math_blocks(text: str) -> str:
     return "".join(result)
 
 
-# ── 7. Colapso de líneas en blanco ────────────────────────────────────────────
-
+# ──Colapso de líneas en blanco ────────────────────────────────────────────
 def _collapse_blank_lines(text: str) -> str:
     """Reduce tres o más líneas en blanco consecutivas a exactamente dos."""
     text = re.sub(r"\n{3,}", "\n\n", text)
@@ -206,35 +179,15 @@ def _collapse_blank_lines(text: str) -> str:
 
 
 # ── Función pública principal ─────────────────────────────────────────────────
-
 def clean_extracted_text(text: str) -> str:
-    """
-    Aplica el pipeline completo de limpieza al texto extraído del PDF.
-
-    Orden de aplicación:
-      normalize_unicode → normalize_math_italic → remove_visual_noise
-        → join_split_headings → reconstruct_formulas → wrap_math_blocks
-        → collapse_blank_lines → strip
-
-    Parámetros
-    ----------
-    text : str
-        Texto crudo producido por ``extract_pdf_with_layout``.
-
-    Retorna
-    -------
-    str
-        Markdown limpio, jerárquico y libre de ruido visual, con fórmulas
-        financieras reconstruidas como bloques LaTeX renderizables.
-    """
     if not text:
         return ""
 
     text = _normalize_unicode(text)
-    text = _normalize_math_italic(text)   # ASCII-ifica letras cursivas Unicode
+    text = _normalize_math_italic(text)
     text = _remove_visual_noise(text)
     text = _join_split_headings(text)
-    text = _reconstruct_formulas(text)    # Reconstruye frac/exp de fórmulas lineales
+    text = _reconstruct_formulas(text)
     text = _wrap_math_blocks(text)
     text = _collapse_blank_lines(text)
     return text.strip()

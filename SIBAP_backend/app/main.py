@@ -1,23 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from contextlib import asynccontextmanager
-import asyncio
+
 
 from app.api.routers import auth, user, documents, questions, dashboard, curriculum
 from app.core.config import CORS_ORIGINS
-from app.models import *  # noqa: F401, F403
-from app.core.tasks import cleanup_expired_documents_loop
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Iniciar la tarea de fondo de limpieza de documentos estructurados >24h
-    # Corre una vez por hora (3600 segundos)
-    task = asyncio.create_task(cleanup_expired_documents_loop(3600))
-    yield
-    # Cancelación al apagar el servidor
-    task.cancel()
-
-app = FastAPI(lifespan=lifespan)
+from app.models import *
+app = FastAPI()
 
 # configuracion de cors
 app.add_middleware(

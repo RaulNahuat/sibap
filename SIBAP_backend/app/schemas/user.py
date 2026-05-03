@@ -2,7 +2,6 @@ from pydantic import BaseModel, EmailStr, field_validator
 from datetime import datetime
 from typing import Optional
 
-
 from app.utils.validators import (
     validate_password_strength, 
     validate_name_length,
@@ -88,15 +87,12 @@ class UserUpdatePassword(PasswordValidationMixin):
 Schemas de recuperación de contraseña
 """
 class PasswordResetRequest(BaseModel):
-    """Schema para solicitar reset de contraseña"""
     email: EmailStr
 
 class PasswordResetVerify(BaseModel):
-    """Schema para verificar token de reset"""
     token: str
 
 class PasswordResetComplete(PasswordValidationMixin):
-    """Schema para completar el reset de contraseña"""
     token: str
     new_password: str
     

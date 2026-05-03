@@ -6,7 +6,6 @@ import logging
 from pathlib import Path
 
 
-
 def validate_password_strength(password: str) -> str:
     rules = [
         (r".{8,}", "al menos 8 caracteres"),
