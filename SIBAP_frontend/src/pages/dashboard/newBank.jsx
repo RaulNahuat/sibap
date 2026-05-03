@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-    Play, Sparkles, AlertCircle, FileText, CheckCircle, Save, Download, RefreshCw, Loader2, Info, BookOpen, BrainCircuit, GripVertical, Plus, Trash2, X, RotateCcw, UploadCloud, MessageSquare, Library, ChevronDown, ChevronUp
+    Play, Sparkles, AlertCircle, FileText, CheckCircle, Save, Download, RefreshCw, Loader2, Info, BookOpen, BrainCircuit, GripVertical, Plus, Trash2, X, RotateCcw, UploadCloud, MessageSquare, Library, ChevronDown, ChevronUp, Copy, Check
 } from 'lucide-react';
 import DocumentSelectionModal from '../../components/documents/DocumentSelectionModal';
 import { uploadDocument, getDocument } from '../../api/documents';
-import { generateQuestions, checkGenerationStatus, getBankQuestions } from '../../api/questions';
+import { generateQuestions, checkGenerationStatus, getBankQuestions, previewPrompt } from '../../api/questions';
 import { getCurriculumSemesters, getCurriculumSubjects, getPrograms } from '../../api/curriculum';
 import { getErrorMessage } from '../../utils/errorHandler';
 import { useLocalStorage } from '../../hooks';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import ConfirmModal from '../../components/ui/ConfirmModal';
+import Modal from '../../components/ui/Modal';
 
 export default function NewBankPage() {
     const navigate = useNavigate();
@@ -57,6 +58,14 @@ export default function NewBankPage() {
     const [showLibraryModal, setShowLibraryModal] = useState(false);
     const [error, setError] = useState('');
     const [showAdvancedAcademic, setShowAdvancedAcademic] = useState(false);
+
+    // Prompt preview state
+    const [showPromptModal, setShowPromptModal] = useState(false);
+    const [previewPromptText, setPreviewPromptText] = useState('');
+    const [originalPromptText, setOriginalPromptText] = useState('');
+    const [isFetchingPrompt, setIsFetchingPrompt] = useState(false);
+    const [isPromptEdited, setIsPromptEdited] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     // Curriculum cascading state
     const IS_PROGRAM = 'Licenciatura en Ingeniería de Software';
@@ -117,7 +126,7 @@ export default function NewBankPage() {
         }
     }, [selectedSemesterNum, formData.program]);
 
-    const handleGenerate = async () => {
+    const handleGenerate = async (customPrompt = null) => {
         if (!formData.subject || !formData.topic) {
             setError('Por favor completa al menos la materia y el tema principal');
             return;
@@ -155,6 +164,7 @@ export default function NewBankPage() {
                 program_id: formData.program_id,
                 subject_id: formData.subject_id,
                 program: formData.program,
+                semester: formData.semester || null,
                 subject: formData.subject,
                 topic: formData.topic,
                 subtopic: formData.subtopic || null,
@@ -175,7 +185,8 @@ export default function NewBankPage() {
                 generate_general_feedback: formData.generateGeneralFeedback,
                 generate_specific_feedback: formData.generateSpecificFeedback,
                 custom_instructions: formData.customInstructions || null,
-                external_references: formData.externalReferences || null
+                external_references: formData.externalReferences || null,
+                custom_prompt: customPrompt || (isPromptEdited ? previewPromptText : null)
             };
 
             // 1. Iniciar la generación (asíncrona)
@@ -254,6 +265,8 @@ export default function NewBankPage() {
         // Limpiar el caché del formulario antes de navegar
         clearFormData();
         clearUploadedFiles();
+        setIsPromptEdited(false);
+        setPreviewPromptText('');
         
         navigate('/dashboard/validate', {
             state: {
@@ -298,6 +311,65 @@ export default function NewBankPage() {
             toast.error(msg, { duration: 4000 });
         } finally {
             setIsUploading(false);
+        }
+    };
+
+    const handlePreviewPrompt = async () => {
+        if (!formData.subject || !formData.topic) {
+            setError('Por favor completa al menos la materia y el tema principal para previsualizar el prompt');
+            return;
+        }
+
+        if (uploadedFiles.length === 0 && !formData.externalReferences) {
+            setError('Por favor carga al menos un documento o proporciona referencias externas para que el prompt tenga contexto');
+            return;
+        }
+
+        setIsFetchingPrompt(true);
+        setShowPromptModal(true);
+        setError('');
+
+        try {
+            const requestData = {
+                document_ids: uploadedFiles.map(f => f.id),
+                program_id: formData.program_id,
+                subject_id: formData.subject_id,
+                program: formData.program,
+                semester: formData.semester || null,
+                subject: formData.subject,
+                topic: formData.topic,
+                subtopic: formData.subtopic || null,
+                learning_objectives: formData.learningObjectives || null,
+                general_competence: formData.generalCompetence || null,
+                specific_competence: formData.specificCompetence || null,
+                cognitive_level: Array.isArray(formData.cognitiveLevel) ? formData.cognitiveLevel.join(', ') : formData.cognitiveLevel,
+                question_type: 'MIXED',
+                difficulty: formData.difficulty === 'Básico' ? 'EASY' : (formData.difficulty === 'Avanzado' ? 'HARD' : 'MEDIUM'),
+                num_mcq: parseInt(formData.numMCQ) || 0,
+                num_matching: parseInt(formData.numMatching) || 0,
+                num_calculated: parseInt(formData.numCalculated) || 0,
+                num_questions: (parseInt(formData.numMCQ) || 0) + (parseInt(formData.numMatching) || 0) + (parseInt(formData.numCalculated) || 0),
+                model_name: formData.aiModel,
+                wrong_option_count: formData.wrongOptionCount,
+                plausible_distractors: formData.plausibleDistractors,
+                avoid_ambiguity: formData.avoidAmbiguity,
+                generate_general_feedback: formData.generateGeneralFeedback,
+                generate_specific_feedback: formData.generateSpecificFeedback,
+                custom_instructions: formData.customInstructions || null,
+                external_references: formData.externalReferences || null
+            };
+
+            const response = await previewPrompt(requestData);
+            setPreviewPromptText(response.prompt);
+            setOriginalPromptText(response.prompt);
+            setIsPromptEdited(false);
+        } catch (err) {
+            const msg = getErrorMessage(err);
+            setError(msg);
+            toast.error(msg);
+            setShowPromptModal(false);
+        } finally {
+            setIsFetchingPrompt(false);
         }
     };
 
@@ -1075,20 +1147,139 @@ export default function NewBankPage() {
                 )}
 
                 {/* Action Buttons */}
-                <div className="flex justify-end gap-3 pt-4">
-                    <button className="px-6 py-3 rounded-xl border border-[#e2e8f0] text-sm font-medium text-[#64748b] hover:bg-[#f1f5f9] hover:text-slate-800 transition-all">
-                        Guardar Borrador
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4">
+                    <button 
+                        onClick={() => {
+                            clearFormData();
+                            clearUploadedFiles();
+                            setIsPromptEdited(false);
+                            setPreviewPromptText('');
+                        }}
+                        className="px-6 py-3 rounded-xl border border-[#e2e8f0] text-sm font-medium text-[#64748b] hover:bg-[#f1f5f9] hover:text-slate-800 transition-all order-3 sm:order-1"
+                    >
+                        Limpiar Todo
                     </button>
                     <button
-                        onClick={handleGenerate}
+                        type="button"
+                        onClick={handlePreviewPrompt}
                         disabled={isGenerating}
-                        className="bg-[#1a5276] text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center gap-2 hover:bg-[#154360] transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-6 py-3 rounded-xl border border-[#1a5276] text-sm font-bold text-[#1a5276] hover:bg-[#f0f9ff] transition-all flex items-center justify-center gap-2 order-2 sm:order-2"
+                    >
+                        <FileText className="w-4 h-4" />
+                        Previsualizar prompt
+                    </button>
+                    <button
+                        onClick={() => handleGenerate()}
+                        disabled={isGenerating}
+                        className="bg-[#1a5276] text-white px-6 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#154360] transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed order-1 sm:order-3"
                     >
                         <Sparkles className="w-4 h-4" />
                         {isGenerating ? 'Generando...' : 'Generar Reactivos con IA'}
                     </button>
                 </div>
             </div>
+
+            {/* Modal de Previsualización de Prompt */}
+            <Modal 
+                isOpen={showPromptModal} 
+                onClose={() => setShowPromptModal(false)} 
+                title="Previsualizar Prompt de Generación"
+                maxWidth="max-w-4xl"
+            >
+                <div className="flex flex-col gap-4">
+                    <div className="bg-amber-50 border border-amber-100 rounded-lg p-3 flex gap-3 items-start">
+                        <Info className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                        <div className="text-xs text-amber-800 leading-relaxed">
+                            <p className="font-bold mb-1">Nota sobre la edición:</p>
+                            <p>Si editas el prompt, se usará exactamente el texto que proporciones. Asegúrate de mantener las instrucciones sobre el formato <strong>JSON</strong> para que el sistema pueda procesar las preguntas correctamente.</p>
+                        </div>
+                    </div>
+
+                    <div className="relative rounded-xl border border-[#e2e8f0] bg-white shadow-sm flex flex-col">
+                        {/* Editor Toolbar */}
+                        <div className="flex items-center justify-between px-4 py-3 border-b border-[#e2e8f0] bg-slate-50 rounded-t-xl">
+                            <div className="flex items-center gap-2">
+                                <FileText className="w-4 h-4 text-[#1a5276]" />
+                                <span className="text-sm font-semibold text-slate-700">prompt_unificado.txt</span>
+                            </div>
+                            
+                            {!isFetchingPrompt && (
+                                <div className="flex items-center gap-2">
+                                    {isPromptEdited && (
+                                        <button 
+                                            onClick={() => {
+                                                setPreviewPromptText(originalPromptText);
+                                                setIsPromptEdited(false);
+                                            }}
+                                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition-colors"
+                                            title="Restaurar al prompt original generado por el sistema"
+                                        >
+                                            <RotateCcw className="w-3.5 h-3.5" />
+                                            <span>Deshacer cambios</span>
+                                        </button>
+                                    )}
+                                    <button 
+                                        onClick={() => {
+                                            navigator.clipboard.writeText(previewPromptText);
+                                            setCopied(true);
+                                            setTimeout(() => setCopied(false), 2000);
+                                        }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-[#1a5276] hover:bg-[#f0f9ff] transition-colors"
+                                    >
+                                        {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                                        <span className={copied ? "text-emerald-600 font-bold" : ""}>{copied ? 'Copiado' : 'Copiar texto'}</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Editor Area */}
+                        {isFetchingPrompt ? (
+                            <div className="h-[400px] flex flex-col items-center justify-center bg-slate-50 rounded-b-xl">
+                                <Loader2 className="w-10 h-10 text-[#1a5276] animate-spin mb-3" />
+                                <p className="text-sm font-medium text-slate-500">Construyendo el prompt...</p>
+                            </div>
+                        ) : (
+                            <textarea
+                                className="w-full h-[400px] p-5 bg-white text-slate-800 font-mono text-sm leading-relaxed focus:outline-none focus:ring-4 focus:ring-[#1a5276]/5 rounded-b-xl resize-y"
+                                value={previewPromptText}
+                                onChange={(e) => {
+                                    setPreviewPromptText(e.target.value);
+                                    setIsPromptEdited(true);
+                                }}
+                                spellCheck={false}
+                            />
+                        )}
+                        {!isFetchingPrompt && isPromptEdited && (
+                            <div className="absolute bottom-4 right-6 pointer-events-none">
+                                <span className="bg-amber-100 text-amber-800 text-[11px] font-bold px-3 py-1 rounded-full border border-amber-300 shadow-sm">
+                                    MODIFICADO MANUALMENTE
+                                </span>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="flex justify-end gap-3 mt-2">
+                        <button
+                            onClick={() => setShowPromptModal(false)}
+                            className="px-5 py-2.5 rounded-xl border border-[#e2e8f0] text-sm font-medium text-[#64748b] hover:bg-[#f1f5f9] transition-all"
+                        >
+                            Cerrar
+                        </button>
+                        <button
+                            onClick={() => {
+                                setShowPromptModal(false);
+                                handleGenerate(previewPromptText);
+                            }}
+                            disabled={isFetchingPrompt || !previewPromptText}
+                            className="px-6 py-2.5 rounded-xl bg-[#1a5276] text-white text-sm font-bold flex items-center gap-2 hover:bg-[#154360] transition-all shadow-md disabled:opacity-50"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Generar con este prompt
+                        </button>
+                    </div>
+                </div>
+            </Modal>
 
             {/* Modal */}
             <DocumentSelectionModal

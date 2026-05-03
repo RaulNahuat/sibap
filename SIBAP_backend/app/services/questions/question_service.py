@@ -62,10 +62,8 @@ _TYPE_LABELS = {
 }
 
 
-def _build_prompt(
-    count: int,
-    batch_index: int,
-    q_type: QuestionType,
+
+def build_unified_prompt(
     request: QuestionGenerationRequest,
     existing_formatted: str,
     context: str,
@@ -73,101 +71,127 @@ def _build_prompt(
     distractor_rule: str,
     ambiguity_rule: str,
 ) -> str:
-    type_label = _TYPE_LABELS[q_type]
-    
-    if q_type == QuestionType.MCQ:
-        type_instructions = f"""
-        REGLAS PARA OPCIÓN MÚLTIPLE:
-        - El enunciado plantea una pregunta o situación concreta.
-        - Genera exactamente 1 opción correcta y {request.wrong_option_count} distractores.
-        - Cada opción debe ser texto breve y claro.
-        - "is_correct": true SOLO para la opción correcta.
-        """
-    elif q_type == QuestionType.MATCHING:
-        type_instructions = """
-        REGLAS PARA RELACIONAR COLUMNAS:
-        - El enunciado introduce el contexto y pide relacionar pares de conceptos.
-        - IMPORTANTE (UX UI): Para una óptima experiencia visual en plataformas como Moodle, la parte izquierda (premisa estática en pantalla) debe ser la descripción o frase larga, y la parte derecha (opción que va dentro de la caja desplegable) debe ser de texto muy corto (1 a 4 palabras máximo).
-        - Cada "opción" representa UN PAR con formato exacto: "Definición, descripción o escenario largo | Término corto asociado".
-        - Genera entre 4 y 6 pares. Todos los pares son "correctos" (is_correct: true).
-        - Los pares deben ser relaciones directas e inequívocas del contenido.
-        - Ejemplo de opción: "Capacidad de un objeto en programación orientada a objetos de tomar múltiples comportamientos al heredar | Polimorfismo"
-        """
-    else: # CALCULADA
-        type_instructions = f"""
-        REGLAS PARA PREGUNTA CALCULADA:
-        - El enunciado plantea un problema numérico o cuantitativo con valores concretos.
-        - Genera 1 opción correcta con el resultado numérico correcto (is_correct: true).
-        - Genera {request.wrong_option_count} distractores con resultados incorrectos pero plausibles.
-        - Incluye la fórmula o procedimiento en el feedback de la opción correcta.
-        - CRÍTICO FORMATO JSON: Usa ÚNICAMENTE $...$ para fórmulas (ej: $F = ma$).
-          JAMÁS uses \\( \\) \\[ \\] pues rompen el JSON. Solo usar signo de dólar $...$.
-        """
+    #Secciones opcionales
+    semester_line   = f"  • Semestre / Grado  : {request.semester}" if getattr(request, 'semester', None) else ""
+    subtopic_line   = f"  • Subtema            : {request.subtopic}" if request.subtopic else ""
+    bloom_line      = f"  • Niveles de Bloom   : {request.cognitive_level}" if getattr(request, 'cognitive_level', None) else ""
+    gen_comp_line   = f"\n  • Competencia General: {request.general_competence}" if getattr(request, 'general_competence', None) else ""
+    spec_comp_line  = f"\n  • Comp. Específica   : {request.specific_competence}" if getattr(request, 'specific_competence', None) else ""
+    obj_line        = f"\n  • Resultados de aprendizaje:\n    {request.learning_objectives}" if request.learning_objectives else ""
+    ext_refs        = f"\n## REFERENCIAS EXTERNAS\n{request.external_references}" if getattr(request, 'external_references', None) else ""
+    custom_block    = f"\n## INSTRUCCIONES DEL DOCENTE (PRIORIDAD ALTA)\n{custom_rules.strip()}" if custom_rules.strip() else ""
 
-    return f"""
-    Eres un experto pedagogo diseñando evaluaciones académicas de alta calidad.
-    Basado en el siguiente contenido, genera exactamente {count} reactivos de tipo {type_label}.
-    
-    CONTEXTO ACADÉMICO:
-    - Programa: {request.program or "No especificado"}
-    - Materia: {request.subject or "No especificada"}
-    - Tema: {request.topic or "No especificado"}
-    {f"- Niveles cognitivos evaluados (Taxonomía de Bloom): {request.cognitive_level}" if getattr(request, 'cognitive_level', None) else ""}
-    {f"- Competencia General: {request.general_competence}" if getattr(request, 'general_competence', None) else ""}
-    {f"- Competencia Específica: {request.specific_competence}" if getattr(request, 'specific_competence', None) else ""}
-    {f"- Objetivos de aprendizaje del tema: {request.learning_objectives}" if request.learning_objectives else ""}
-    {custom_rules}
-    PREGUNTAS EXISTENTES (ESTRICTAMENTE NO REPETIR NI COPIAR ESTILO):
-    {existing_formatted}
+    #Construye la sección de distribución y reglas solo para los tipos solicitados
+    dist_lines = []
+    rules_sections = []
+    total = 0
+    if request.num_mcq > 0:
+        dist_lines.append(f"  - Opción Múltiple (MCQ)     : {request.num_mcq} reactivo(s), {request.wrong_option_count} distractor(es) por pregunta")
+        rules_sections.append(f"""\
+### MCQ — Opción Múltiple ({request.num_mcq} reactivos)
+- Enunciado: pregunta o situación concreta y evaluable.
+- Genera 1 opción correcta y {request.wrong_option_count} distractores por reactivo.
+- Opciones breves, homógeneas en extensión y sintácticamente paralelas.
+- "is_correct": true EXCLUSIVAMENTE en la opción correcta.""")
+        total += request.num_mcq
+    if request.num_matching > 0:
+        dist_lines.append(f"  - Relacionar Columnas (MATCHING): {request.num_matching} reactivo(s)")
+        rules_sections.append(f"""\
+### MATCHING — Relacionar Columnas ({request.num_matching} reactivos)
+- Formato obligatorio de cada opción: "Descripción larga | Término corto" (máx. 4 palabras a la derecha).
+- Genera entre 4 y 6 pares; todos son correctos (is_correct: true).
+- Los pares deben ser inequívocos y extraíbles directamente del contenido.""")
+        total += request.num_matching
+    if request.num_calculated > 0:
+        dist_lines.append(f"  - Calculada (CALCULATED)       : {request.num_calculated} reactivo(s)")
+        rules_sections.append(f"""\
+### CALCULATED — Preguntas Calculadas ({request.num_calculated} reactivos)
+- Enunciado: problema numérico o cuantitativo con datos concretos.
+- Genera 1 opción correcta y {request.wrong_option_count} distractores plausibles pero incorrectos.
+- Incluye la fórmula o procedimiento completo en el feedback de la opción correcta.
+- FORMATO MATEMÁTICO: usa $...$ exclusivamente para fórmulas. NUNCA \\( \\) \\[ \\].""")
+        total += request.num_calculated
 
-    RESTRICCIONES:
-    - Generar exactamente {count} preguntas (Batch #{batch_index+1}).
-    - NO repetir conceptos ni enunciados de la lista de 'PREGUNTAS EXISTENTES'.
-    - Variar el enfoque pedagógico (Batch #{batch_index+1} debe cubrir áreas distintas a los anteriores si aplica).
-    {distractor_rule}
-    {ambiguity_rule}
+    distribution = "\n".join(dist_lines)
+    rules = "\n\n".join(rules_sections)
 
-    {type_instructions}
+    return f"""\
+# ROL
+Eres un experto pedagogo universitario especializado en diseño de evaluaciones de alta calidad.
+Genera reactivos rigurosos, imparciales y alineados a los estándares académicos indicados.
 
-    ESTÁNDARES TÉCNICOS Y PEDAGÓGICOS (CRÍTICO):
-    1. Reducción de varianza irrelevante: El lenguaje debe ser gramaticalmente perfecto y claro.
-    2. Equidad y sensibilidad: Eliminar cualquier sesgo o estereotipo.
-    3. Calidad de las opciones: Distractores PLAUSIBLES pero INEQUÍVOCAMENTE INCORRECTAS.
-    4. Validez de Contenido: Evaluar estrictamente el contenido proporcionado.
-    5. Formato Matemático (CRÍTICO): Usa el símbolo de dólar `$` ÚNICAMENTE para aislar fórmulas matemáticas (ej: `$E=mc^2$`). Para expresar dinero, usa la palabra escrita (ej: 50,000 pesos) o escapa el símbolo (`\\$50,000`). NUNCA envuelvas oraciones enteras ni texto normal dentro de signos `$`.
+# CONTEXTO ACADÉMICO
+  • Programa : {request.program or "No especificado"}
+{semester_line}
+  • Materia  : {request.subject or "No especificada"}
+  • Tema     : {request.topic or "No especificado"}
+{subtopic_line}
+{bloom_line}
+{gen_comp_line}
+{spec_comp_line}
+{obj_line}
+{custom_block}
 
-    CONTENIDO DE REFERENCIA:
-    {context}
-    
-    DEVOLVER ÚNICAMENTE UN JSON CON LA SIGUIENTE ESTRUCTURA:
+# DISTRIBUCIÓN Y CANTIDAD
+Genera exactamente {total} reactivos distribuidos así:
+{distribution}
+
+# RESTRICCIONES
+  • NO repitas ni parafrasees ninguno de los enunciados existentes.
+  • {distractor_rule}
+  • {ambiguity_rule if ambiguity_rule else "Sin restricción adicional sobre ambigüedad."}
+  • Cada reactivo debe cubrir un ángulo o concepto distinto (variedad pedagógica).
+
+# PREGUNTAS YA EXISTENTES (NO REPETIR)
+{existing_formatted}
+
+# REGLAS POR TIPO
+{rules}
+
+# ESTÁNDARES TÉCNICOS
+  1. LENGUAJE    : Gramáticamente perfecto, preciso y neutral.
+  2. EQUIDAD     : Sin sesgos culturales, de género o socioeconómicos.
+  3. DISTRACTORES: Plausibles pero inequívocamente incorrectos para quien domina el tema.
+  4. VALIDEZ     : Evaluar únicamente contenido presente en el material de referencia.
+  5. MATEMÁTICAS : Usa `$...$` SOLO para fórmulas (ej: `$E = mc^2$`).
+                   Para montos usa palabras (ej: 50 000 pesos) o escapa `\\$`.
+
+# CONTENIDO DE REFERENCIA
+{context}
+{ext_refs}
+
+# FORMATO DE SALIDA
+Devuelve EXCLUSIVAMENTE el siguiente JSON, sin texto adicional antes ni después:
+
+{{
+  "questions": [
     {{
-        "questions": [
-            {{
-                "name": "Nombre corto y descriptivo de la pregunta (ej: tema_materia_px)",
-                "text": "Texto de la pregunta (puedes usar HTML básico)",
-                "feedback_correct": "Retroalimentación general para aciertos",
-                "feedback_incorrect": "Retroalimentación general para errores",
-                "options": [
-                    {{ 
-                        "text": "Opción 1", 
-                        "is_correct": true,
-                        "feedback": "Explicación de por qué esta respuesta es correcta o incorrecta"
-                    }},
-                    {{ 
-                        "text": "Opción 2", 
-                        "is_correct": false,
-                        "feedback": "Explicación de por qué esta respuesta es incorrecta"
-                    }}
-                ]
-            }}
-        ]
+      "type": "mcq",
+      "name": "id_corto_descriptivo",
+      "text": "Enunciado completo (admite HTML básico)",
+      "feedback_correct": "Explicación de por qué la respuesta correcta lo es",
+      "feedback_incorrect": "Orientación general para quien respondió mal",
+      "options": [
+        {{"text": "...", "is_correct": true, "feedback": "..."}},
+        {{"text": "...", "is_correct": false, "feedback": "..."}}
+      ]
     }}
-    """
+  ]
+}}
+
+Nota: el campo \"type\" debe ser exactamente \"mcq\", \"matching\" o \"calculated\" según corresponda a cada reactivo.
+"""
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Función principal de generación
 # ──────────────────────────────────────────────────────────────────────────────
+
+_TYPE_FROM_STR = {
+    "mcq": QuestionType.MCQ,
+    "matching": QuestionType.MATCHING,
+    "calculated": QuestionType.CALCULATED,
+}
 
 def create_generation_config(db: Session, request: QuestionGenerationRequest, user_id: int) -> ConfiguracionGeneracion:
     """Crea la configuración inicial en estado PENDING."""
@@ -212,6 +236,36 @@ def create_generation_config(db: Session, request: QuestionGenerationRequest, us
     return config
 
 
+async def get_prompt_preview(db: Session, request: QuestionGenerationRequest, user_id: int) -> str:
+    """Devuelve el prompt exacto que se enviará a la IA (unificado cuando hay múltiples tipos)."""
+    curr_service = CurriculumService(db)
+    prog_id, sub_id, top_id = curr_service.resolve_ids(
+        request.program, request.subject, request.topic,
+        request.program_id, request.subject_id, request.topic_id
+    )
+
+    documents = db.query(Documento).filter(Documento.id.in_(request.document_ids)).all()
+    full_text = "\n\n".join([doc.content_text for doc in documents if doc.content_text])
+
+    rag_query = f"{request.topic or ''} {request.subtopic or ''}".strip()
+    context = _get_rag_context(rag_query, request.document_ids, full_text)
+
+    existing_texts = _get_existing_question_texts(db, top_id, request.document_ids[0] if request.document_ids else None) if top_id else []
+    existing_formatted = "\n".join([f"- {t}" for t in existing_texts]) if existing_texts else "Ninguna aún."
+
+    custom_rules = f"\n        INSTRUCCIONES ADICIONALES DEL USUARIO (PRIORIDAD ALTA):\n        {request.custom_instructions}\n" if request.custom_instructions else ""
+    if not request.generate_general_feedback:
+        custom_rules += "\n        - IMPORTANTE: NO generes ninguna retroalimentación general (deja feedback_correct y feedback_incorrect en null o vacíos).\n"
+    if not request.generate_specific_feedback:
+        custom_rules += "\n        - IMPORTANTE: NO generes retroalimentación específica por opción (deja feedback en null o vacío dentro del arreglo options).\n"
+
+    distractor_rule = "- Generar 1 opción correcta y distractores plausibles (evitar opciones obvias)." if request.plausible_distractors else "- Generar 1 opción correcta y distractores claramente incorrectos."
+    ambiguity_rule = "- Evitar estrictamente ambigüedades en enunciados y opciones." if request.avoid_ambiguity else ""
+
+    # Prompt unificado único para cualquier escenario
+    return build_unified_prompt(request, existing_formatted, context, custom_rules, distractor_rule, ambiguity_rule)
+
+
 async def process_question_generation_task(config_id: int, request_data: dict, user_id: int):
     """Tarea en segundo plano para generar preguntas de forma asíncrona."""
     with SessionLocal() as db_session:
@@ -251,39 +305,37 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
             distractor_rule = "- Generar 1 opción correcta y distractores plausibles (evitar opciones obvias)." if request.plausible_distractors else "- Generar 1 opción correcta y distractores claramente incorrectos."
             ambiguity_rule = "- Evitar estrictamente ambigüedades en enunciados y opciones." if request.avoid_ambiguity else ""
 
-            BATCH_SIZE = 5
-            type_batches: List[tuple[QuestionType, int, int]] = []
-            global_idx = 0
-            for q_type, qty in [
-                (QuestionType.MCQ, config.num_mcq),
-                (QuestionType.MATCHING, config.num_matching),
-                (QuestionType.CALCULATED, config.num_calculated),
-            ]:
-                if qty <= 0: continue
-                splits = [min(BATCH_SIZE, qty - i) for i in range(0, qty, BATCH_SIZE)]
-                for count in splits:
-                    type_batches.append((q_type, count, global_idx))
-                    global_idx += 1
-
-            async def run_batch(qt: QuestionType, ct: int, idx: int):
-                p = _build_prompt(ct, idx, qt, request, existing_formatted, context, custom_rules, distractor_rule, ambiguity_rule)
-                res = await ai_service.generate_content_json(model_to_use, p)
-                return qt, res
-
-            tasks = [run_batch(qt, ct, i) for (qt, ct, i) in type_batches]
-            results = await asyncio.gather(*tasks)
+            if request.custom_prompt:
+                logger.info(f"Task: Usando prompt personalizado para config {config_id}")
+                res = await ai_service.generate_content_json(model_to_use, request.custom_prompt)
+                results = [(config.question_type, res)]
+            else:
+                # ─ Prompt unificado único para cualquier escenario ─
+                total_q = config.num_mcq + config.num_matching + config.num_calculated
+                types_used = sum(1 for qty in [config.num_mcq, config.num_matching, config.num_calculated] if qty > 0)
+                logger.info(f"Task: Prompt unificado — {total_q} reactivos ({types_used} tipos) para config {config_id}")
+                unified_p = build_unified_prompt(request, existing_formatted, context, custom_rules, distractor_rule, ambiguity_rule)
+                res = await ai_service.generate_content_json(model_to_use, unified_p)
+                results = [(None, res)]  # None → el tipo viene del campo JSON
 
             # Guardar resultados
             for q_type, res in results:
                 if not res or not isinstance(res, dict): continue
                 for q_data in res.get("questions", []):
                     if not q_data or "text" not in q_data: continue
-                    
+
+                    # Si q_type es None, viene de prompt unificado: leer el campo "type" del JSON
+                    if q_type is None:
+                        type_str = q_data.get("type", "mcq").lower()
+                        effective_type = _TYPE_FROM_STR.get(type_str, QuestionType.MCQ)
+                    else:
+                        effective_type = q_type
+
                     reactivo = q_repo.create_question(Reactivo(
                         config_id=config.id,
                         question_text=q_data["text"],
                         name=q_data.get("name"),
-                        question_type=q_type,
+                        question_type=effective_type,
                         feedback_correct=q_data.get("feedback_correct"),
                         feedback_incorrect=q_data.get("feedback_incorrect")
                     ))

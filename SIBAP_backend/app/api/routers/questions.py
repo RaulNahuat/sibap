@@ -68,6 +68,31 @@ async def generate_questions(
         )
 
 
+@router.post(
+    "/preview-prompt",
+    response_model=dict,
+    status_code=status.HTTP_200_OK
+)
+async def preview_prompt(
+    request: QuestionGenerationRequest,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        prompt = await question_service.get_prompt_preview(
+            db=db,
+            request=request,
+            user_id=current_user.id
+        )
+        return {"prompt": prompt}
+    except Exception as e:
+        print(f"Error al previsualizar prompt: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error al generar previsualización: {str(e)}"
+        )
+
+
 @router.get(
     "/status/{config_id}",
     response_model=QuestionStatusResponse,

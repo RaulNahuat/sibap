@@ -39,6 +39,7 @@ class QuestionGenerationRequest(BaseModel):
     subject: Optional[str] = None
     topic: Optional[str] = None
     subtopic: Optional[str] = None
+    semester: Optional[str] = None
     learning_objectives: Optional[str] = None
     general_competence: Optional[str] = None
     specific_competence: Optional[str] = None
@@ -57,6 +58,7 @@ class QuestionGenerationRequest(BaseModel):
     generate_specific_feedback: bool = True
     custom_instructions: Optional[str] = None
     external_references: Optional[str] = None
+    custom_prompt: Optional[str] = None
 
 class QuestionUpdateRequest(BaseModel):
     id: int

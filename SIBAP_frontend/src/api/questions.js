@@ -15,6 +15,15 @@ export const generateQuestions = async (data) => {
 };
 
 /**
+ * Obtiene una previsualización del prompt
+ * @param {Object} data 
+ */
+export const previewPrompt = async (data) => {
+    const response = await apiClient.post('/api/questions/preview-prompt', data);
+    return response.data;
+};
+
+/**
  * Regenera una pregunta específica
  * @param {number} questionId 
  */
