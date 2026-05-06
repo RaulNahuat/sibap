@@ -183,6 +183,7 @@ const FileUploader = ({
             )}
 
             {/* Opciones adicionales */}
+            {/*
             {selectedFile && !error && (
                 <div className="mt-4 flex items-start space-x-2 text-left">
                     <div className="flex items-center h-5">
@@ -194,6 +195,8 @@ const FileUploader = ({
                             className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
                         />
                     </div>
+
+                    {/*
                     <div>
                         <label htmlFor="complex-file" className="text-sm font-medium text-gray-900 cursor-pointer">
                             Es un documento complejo
@@ -202,6 +205,7 @@ const FileUploader = ({
                     </div>
                 </div>
             )}
+            */}
 
             {/* Botón de upload */}
             {selectedFile && !error && (
