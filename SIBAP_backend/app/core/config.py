@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     COOKIE_NAME: str
     ENVIRONMENT: str = "development" #development o production
-    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://localhost:8000"
     
     # Configuración de correo electrónico
     EMAIL_HOST: str = "smtp.gmail.com"

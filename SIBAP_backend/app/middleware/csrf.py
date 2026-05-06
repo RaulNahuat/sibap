@@ -4,7 +4,7 @@ from app.core.config import ENVIRONMENT
 
 class CSRFMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.method in ["POST", "PUT", "PATCH", "DELETE"]:
+        if ENVIRONMENT == "production" and request.method in ["POST", "PUT", "PATCH", "DELETE"]:
             if request.url.path in [
                 "/auth/login", 
                 "/auth/register", 
