@@ -36,6 +36,7 @@ export default function MyBanksPage() {
             if (data) {
                 const mappedBanks = data.map(b => ({
                     ...b,
+                    isCompleted: b.isCompleted !== undefined ? b.isCompleted : b.is_completed,
                     lastModified: new Date(b.created_at)
                 }));
                 setBanks(mappedBanks);
@@ -119,8 +120,8 @@ export default function MyBanksPage() {
             bank.subject.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesFilter = filterStatus === 'all' ||
-            (filterStatus === 'completed' && bank.is_completed) ||
-            (filterStatus === 'inProgress' && !bank.is_completed);
+            (filterStatus === 'completed' && bank.isCompleted) ||
+            (filterStatus === 'inProgress' && !bank.isCompleted);
 
         return matchesSearch && matchesFilter;
     });
