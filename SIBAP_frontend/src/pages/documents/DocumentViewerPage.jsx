@@ -169,9 +169,9 @@ const DocumentViewerPage = () => {
                 </div>
             </div>
 
-            {/* Content */}
+            {/* Contenido */}
             <div className="flex-1 max-w-5xl w-full mx-auto p-3 sm:p-6 md:p-8">
-                {/* Anchor for scrolling */}
+                {/* Ancla de scroll */}
                 <div ref={contentTopRef} className="scroll-mt-24" />
 
                 <div className="bg-white rounded-xl shadow-sm border border-[#00000014] min-h-[calc(100vh-140px)] flex flex-col">

@@ -333,7 +333,7 @@ export default function MyBanksPage() {
                 </div>
             </div>
 
-            {/* Barra de acciones para bancos seleccionados - Ultra Compacta */}
+            {/* Barra de acciones para bancos seleccionados*/}
             {selectedBanks.length > 0 && (
                 <div className="mt-4 px-0 sm:px-4 animate-in fade-in slide-in-from-top-2 duration-300">
                     <div className="max-w-6xl mx-auto">

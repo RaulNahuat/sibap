@@ -33,7 +33,6 @@ const DocumentProcessorPage = () => {
     const [sortBy, setSortBy] = useState('recent');
     const [selectedDocs, setSelectedDocs] = useState([]);
     const [showUploadModal, setShowUploadModal] = useState(false);
-    // 'local' | 'drive'
     const [uploadMode, setUploadMode] = useState('local');
     const [driveUrl, setDriveUrl] = useState('');
     const [driveIsComplex, setDriveIsComplex] = useState(false);
@@ -59,7 +58,7 @@ const DocumentProcessorPage = () => {
         if (hasPendingDocs) {
             const intervalId = setInterval(() => {
                 loadDocuments(true);
-            }, 5000); // Consultar cada 5 segundos
+            }, 5000);
 
             return () => clearInterval(intervalId);
         }
@@ -177,7 +176,7 @@ const DocumentProcessorPage = () => {
         }
     };
 
-    // Filtrar y ordenar documentos - Más robusto
+    // Filtar y ordenar los documentos de forma robusta
     const filteredDocuments = (documents || [])
         .filter(doc => {
             if (!searchTerm) return true;
@@ -253,7 +252,7 @@ const DocumentProcessorPage = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24">
-            {/* Header section with upload button */}
+            {/* Sección del header con el botón de subida */}
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-3xl font-extrabold text-[#1a5276] tracking-tight mb-2">
@@ -377,9 +376,9 @@ const DocumentProcessorPage = () => {
                 </div>
             </div>
 
-            {/* Tabla de documentos con Scroll Interno */}
+            {/* Tabla de documentos con scroll interno */}
             <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm flex flex-col max-h-[60vh] sm:max-h-[70vh]">
-                {/* Header de tabla - Hidden on Mobile */}
+                {/* Header de tabla - Oculto en móvil */}
                 <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 border-b border-gray-200 shrink-0">
                     <div className="col-span-1 flex items-center">
                         <input
@@ -403,7 +402,7 @@ const DocumentProcessorPage = () => {
                     </div>
                 </div>
 
-                {/* Filas de documentos - SCROLLABLE AREA */}
+                {/* Filas de documentos - ÁREA DE SCROLL */}
                 <div className="flex-1 overflow-y-auto min-h-[50px] scrollbar-thin scrollbar-thumb-slate-200">
                     {filteredDocuments.length === 0 ? (
                         <div className="p-12 text-center">
@@ -424,7 +423,7 @@ const DocumentProcessorPage = () => {
                                 key={doc.id}
                                 className="flex flex-col md:grid md:grid-cols-12 gap-3 md:gap-4 px-6 py-4 md:py-3 border-b border-gray-100 hover:bg-slate-50/50 transition-colors md:items-center group"
                             >
-                                {/* Filename and Meta */}
+                                {/* Nombre y metadatos */}
                                 <div className="col-span-6 flex items-start gap-4">
                                     <div className="mt-1 shrink-0">
                                         <input
@@ -451,7 +450,7 @@ const DocumentProcessorPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Status */}
+                                {/* Estado */}
                                 <div className="col-span-3 flex flex-row md:flex-col items-center md:items-start gap-2 ml-9 md:ml-0">
                                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getFileTypeBadge(doc.file_type)}`}>
                                         {doc.file_type}
@@ -459,7 +458,7 @@ const DocumentProcessorPage = () => {
                                     {getStatusBadge(doc.status, doc.error_message)}
                                 </div>
 
-                                {/* Actions - Always visible and clear buttons */}
+                                {/* Acciones - Botones siempre visibles y claros */}
                                 <div className="col-span-3 flex items-center justify-end gap-2 mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-0 border-gray-100 w-full md:w-auto">
                                     <button
                                         onClick={() => handleViewDocument(doc)}
@@ -482,9 +481,9 @@ const DocumentProcessorPage = () => {
                 </div>
             </div>
 
-            {/* Interaction Area (Pagination + Actions) - Normal Flow */}
+            {/* Área de interacción (Paginación + Acciones) - Flujo Normal */}
             <div className="mt-8 flex flex-col gap-6">
-                {/* Pagination */}
+                {/* Paginación */}
                 {totalPages > 1 && (
                     <div className="px-6 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm flex items-center justify-between transition-all">
                             <div className="text-xs font-bold text-[#1a5276]">
@@ -509,7 +508,7 @@ const DocumentProcessorPage = () => {
                         </div>
                     )}
 
-                {/* Bulk Actions - Ultra Compact Single Row */}
+                {/* Acciones masivas - Fila única ultra compacta */}
                 {selectedDocs.length > 0 && (
                     <div className="mt-4 bg-[#1a5276] text-white p-2.5 sm:p-3 rounded-xl shadow-md flex items-center justify-between gap-2 border border-blue-900/30 animate-in fade-in slide-in-from-top-2 duration-300">
                         <div className="flex items-center gap-2 pl-1">
@@ -538,7 +537,7 @@ const DocumentProcessorPage = () => {
                 )}
             </div>
 
-            {/* Modal de upload (Fixed background) */}
+            {/* Modal de upload (Fondo fijo) */}
             {showUploadModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm transition-opacity">
                     <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 transform transition-all scale-100">

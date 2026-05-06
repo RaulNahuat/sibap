@@ -328,7 +328,7 @@ export default function ValidateQuestionsPage() {
                 </p>
             </div>
 
-            {/* Bank Info Card - Sticky */}
+            {/* Tarjeta de información del banco */}
             <div className="sticky top-0 z-10 bg-[#f4f7f6] pb-4">
                 <div className="bg-white border border-[#e2e8f0] rounded-lg p-4 sm:p-6 shadow-sm">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -379,7 +379,7 @@ export default function ValidateQuestionsPage() {
                 </div>
             </div>
 
-            {/* Questions List */}
+            {/* Lista de preguntas */}
             <div className="space-y-4 mb-8">
                 {questions.map((question, index) => (
                     <QuestionCard
@@ -395,7 +395,7 @@ export default function ValidateQuestionsPage() {
                 ))}
             </div>
 
-            {/* Add Question Button */}
+            {/* Botón de agregar pregunta */}
             <button
                 onClick={() => setIsAddingQuestion(true)}
                 className="w-full mt-2 py-3 border-2 border-dashed border-[#e2e8f0] rounded-xl text-sm font-medium text-[#64748b] hover:border-[#1a5276] hover:text-[#1a5276] hover:bg-[#f8fafc] transition-all flex items-center justify-center gap-2"
@@ -404,10 +404,10 @@ export default function ValidateQuestionsPage() {
                 Agregar pregunta manual
             </button>
 
-            {/* Export Section at the Bottom */}
+            {/* Sección de exportación */}
             <div className={`mt-8 p-4 sm:p-5 rounded-xl border-2 ${isValidated ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'} transition-all`}>
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 md:gap-6">
-                    {/* Left: status text */}
+                    {/* Texto de estado */}
                     <div className="min-w-0">
                         <h3 className={`font-bold text-sm sm:text-base ${isValidated ? 'text-green-800' : 'text-gray-700'}`}>
                             {isValidated ? '¡Banco de Preguntas Validado!' : 'Validación en Progreso'}
@@ -420,7 +420,7 @@ export default function ValidateQuestionsPage() {
                         </p>
                     </div>
 
-                    {/* Derecha: Botones de exportación */}
+                    {/* Botones de exportación */}
                     <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                         <button
                             //onClick={() => handleExport('GIFT')}
@@ -449,7 +449,7 @@ export default function ValidateQuestionsPage() {
                 </div>
             </div>
 
-            {/* Modals */}
+            {/* Modales */}
             <RegenerateDialog
                 isOpen={regenerateDialogState.isOpen}
                 onClose={() => setRegenerateDialogState({ isOpen: false, question: null })}
@@ -459,7 +459,7 @@ export default function ValidateQuestionsPage() {
 
 
 
-            {/* Edit Modal */}
+            {/* Modal de edición */}
             {editingQuestion && (
                 <EditQuestionModal
                     key={editingQuestion.id}
@@ -470,7 +470,7 @@ export default function ValidateQuestionsPage() {
                 />
             )}
 
-            {/* Add Question Modal (create mode) */}
+            {/* Modal de agregar pregunta */}
             <EditQuestionModal
                 key={isAddingQuestion ? 'adding' : 'closed'}
                 isOpen={isAddingQuestion}
@@ -479,7 +479,7 @@ export default function ValidateQuestionsPage() {
                 onSave={handleAddQuestion}
             />
 
-            {/* Delete Confirmation */}
+            {/* Modal de confirmación de eliminación */}
             {deletingQuestion && (
                 <ConfirmModal
                     isOpen={!!deletingQuestion}
