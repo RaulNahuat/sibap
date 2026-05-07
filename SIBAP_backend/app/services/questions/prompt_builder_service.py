@@ -47,6 +47,7 @@ class PromptBuilderService:
         # Secciones opcionales
         semester_line   = f"  • Semestre / Grado  : {request.semester}" if getattr(request, 'semester', None) else ""
         subtopic_line   = f"  • Subtema            : {request.subtopic}" if request.subtopic else ""
+        keywords_line   = f"  • Términos Clave   : {', '.join(request.keywords)}" if getattr(request, 'keywords', None) else ""
         bloom_line      = f"  • Niveles de Bloom   : {request.cognitive_level}" if getattr(request, 'cognitive_level', None) else ""
 
         gen_comp_line   = f"\n  • Competencia General: {request.general_competence}" if getattr(request, 'general_competence', None) else ""
@@ -100,6 +101,7 @@ Genera reactivos rigurosos, imparciales y alineados a los estándares académico
   • Materia  : {request.subject or "No especificada"}
   • Tema     : {request.topic or "No especificado"}
 {subtopic_line}
+{keywords_line}
 {bloom_line}
 {gen_comp_line}
 {spec_comp_line}

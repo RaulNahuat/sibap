@@ -117,7 +117,7 @@ def add_document_chunks(
 def search_similar(
     query: str,
     document_ids: List[int],
-    top_k: int = 10,
+    top_k: int = 15,
     model_name: str = EMBEDDING_MODEL,
 ) -> str:
     if not document_ids:

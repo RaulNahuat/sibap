@@ -45,6 +45,7 @@ export const mapFormDataToRequest = (formData, uploadedFiles, customPrompt = nul
         generate_specific_feedback: formData.generateSpecificFeedback,
         custom_instructions: formData.customInstructions || null,
         external_references: formData.externalReferences || null,
+        keywords: formData.keywords || [],
         custom_prompt: customPrompt || (isPromptEdited ? previewPromptText : null)
     };
 };

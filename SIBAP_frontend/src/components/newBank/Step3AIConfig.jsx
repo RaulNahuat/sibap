@@ -1,4 +1,4 @@
-import { Sparkles, Loader2, FileText } from 'lucide-react';
+import { Sparkles, Loader2, FileText, Tag, X } from 'lucide-react';
 
 export default function Step3AIConfig({
     formData,
@@ -53,6 +53,51 @@ export default function Step3AIConfig({
                         ¿Problemas con el modelo? Restablecer por defecto
                     </button>
                 </div>
+            </div>
+            
+            <div className="mb-8">
+                <label className="flex text-sm font-medium text-[#102129] mb-2 items-center gap-2">
+                    <Tag className="w-4 h-4 text-[#1a5276]" />
+                    Palabras clave (opcional, pero recomendadas para proporcionar mayor contexto y mejorar la precisión de la IA).
+                </label>
+                <div className="flex flex-wrap gap-2 p-3 border border-[#e2e8f0] rounded-xl focus-within:ring-4 focus-within:ring-[#1a5276]/10 focus-within:border-[#1a5276] transition-all bg-white min-h-[46px]">
+                    {formData.keywords?.map((tag, index) => (
+                        <span 
+                            key={index} 
+                            className="flex items-center gap-1.5 px-2.5 py-1 bg-[#f0f9ff] text-[#1a5276] text-xs font-semibold rounded-lg border border-[#bae6fd] animate-in zoom-in-95 duration-200"
+                        >
+                            {tag}
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    const newKeywords = formData.keywords.filter((_, i) => i !== index);
+                                    setFormData({ ...formData, keywords: newKeywords });
+                                }}
+                                className="hover:text-red-600 transition-colors"
+                            >
+                                <X className="w-3 h-3" />
+                            </button>
+                        </span>
+                    ))}
+                    <input
+                        type="text"
+                        placeholder={formData.keywords?.length === 0 ? "Ej: Ciclo de vida del software, Modelos de proceso..." : "Agregar más..."}
+                        className="flex-1 min-w-[120px] text-sm focus:outline-none bg-transparent"
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ',') {
+                                e.preventDefault();
+                                const value = e.target.value.trim().replace(',', '');
+                                if (value && !formData.keywords?.includes(value)) {
+                                    setFormData({ ...formData, keywords: [...(formData.keywords || []), value] });
+                                    e.target.value = '';
+                                }
+                            }
+                        }}
+                    />
+                </div>
+                <p className="mt-1.5 text-[11px] text-[#64748b]">
+                    Presiona <span className="font-semibold">Enter</span> o <span className="font-semibold">Coma</span> para añadir una palabra. Estas palabras guiarán al sistema para encontrar los mejores fragmentos relacionados con tu tema.
+                </p>
             </div>
 
             <div className="flex flex-col gap-3 mb-8 border-t border-[#e2e8f0] pt-6">

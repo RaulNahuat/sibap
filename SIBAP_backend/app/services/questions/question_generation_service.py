@@ -18,8 +18,8 @@ from app.core.config import GOOGLE_AI_MODEL, EMBEDDING_MODEL
 
 logger = logging.getLogger(__name__)
 
-
-def _get_rag_context(query: str, document_ids: List[int], fallback_text: str, top_k: int = 5) -> str:
+#Top k documentos a recuperar
+def _get_rag_context(query: str, document_ids: List[int], fallback_text: str, top_k: int = 15) -> str:
     try:
         context = vector_service.search_similar(
             query=query,
@@ -88,7 +88,7 @@ async def get_prompt_preview(db: Session, request: QuestionGenerationRequest, us
     documents = db.query(Documento).filter(Documento.id.in_(request.document_ids)).all()
     full_text = "\n\n".join([doc.content_text for doc in documents if doc.content_text])
 
-    rag_query = f"{request.topic or ''} {request.subtopic or ''}".strip()
+    rag_query = f"{request.topic or ''} {request.subtopic or ''} {' '.join(request.keywords or [])}".strip()
     context = _get_rag_context(rag_query, request.document_ids, full_text)
 
     q_repo = QuestionRepository(db)
@@ -125,7 +125,7 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
             documents = db_session.query(Documento).filter(Documento.id.in_(request.document_ids)).all()
             full_text = "\n\n".join([doc.content_text for doc in documents if doc.content_text])
             
-            rag_query = f"{request.topic or ''} {request.subtopic or ''}".strip()
+            rag_query = f"{request.topic or ''} {request.subtopic or ''} {' '.join(request.keywords or [])}".strip()
             context = _get_rag_context(rag_query, request.document_ids, full_text)
 
             model_to_use = request.model_name or GOOGLE_AI_MODEL

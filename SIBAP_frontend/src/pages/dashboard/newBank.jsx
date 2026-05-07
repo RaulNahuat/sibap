@@ -51,6 +51,7 @@ export default function NewBankPage() {
         aiModel: 'gemini-flash-latest',
         generateGeneralFeedback: true,
         generateSpecificFeedback: true,
+        keywords: [],
     });
 
     const [showAdvancedAcademic, setShowAdvancedAcademic] = useState(false);

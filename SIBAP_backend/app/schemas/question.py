@@ -58,6 +58,7 @@ class QuestionGenerationRequest(BaseModel):
     generate_specific_feedback: bool = True
     custom_instructions: Optional[str] = None
     external_references: Optional[str] = None
+    keywords: Optional[List[str]] = None
     custom_prompt: Optional[str] = None
 
 class QuestionUpdateRequest(BaseModel):
