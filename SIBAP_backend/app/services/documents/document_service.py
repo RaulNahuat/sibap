@@ -190,7 +190,7 @@ class DocumentService:
             from app.services.rag.chunk_service import split_text
             from app.services.rag.embedding_service import get_embeddings
             from app.services.rag import vector_service
-            from app.core.config import settings
+            from app.core.config import settings, EMBEDDING_MODEL
 
             if not getattr(settings, "ENABLE_RAG", False):
                 logger.debug(f"RAG: Indexación desactivada por configuración para el documento {document_id}.")
@@ -199,14 +199,12 @@ class DocumentService:
             if vector_service.document_has_chunks(document_id):
                 return
 
-            chunks = split_text(content_text, chunk_size=600, overlap=100)
+            chunks = split_text(content_text, chunk_size=1000, overlap=150)
             if not chunks:
                 logger.warning(f"RAG: No se generaron chunks para el documento {document_id}.")
                 return
 
-            model_to_use = getattr(settings, "EMBEDDING_MODEL", None)
-            if model_to_use == "paraphrase-multilingual-mpnet-base-v2":
-                model_to_use = None
+            model_to_use = getattr(settings, "EMBEDDING_MODEL", EMBEDDING_MODEL)
                 
             embeddings = get_embeddings(chunks, model_name=model_to_use)
             

@@ -1,6 +1,7 @@
 import logging
 import os
 from typing import List, Optional
+from app.core.config import EMBEDDING_MODEL
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +10,7 @@ _COLLECTION_NAME = "sibap_chunks"
 _client = None
 _collection = None
 
-
+#Funcion auxiliar para obtener la coleccion de ChromaDB y verificar si esta habilitado el RAG
 def _get_collection():
     global _client, _collection
 
@@ -47,6 +48,7 @@ def _get_collection():
     return _collection
 
 
+#Función para verificar si el documento ya tiene chunks
 def document_has_chunks(document_id: int) -> bool:
     try:
         collection = _get_collection()
@@ -69,6 +71,7 @@ def document_has_chunks(document_id: int) -> bool:
         return False
 
 
+#Función para agregar chunks al documento
 def add_document_chunks(
     document_id: int,
     chunks: List[str],
@@ -110,11 +113,12 @@ def add_document_chunks(
     return len(chunks)
 
 
+#Función para buscar chunks similares al query usando ChromaDB
 def search_similar(
     query: str,
     document_ids: List[int],
-    top_k: int = 5,
-    model_name: str = "paraphrase-multilingual-mpnet-base-v2",
+    top_k: int = 10,
+    model_name: str = EMBEDDING_MODEL,
 ) -> str:
     if not document_ids:
         logger.warning("vector_service: se llamó search_similar sin document_ids.")
@@ -171,6 +175,7 @@ def search_similar(
         return ""
 
 
+#Función para eliminar chunks de un documento
 def delete_document_chunks(document_id: int) -> int:
     try:
         collection = _get_collection()

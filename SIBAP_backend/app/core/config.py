@@ -29,11 +29,12 @@ class Settings(BaseSettings):
     # Configuración de IA
     GOOGLE_API_KEY: str = ""
     GOOGLE_AI_MODEL: str = "gemini"
+    EMBEDDING_DIMENSIONALITY: int = 3072
 
     # Configuración de RAG
     ENABLE_RAG: bool = True
     CHROMA_PERSIST_DIR: str = "./chroma_db"
-    EMBEDDING_MODEL: str = "paraphrase-multilingual-mpnet-base-v2"
+    EMBEDDING_MODEL: str = "models/gemini-embedding-001"
 
     class Config:
         env_file = ".env"
@@ -57,6 +58,7 @@ RESET_TOKEN_EXPIRE_MINUTES = settings.RESET_TOKEN_EXPIRE_MINUTES
 # Configuración de IA
 GOOGLE_API_KEY = settings.GOOGLE_API_KEY
 GOOGLE_AI_MODEL = settings.GOOGLE_AI_MODEL
+EMBEDDING_DIMENSIONALITY = settings.EMBEDDING_DIMENSIONALITY
 
 # Configuración de RAG
 ENABLE_RAG = settings.ENABLE_RAG

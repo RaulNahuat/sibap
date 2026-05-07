@@ -5,15 +5,16 @@ from typing import List
 logger = logging.getLogger(__name__)
 _CHARS_PER_TOKEN: int = 4
 
+# Función auxiliar para estimar tokens
 def _token_estimate(text: str) -> int:
     return len(text) // _CHARS_PER_TOKEN
 
-
+# Función auxiliar para dividir texto
 def _split_by_separator(text: str, separator: str) -> List[str]:
     parts = text.split(separator)
     return [p.strip() for p in parts if p.strip()]
 
-
+# Función auxiliar para fusionar los chunks
 def _merge_chunks(
     splits: List[str],
     chunk_size_chars: int,
@@ -53,11 +54,11 @@ def _merge_chunks(
 
     return chunks
 
-
+# Función principal para dividir el texto
 def split_text(
     text: str,
-    chunk_size: int = 600,
-    overlap: int = 100,
+    chunk_size: int = 1000,
+    overlap: int = 150,
 ) -> List[str]:
     if not text or not text.strip():
         logger.warning("chunk_service: texto vacío recibido, devolviendo lista vacía.")
