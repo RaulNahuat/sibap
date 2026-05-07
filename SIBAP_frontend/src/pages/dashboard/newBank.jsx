@@ -17,6 +17,7 @@ import Step1Documents from '../../components/newBank/Step1Documents';
 import Step2AcademicParams from '../../components/newBank/Step2AcademicParams';
 import Step3AIConfig from '../../components/newBank/Step3AIConfig';
 import PromptPreviewModal from '../../components/newBank/PromptPreviewModal';
+import { getAIModels } from '../../api/config';
 
 export default function NewBankPage() {
     const location = useLocation();
@@ -60,6 +61,28 @@ export default function NewBankPage() {
     //Estados para el Prompt (centralizados)
     const [isPromptEdited, setIsPromptEdited] = useState(false);
     const [previewPromptText, setPreviewPromptText] = useState('');
+    const [aiModels, setAiModels] = useState([]);
+
+    //Carga de modelos de IA desde el backend
+    useEffect(() => {
+        const fetchModels = async () => {
+            try {
+                const models = await getAIModels();
+                setAiModels(models);
+                
+                //Si el modelo actual no está en la lista (posible cambio de backend), 
+                //poner el por defecto
+                const currentModelExists = models.some(m => m.id === formData.aiModel);
+                if (models.length > 0 && !currentModelExists) {
+                    const defaultModel = models.find(m => m.is_default) || models[0];
+                    setFormData(prev => ({ ...prev, aiModel: defaultModel.id }));
+                }
+            } catch (err) {
+                console.error("Error al cargar modelos de IA:", err);
+            }
+        };
+        fetchModels();
+    }, []);
 
     //Hook de Documentos
     const {
@@ -210,6 +233,7 @@ export default function NewBankPage() {
                 clearUploadedFiles={clearUploadedFiles}
                 setIsPromptEdited={setIsPromptEdited}
                 setPreviewPromptText={setPreviewPromptText}
+                aiModels={aiModels}
             />
 
             {/* Modales */}

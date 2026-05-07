@@ -5,6 +5,7 @@ from typing import List, Any
 from google import genai
 from google.genai import types
 from app.core.config import GOOGLE_API_KEY
+from app.core.models_config import FALLBACK_CHAIN, DEFAULT_FALLBACK
 
 logger = logging.getLogger(__name__)
 
@@ -40,16 +41,7 @@ def _sanitize_json_str(text: str) -> str:
 
 import asyncio
 
-FALLBACK_CHAIN = {
-    # Si falla pro, intenta con flash
-    "gemini-1.5-pro": ["gemini-1.5-pro", "gemini-1.5-flash"],
-    "gemini-2.5-pro": ["gemini-2.5-pro", "gemini-1.5-pro", "gemini-1.5-flash"],
-    # Si falla flash, podría intentar con pro o solo reintentar (aquí usamos retry en el mismo si no hay alternativas más rápidas)
-    "gemini-1.5-flash": ["gemini-1.5-flash", "gemini-1.5-pro"],
-    "gemini-2.5-flash": ["gemini-2.5-flash", "gemini-1.5-flash"]
-}
-
-DEFAULT_FALLBACK = ["gemini-1.5-flash", "gemini-1.5-pro"]
+# Configuración de modelos cargada desde models_config.py
 
 
 class AiGenerationService:

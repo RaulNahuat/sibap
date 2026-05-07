@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 
-from app.api.routers import auth, user, documents, questions, dashboard, curriculum
+from app.api.routers import auth, user, documents, questions, dashboard, curriculum, config
 from app.core.config import CORS_ORIGINS
 from app.models import *
 app = FastAPI()
@@ -26,6 +26,7 @@ app.include_router(documents.router)
 app.include_router(questions.router)
 app.include_router(dashboard.router)
 app.include_router(curriculum.router)
+app.include_router(config.router)
 
 @app.get("/")
 def read_root():

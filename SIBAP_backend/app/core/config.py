@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import List
+from app.core.models_config import AIModelID, SUPPORTED_MODELS
 
 class Settings(BaseSettings):
     DATABASE_URL: str
@@ -28,7 +29,7 @@ class Settings(BaseSettings):
     
     # Configuración de IA
     GOOGLE_API_KEY: str = ""
-    GOOGLE_AI_MODEL: str = "gemini"
+    GOOGLE_AI_MODEL: str = AIModelID.GEMINI_FLASH.value
     EMBEDDING_DIMENSIONALITY: int = 3072
 
     # Configuración de RAG

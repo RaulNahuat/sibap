@@ -11,8 +11,11 @@ export default function Step3AIConfig({
     clearFormData,
     clearUploadedFiles,
     setIsPromptEdited,
-    setPreviewPromptText
+    setPreviewPromptText,
+    aiModels = []
 }) {
+    const defaultModelId = aiModels.find(m => m.is_default)?.id || aiModels[0]?.id || 'gemini-1.5-flash';
+
     return (
         <div className="bg-white border border-[#e2e8f0]/60 rounded-2xl p-6 sm:p-8 mb-6 shadow-md">
             <div className="flex items-center gap-3 mb-6">
@@ -35,10 +38,15 @@ export default function Step3AIConfig({
                         value={formData.aiModel}
                         onChange={(e) => setFormData({ ...formData, aiModel: e.target.value })}
                     >
-                        <option value="gemini-flash-latest">Gemini Flash (Estable - Recomendado)</option>
-                        <option value="gemma-3-27b-it">Gemma 3 27B (Modelo Abierto)</option>
-                        <option value="gemini-3-flash-preview">Gemini 3 Flash (Vista Previa)</option>
-
+                        {aiModels.length > 0 ? (
+                            aiModels.map((model) => (
+                                <option key={model.id} value={model.id}>
+                                    {model.name} {model.is_default ? '(Recomendado)' : ''}
+                                </option>
+                            ))
+                        ) : (
+                            <option value={formData.aiModel}>Cargando modelos...</option>
+                        )}
                     </select>
                     <p className="mt-1.5 text-[11px] text-[#64748b]">
                         Seleccione el modelo según sus necesidades de rapidez o complejidad.
@@ -47,7 +55,7 @@ export default function Step3AIConfig({
                 <div className="flex items-end flex-1">
                     <button
                         type="button"
-                        onClick={() => setFormData({ ...formData, aiModel: 'gemini-flash-latest' })}
+                        onClick={() => setFormData({ ...formData, aiModel: defaultModelId })}
                         className="text-[10px] text-[#1a5276] hover:underline font-medium"
                     >
                         ¿Problemas con el modelo? Restablecer por defecto
