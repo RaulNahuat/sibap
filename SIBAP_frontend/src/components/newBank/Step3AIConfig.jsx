@@ -66,7 +66,7 @@ export default function Step3AIConfig({
             <div className="mb-8">
                 <label className="flex text-sm font-medium text-[#102129] mb-2 items-center gap-2">
                     <Tag className="w-4 h-4 text-[#1a5276]" />
-                    Palabras clave (opcional, pero recomendadas para proporcionar mayor contexto y mejorar la precisión de la IA).
+                    Conceptos a Evaluar: [lista de técnicas/ideas].
                 </label>
                 <div className="flex flex-wrap gap-2 p-3 border border-[#e2e8f0] rounded-xl focus-within:ring-4 focus-within:ring-[#1a5276]/10 focus-within:border-[#1a5276] transition-all bg-white min-h-[46px]">
                     {formData.keywords?.map((tag, index) => (
