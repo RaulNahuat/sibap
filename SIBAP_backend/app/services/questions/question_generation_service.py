@@ -20,6 +20,11 @@ logger = logging.getLogger(__name__)
 
 #Top k documentos a recuperar
 def _get_rag_context(query: str, document_ids: List[int], fallback_text: str, top_k: int = 15) -> str:
+    query = query.strip()
+    if not query:
+        logger.info("RAG: query vacío, utilizando fallback de texto.")
+        return f"[AVISO: Búsqueda semántica omitida por falta de tema/palabras clave. Se enviará el DOCUMENTO COMPLETO a la IA]\n\n{fallback_text}"
+
     try:
         context = vector_service.search_similar(
             query=query,
@@ -28,12 +33,11 @@ def _get_rag_context(query: str, document_ids: List[int], fallback_text: str, to
             model_name=EMBEDDING_MODEL,
         )
         if context:
-            return context
+            return f"[ÉXITO: Fragmentos extraídos dinámicamente con IA basados en el tema '{query}']\n\n{context}"
     except Exception as e:
         logger.warning(f"RAG: búsqueda semántica falló: {e}")
-        console.log("RAG: búsqueda semántica falló: {e}")
 
-    return fallback_text[:8000]
+    return f"[AVISO: Fallo en búsqueda semántica. Se enviará el DOCUMENTO COMPLETO a la IA]\n\n{fallback_text}"
 
 
 def create_generation_config(db: Session, request: QuestionGenerationRequest, user_id: int) -> ConfiguracionGeneracion:
