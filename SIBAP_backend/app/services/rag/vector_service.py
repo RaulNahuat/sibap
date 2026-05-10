@@ -167,9 +167,9 @@ def search_similar(
         total_chars = sum(len(d) for d in retrieved_docs)
         estimated_tokens = total_chars // 4
 
-        logger.info(
-            f"vector_service: recuperados {len(retrieved_docs)} chunks "
-            f"(~{estimated_tokens} tokens) para query: '{query[:60]}...'"
+        print(
+            f"[RAG] ÉXITO: vector_service recuperó {len(retrieved_docs)} chunks "
+            f"(~{estimated_tokens} tokens) para la búsqueda: '{query[:60]}...'"
         )
 
         context = "\n\n---\n\n".join(retrieved_docs)
