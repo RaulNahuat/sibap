@@ -24,10 +24,14 @@ def _get_collection():
     try:
         os.environ["ANONYMIZED_TELEMETRY"] = "False"
         import chromadb
+        from chromadb.config import Settings as ChromaSettings
         persist_dir = getattr(settings, "CHROMA_PERSIST_DIR", "./chroma_db")
         os.makedirs(persist_dir, exist_ok=True)
 
-        _client = chromadb.PersistentClient(path=persist_dir)
+        _client = chromadb.PersistentClient(
+            path=persist_dir,
+            settings=ChromaSettings(anonymized_telemetry=False)
+        )
         _collection = _client.get_or_create_collection(
             name=_COLLECTION_NAME,
             metadata={"hnsw:space": "cosine"},
@@ -43,7 +47,7 @@ def _get_collection():
             )
         return None
     except Exception as e:
-        logger.error(f"vector_service: error al inicializar ChromaDB: {e}")
+        logger.exception("vector_service: error crítico al inicializar ChromaDB")
         return None
 
     return _collection

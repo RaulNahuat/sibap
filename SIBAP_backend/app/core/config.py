@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     ENABLE_RAG: bool = True
     CHROMA_PERSIST_DIR: str = "./chroma_db"
     EMBEDDING_MODEL: str = "models/gemini-embedding-001"
+    ANONYMIZED_TELEMETRY: str = "False"
 
     class Config:
         env_file = ".env"
