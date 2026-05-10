@@ -22,6 +22,7 @@ def _get_collection():
         return _collection
 
     try:
+        os.environ["ANONYMIZED_TELEMETRY"] = "False"
         import chromadb
         persist_dir = getattr(settings, "CHROMA_PERSIST_DIR", "./chroma_db")
         os.makedirs(persist_dir, exist_ok=True)
