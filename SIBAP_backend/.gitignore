@@ -19,3 +19,7 @@ dist/
 
 # Logs
 *.log
+
+# Databases and Uploads
+chroma_db/
+uploads/
