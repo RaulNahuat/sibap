@@ -106,15 +106,19 @@ export default function QuestionCard({
                         <Edit3 className="w-4 h-4" />
                     </button>
                     {question.validationStatus !== 'validated' && onRegenerate && (
-                        <button
-                            onClick={() => onRegenerate(question)}
-                            disabled={isRegenerating}
-                            className={`p-2 rounded-md text-[#64748b] transition-colors ${isRegenerating ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#f1f5f9] hover:text-[#1a5276]'
-                                }`}
-                            title="Regenerar"
-                        >
-                            <RefreshCw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
-                        </button>
+                        <>
+                            {/**
+                            <button
+                                onClick={() => onRegenerate(question)}
+                                disabled={isRegenerating}
+                                className={`p-2 rounded-md text-[#64748b] transition-colors ${isRegenerating ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#f1f5f9] hover:text-[#1a5276]'
+                                    }`}
+                                title="Regenerar"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+                            </button>
+                            */}
+                        </>
                     )}
                     <button
                         onClick={() => onDelete(question)}
