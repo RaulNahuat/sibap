@@ -20,11 +20,6 @@ class QuestionType(enum.Enum):
     CALCULATED = "CALCULATED"
     MIXED = "MIXED"
 
-class DifficultyLevel(enum.Enum):
-    EASY = "EASY"
-    MEDIUM = "MEDIUM"
-    HARD = "HARD"
-
 class GenerationStatus(enum.Enum):
     PENDING = "PENDING"
     PROCESSING = "PROCESSING"
@@ -42,9 +37,9 @@ class ConfiguracionGeneracion(Base):
     topic_id: Mapped[int] = mapped_column(ForeignKey("curriculum_topics.id"), nullable=False)
 
     subtopic: Mapped[Optional[str]] = mapped_column(String(150), nullable=True)
-    
+    cognitive_level: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
     question_type: Mapped[QuestionType] = mapped_column(Enum(QuestionType), nullable=False)
-    difficulty: Mapped[DifficultyLevel] = mapped_column(Enum(DifficultyLevel), nullable=False)
     
     num_questions: Mapped[int] = mapped_column(Integer, nullable=False)
     num_mcq: Mapped[int] = mapped_column(Integer, default=0)

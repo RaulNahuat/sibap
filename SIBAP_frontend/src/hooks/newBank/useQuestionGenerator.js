@@ -124,7 +124,7 @@ export const useQuestionGenerator = ({
                 name: `${formData.subject} - ${formData.topic}`,
                 subject: formData.subject,
                 topic: formData.topic,
-                difficulty: formData.difficulty,
+                cognitive_level: formData.cognitiveLevel,
                 program: formData.program,
                 semester: formData.semester,
                 wrongOptionCount: formData.wrongOptionCount,

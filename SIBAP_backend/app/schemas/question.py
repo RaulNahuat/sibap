@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
-from app.models.configuracion_generacion import QuestionType, DifficultyLevel
+from app.models.configuracion_generacion import QuestionType
 
 class OptionBase(BaseModel):
     option_text: str
@@ -45,7 +45,6 @@ class QuestionGenerationRequest(BaseModel):
     specific_competence: Optional[str] = None
     cognitive_level: Optional[str] = "Comprender"
     question_type: Optional[QuestionType] = QuestionType.MIXED
-    difficulty: DifficultyLevel
     num_questions: int = 10
     num_mcq: int = 0
     num_matching: int = 0

@@ -6,12 +6,6 @@
  * Mapea los datos del formulario al formato esperado por la API de generación de reactivos
  */
 export const mapFormDataToRequest = (formData, uploadedFiles, customPrompt = null, isPromptEdited = false, previewPromptText = '') => {
-    const difficultyMapping = {
-        'Básico': 'EASY',
-        'Intermedio': 'MEDIUM',
-        'Avanzado': 'HARD'
-    };
-
     const num_mcq = parseInt(formData.numMCQ) || 0;
     const num_matching = parseInt(formData.numMatching) || 0;
     const num_calculated = parseInt(formData.numCalculated) || 0;
@@ -32,7 +26,6 @@ export const mapFormDataToRequest = (formData, uploadedFiles, customPrompt = nul
             ? formData.cognitiveLevel.join(', ') 
             : formData.cognitiveLevel,
         question_type: 'MIXED',
-        difficulty: difficultyMapping[formData.difficulty] || 'MEDIUM',
         num_mcq,
         num_matching,
         num_calculated,

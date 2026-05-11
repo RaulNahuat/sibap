@@ -114,7 +114,7 @@ class DashboardService:
                 id=config.id,
                 name=f"Banco: {config.tema_obj.nombre if config.tema_obj else 'Sin tema'}",
                 subject=config.materia_obj.nombre if config.materia_obj else 'Sin materia',
-                difficulty=config.difficulty.value,
+                cognitive_level=config.cognitive_level,
                 created_at=config.created_at,
                 totalQuestions=total,
                 validatedQuestions=validated,

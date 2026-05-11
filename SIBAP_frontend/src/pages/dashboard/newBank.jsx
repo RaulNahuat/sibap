@@ -40,7 +40,6 @@ export default function NewBankPage() {
         generalCompetence: '',
         specificCompetence: '',
         cognitiveLevel: ['Comprender'],
-        difficulty: 'Intermedio',
         numMCQ: 5,
         numMatching: 2,
         numCalculated: 1,

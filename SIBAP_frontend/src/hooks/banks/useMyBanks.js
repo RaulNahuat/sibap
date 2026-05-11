@@ -40,7 +40,7 @@ export function useMyBanks() {
 
     // abrir banco
     const handleOpenBank = (bank) => {
-        navigate('/dashboard/validate', { state: { configId: bank.id, name: bank.name, subject: bank.subject } });
+        navigate('/dashboard/validate', { state: { configId: bank.id, name: bank.name, subject: bank.subject, cognitive_level: bank.cognitive_level } });
     };
 
     // eliminar banco

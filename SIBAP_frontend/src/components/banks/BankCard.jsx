@@ -42,14 +42,19 @@ export default function BankCard({
                         )}
                     </div>
                 </div>
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-[#64748b] font-medium">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-xs text-[#64748b] font-medium">
                     <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600">{bank.subject}</span>
-                    <span className="flex items-center gap-1">
-                        Dificultad: <span className="text-[#102129]">
-                            {bank.difficulty === 'EASY' ? 'Básico' :
-                                bank.difficulty === 'MEDIUM' ? 'Intermedio' :
-                                    bank.difficulty === 'HARD' ? 'Avanzado' : bank.difficulty}
-                        </span>
+                    <span className="flex flex-wrap items-center gap-1">
+                        {(() => {
+                            const raw = bank.cognitive_level;
+                            if (!raw) return <span className="text-[#64748b]">Sin taxonomía</span>;
+                            const levels = Array.isArray(raw) ? raw : raw.split(',').map(l => l.trim());
+                            return levels.map((level, idx) => (
+                                <span key={idx} className="px-1.5 py-0.5 bg-[#e9f5f8] text-[#1a5276] rounded text-[10px] font-semibold whitespace-nowrap">
+                                    {level}
+                                </span>
+                            ));
+                        })()}
                     </span>
                     <span className="flex items-center gap-1">
                         <Calendar className="w-3.5 h-3.5" />

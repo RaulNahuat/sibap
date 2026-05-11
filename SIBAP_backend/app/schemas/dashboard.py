@@ -15,7 +15,7 @@ class BankListItem(BaseModel):
     id: int
     name: str
     subject: str
-    difficulty: str
+    cognitive_level: Optional[str] = None
     created_at: datetime
     totalQuestions: int
     validatedQuestions: int

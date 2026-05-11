@@ -44,7 +44,7 @@ export function useQuestionValidation(bankData) {
                             correctAnswerId: q.opciones.find(opt => opt.is_correct)?.id,
                             validationStatus: q.is_validated ? 'validated' : 'pending',
                             metadata: {
-                                difficulty: bankData.difficulty,
+                                cognitive_level: bankData.cognitive_level,
                                 topic: bankData.topic,
                                 generatedAt: q.created_at,
                             },
@@ -234,7 +234,7 @@ export function useQuestionValidation(bankData) {
                 correctAnswerId: created.opciones.find(o => o.is_correct)?.id,
                 validationStatus: 'validated',
                 metadata: {
-                    difficulty: bankData.difficulty,
+                    cognitive_level: bankData.cognitive_level,
                     topic: bankData.topic,
                     generatedAt: created.created_at,
                 },

@@ -211,14 +211,9 @@ export default function Step2AcademicParams({
                                             ? cognitiveLevels.filter(l => l !== level)
                                             : [...cognitiveLevels, level];
                                         
-                                        let newDifficulty = 'Básico';
-                                        if (newLevels.some(l => ['Evaluar', 'Crear'].includes(l))) newDifficulty = 'Avanzado';
-                                        else if (newLevels.some(l => ['Aplicar', 'Analizar'].includes(l))) newDifficulty = 'Intermedio';
-
                                         setFormData({ 
                                             ...formData, 
                                             cognitiveLevel: newLevels,
-                                            difficulty: newDifficulty
                                         });
                                     }}
                                     className={`px-3.5 py-2 rounded-xl text-sm font-medium transition-all border ${

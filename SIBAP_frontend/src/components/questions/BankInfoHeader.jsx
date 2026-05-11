@@ -15,15 +15,20 @@ const BankInfoHeader = ({ bankData, progressPercentage, validatedCount, totalCou
                     </div>
                     <div>
                         <div className="text-xs font-medium text-[#64748b] mb-1">
-                            DIFICULTAD
+                            TAXONOMÍA DE BLOOM
                         </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-base font-semibold text-[#102129]">
-                                {bankData?.difficulty || 'Media'}
-                            </span>
-                            <span className="px-2 py-0.5 bg-[#e9f5f8] text-[#1a5276] text-xs font-medium rounded">
-                                Nivel 2
-                            </span>
+                        <div className="flex flex-wrap items-center gap-1.5">
+                            {(() => {
+                                const levels = bankData?.cognitive_level 
+                                    ? (Array.isArray(bankData.cognitive_level) ? bankData.cognitive_level : bankData.cognitive_level.split(',').map(l => l.trim()))
+                                    : ['No especificado'];
+                                
+                                return levels.map((level, idx) => (
+                                    <span key={idx} className="px-2 py-0.5 bg-[#e9f5f8] text-[#1a5276] text-xs font-medium rounded whitespace-nowrap">
+                                        {level}
+                                    </span>
+                                ));
+                            })()}
                         </div>
                     </div>
                     <div className="col-span-2">
