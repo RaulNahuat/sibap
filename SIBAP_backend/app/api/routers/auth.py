@@ -74,20 +74,21 @@ def login(data: UserLogin, request: Request, response: Response, db: Session = D
         max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60  
     )
 
-    if data.remember_me:
-        refresh_token = create_refresh_token(
-            data={"sub": str(user.id)},
-            expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-        )
-        
-        response.set_cookie(
-            key=REFRESH_COOKIE_NAME,
-            value=refresh_token,
-            httponly=True,
-            secure=is_production,
-            samesite="lax",
-            max_age=REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
-        )
+    refresh_token = create_refresh_token(
+        data={"sub": str(user.id)},
+        expires_delta=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    )
+    
+    refresh_max_age = REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60 if data.remember_me else None
+    
+    response.set_cookie(
+        key=REFRESH_COOKIE_NAME,
+        value=refresh_token,
+        httponly=True,
+        secure=is_production,
+        samesite="lax",
+        max_age=refresh_max_age
+    )
 
     return {
         "message": "Login exitoso"

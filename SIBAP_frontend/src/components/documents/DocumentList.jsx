@@ -62,7 +62,7 @@ const DocumentList = ({
     return (
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
             {/* Header de tabla - Oculto en móvil */}
-            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 border-b border-gray-200 shrink-0">
+            <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-4 bg-[#f8fafc] border-b border-[#e2e8f0] shrink-0 items-center">
                 <div className="col-span-1 flex items-center">
                     <input
                         type="checkbox"
@@ -71,17 +71,17 @@ const DocumentList = ({
                         className="w-5 h-5 rounded border-gray-300 text-[#1a5276] focus:ring-[#1a5276] transition-transform active:scale-90"
                     />
                 </div>
-                <div className="col-span-5 text-xs font-medium text-[#7b8a8a]">
-                    Nombre del documento
+                <div className="col-span-5 text-[13px] font-semibold text-[#64748b]">
+                    NOMBRE DEL DOCUMENTO
                 </div>
-                <div className="col-span-2 text-xs font-medium text-[#7b8a8a]">
-                    Tipo / Estado
+                <div className="col-span-2 text-[13px] font-semibold text-[#64748b]">
+                    TIPO / ESTADO
                 </div>
-                <div className="col-span-2 text-xs font-medium text-[#7b8a8a]">
-                    Fecha de carga
+                <div className="col-span-2 text-[13px] font-semibold text-[#64748b]">
+                    FECHA DE CARGA
                 </div>
-                <div className="col-span-2 text-xs font-medium text-[#7b8a8a] text-right">
-                    Acciones
+                <div className="col-span-2 text-[13px] font-semibold text-[#64748b] text-right">
+                    ACCIONES
                 </div>
             </div>
 
