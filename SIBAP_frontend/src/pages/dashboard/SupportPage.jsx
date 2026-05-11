@@ -26,10 +26,11 @@ export default function SupportPage() {
     };
 
     return (
-        <div className="max-w-6xl mx-auto pb-24">
+        <div className="max-w-7xl mx-auto pb-24">
             <PageHeader 
                 title="Centro de Soporte" 
                 description="¿Tienes dudas o necesitas ayuda con SIBAP? Estamos aquí para ayudarte." 
+                className="mb-10"
             />
 
             <div className="flex justify-center">

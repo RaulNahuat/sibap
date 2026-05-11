@@ -169,12 +169,13 @@ export default function NewBankPage() {
     };
 
     return (
-        <div className="max-w-6xl mx-auto pb-12 sm:pb-24 px-1 sm:px-0">
+        <div className="max-w-7xl mx-auto pb-12 sm:pb-24 px-1 sm:px-0">
             {/* Header */}
-            <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="mb-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <PageHeader 
                     title="Nuevo Banco de Preguntas" 
                     description="Completa los 3 pasos para generar tu examen." 
+                    className="flex-1"
                 />
                 <button
                     onClick={handleClearAll}

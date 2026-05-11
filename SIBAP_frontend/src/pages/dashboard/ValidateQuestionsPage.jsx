@@ -48,7 +48,7 @@ export default function ValidateQuestionsPage() {
     } = useQuestionValidation(bankData);
 
     return (
-        <div className="max-w-6xl mx-auto pb-24">
+        <div className="max-w-7xl mx-auto pb-24">
             {/* Breadcrumb */}
             <div className="flex items-center gap-2 text-sm text-[#64748b] mb-6">
                 <button
@@ -67,6 +67,7 @@ export default function ValidateQuestionsPage() {
             <PageHeader 
                 title="Validación de Reactivos" 
                 description="Revise y edite las preguntas generadas antes de exportar." 
+                className="mb-10"
             />
 
             {/* Tarjeta de información del banco */}

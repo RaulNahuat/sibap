@@ -58,8 +58,8 @@ export default function ProfileInfoCard({ user, formData, handleInputChange, con
                     />
                 </div>
 
-                {/* Correo - Ancho completo */}
-                <div className="sm:col-span-2 flex flex-col gap-2">
+                {/* Correo */}
+                <div className="flex flex-col gap-2">
                     <label className="text-[13px] font-medium text-[#102129]">
                         Correo
                     </label>
@@ -71,9 +71,6 @@ export default function ProfileInfoCard({ user, formData, handleInputChange, con
                             readOnly
                             className="h-10 w-full border border-[#e2e8f0] rounded-md px-3 pr-10 text-sm text-[#64748b] bg-[#f1f5f9] cursor-not-allowed"
                         />
-                        <div className="absolute right-3 text-[#27ae60]">
-                            <CheckCircle className="w-4 h-4" />
-                        </div>
                     </div>
                     <span className="text-xs text-[#64748b] mt-1">
                         El correo no se puede modificar.

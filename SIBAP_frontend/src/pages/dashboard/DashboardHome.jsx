@@ -65,11 +65,12 @@ export default function DashboardHome() {
     const recentActivity = dashboardData?.recent_activity || [];
 
     return (
-        <div className="max-w-6xl mx-auto w-full">
+        <div className="max-w-7xl mx-auto w-full">
             {/* Encabezado de bienvenida */}
             <PageHeader 
                 title={`Hola, ${user.name} 👋`} 
                 description="Bienvenido a SIBAP. Aquí tienes un resumen de tu actividad y bancos de preguntas." 
+                className="mb-10"
             />
 
 

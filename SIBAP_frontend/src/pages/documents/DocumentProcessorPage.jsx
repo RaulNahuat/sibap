@@ -96,6 +96,7 @@ const DocumentProcessorPage = () => {
                 <PageHeader 
                     title="Mis Documentos" 
                     description="Gestiona y procesa tus archivos para generar bancos de preguntas con inteligencia artificial." 
+                    className="mb-10"
                 />
                 <button
                     onClick={() => setShowUploadModal(true)}

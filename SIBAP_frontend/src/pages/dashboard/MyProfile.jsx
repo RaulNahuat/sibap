@@ -28,7 +28,7 @@ export default function MyProfile() {
     } = useProfile();
 
     return (
-        <div className="max-w-6xl mx-auto pb-24">
+        <div className="max-w-7xl mx-auto pb-24">
             {/* Estado de carga */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
@@ -43,6 +43,7 @@ export default function MyProfile() {
                     <PageHeader 
                         title="Mi Perfil" 
                         description="Gestiona tu información de contacto y detalles académicos." 
+                        className="mb-10"
                     />
 
                     {/* Tarjeta de edición de perfil */}

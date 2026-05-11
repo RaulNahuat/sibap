@@ -32,11 +32,12 @@ export default function MyBanksPage() {
     } = useMyBanks();
 
     return (
-        <div className="max-w-6xl mx-auto pb-32">
+        <div className="max-w-7xl mx-auto pb-32">
             {/* Header */}
             <PageHeader 
                 title="Mis Bancos de Preguntas" 
                 description="Gestiona, organiza y exporta tus bancos de preguntas. Todo tu progreso se guarda automáticamente para que nunca pierdas el hilo de tu trabajo." 
+                className="mb-10"
             />
 
             {/* Resumen de estadísticas */}
