@@ -1,7 +1,7 @@
 import { useState } from 'react'; // SIBAP_frontend casing fix
 import { useAuth } from '../../context/AuthContext';
 import ConfirmModal from '../../components/ui/ConfirmModal';
-import { useNavigate, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useNavigate, NavLink, Link, Outlet, useLocation } from 'react-router-dom';
 import { logout as logoutApi } from '../../api/auth';
 import {
   LayoutDashboard,
@@ -110,15 +110,15 @@ export default function DashboardPage() {
 
         {/* Footer */}
         <div className="pt-5 border-t border-[#e2e8f0] mt-auto space-y-1">
-          <a
-            href="/manual_usuario_sibap.html"
+          <Link
+            to="/manual_usuario_sibap.html"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-all w-full text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#102129]"
           >
             <Book className="w-[18px] h-[18px]" />
             Manual de Usuario
-          </a>
+          </Link>
           <NavLink
             to="/dashboard/support"
             onClick={closeSidebar}

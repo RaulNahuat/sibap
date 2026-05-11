@@ -15,6 +15,7 @@ import ValidateQuestionsPage from './pages/dashboard/ValidateQuestionsPage';
 import DocumentProcessorPage from './pages/documents/DocumentProcessorPage';
 import DocumentViewerPage from './pages/documents/DocumentViewerPage';
 import SupportPage from './pages/dashboard/SupportPage';
+import ManualPage from './pages/ManualPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/manual_usuario_sibap.html" element={<ManualPage />} />
             <Route
               path="/dashboard"
               element={
