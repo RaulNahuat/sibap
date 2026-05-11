@@ -270,7 +270,7 @@ export default function LoginPage() {
                   {[
                     { icon: Wand2, text: 'Generación asistida por IA contextual' },
                     { icon: FileCheck, text: 'Validación de reactivos en tiempo real' },
-                    { icon: Download, text: 'Formatos compatibles (XML, GIFT)' },
+                    { icon: Download, text: 'Formatos compatibles (XML)' },
                   ].map(({ icon: Icon, text }) => (
                     <li key={text} className="feature-li" style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
                       <div className="feature-icon" style={{ width: 36, height: 36, background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.16)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
