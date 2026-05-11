@@ -117,12 +117,12 @@ const DocumentList = ({
                                     />
                                 </div>
                                 <div className="min-w-0 flex-1">
-                                    <h4 className="text-[15px] font-bold text-[#0f172a] truncate mb-1" title={doc.filename}>
+                                    <h4 className="text-sm font-medium text-[#102129] truncate mb-1" title={doc.filename}>
                                         {doc.filename}
                                     </h4>
                                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                                        <p className="text-xs text-[#64748b] flex items-center gap-1">
-                                            <AlignLeft className="w-3 h-3" />
+                                        <p className="text-[13px] text-[#475569] flex items-center gap-1">
+                                            <AlignLeft className="w-3.5 h-3.5" />
                                             {doc.characters?.toLocaleString()} caracteres
                                         </p>
                                     </div>
@@ -138,8 +138,8 @@ const DocumentList = ({
                             </div>
 
                             {/* Fecha */}
-                            <div className="col-span-2 hidden md:flex items-center text-sm text-[#64748b] gap-1.5 font-medium">
-                                <Calendar className="w-4 h-4 text-slate-400" />
+                            <div className="col-span-2 hidden md:flex items-center text-sm text-[#475569] gap-1.5">
+                                <Calendar className="w-4 h-4 text-[#475569]" />
                                 {formatDate(doc.uploaded_at)}
                             </div>
 

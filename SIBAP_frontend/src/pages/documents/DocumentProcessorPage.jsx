@@ -90,7 +90,7 @@ const DocumentProcessorPage = () => {
     };
 
     return (
-        <div className="max-w-6xl mx-auto pb-24">
+        <div className="max-w-7xl mx-auto w-full pb-24">
             {/* Sección del header con el botón de subida */}
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <PageHeader 

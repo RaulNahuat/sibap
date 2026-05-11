@@ -24,11 +24,11 @@ export default function BankCard({
                     />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <h3 className="text-[15px] font-bold text-[#0f172a] truncate mb-1" title={bank.name}>
+                    <h3 className="text-sm font-medium text-[#102129] truncate mb-1" title={bank.name}>
                         {bank.name}
                     </h3>
-                    <p className="text-xs text-[#64748b] flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
+                    <p className="text-[13px] text-[#475569] flex items-center gap-1">
+                        <Calendar className="w-3.5 h-3.5" />
                         Modificado: {formatDate(bank.lastModified)}
                     </p>
                 </div>
@@ -36,7 +36,7 @@ export default function BankCard({
 
             {/* Materia y Taxonomía */}
             <div className="col-span-2 flex flex-col gap-1 ml-9 md:ml-0">
-                <span className="text-xs text-[#64748b] font-medium truncate" title={bank.subject}>
+                <span className="text-sm text-[#475569] truncate" title={bank.subject}>
                     {bank.subject}
                 </span>
                 <div className="flex flex-wrap items-center gap-1">

@@ -161,11 +161,11 @@ export default function QuestionCard({
                     <div className="overflow-hidden rounded-lg border border-[#e2e8f0]">
                         <table className="w-full text-sm">
                             <thead>
-                                <tr className="bg-[#f1f5f9]">
-                                    <th className="px-4 py-2 text-left text-xs font-bold text-[#64748b] uppercase tracking-wider w-1/2 border-r border-[#e2e8f0]">
+                                <tr className="bg-[#f8fafc]">
+                                    <th className="px-6 py-4 text-left text-[13px] font-semibold text-[#64748b] uppercase tracking-wider w-1/2 border-r border-[#e2e8f0]">
                                         Columna A — Término
                                     </th>
-                                    <th className="px-4 py-2 text-left text-xs font-bold text-[#64748b] uppercase tracking-wider w-1/2">
+                                    <th className="px-6 py-4 text-left text-[13px] font-semibold text-[#64748b] uppercase tracking-wider w-1/2">
                                         Columna B — Definición / Concepto
                                     </th>
                                 </tr>
@@ -177,7 +177,7 @@ export default function QuestionCard({
                                     const right = parts[1]?.trim() || '—';
                                     return (
                                         <tr key={answer.id} className={`border-t border-[#f1f5f9] ${idx % 2 === 0 ? 'bg-white' : 'bg-[#fafcff]'}`}>
-                                            <td className="px-4 py-3 font-medium text-[#102129] border-r border-[#e2e8f0]">
+                                            <td className="px-6 py-4 text-sm font-medium text-[#102129] border-r border-[#e2e8f0]">
                                                 <ReactMarkdown
                                                     remarkPlugins={[remarkGfm, remarkMath]}
                                                     rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
@@ -186,7 +186,7 @@ export default function QuestionCard({
                                                     {cleanText(left)}
                                                 </ReactMarkdown>
                                             </td>
-                                            <td className="px-4 py-3 text-[#475569]">
+                                            <td className="px-6 py-4 text-sm text-[#475569]">
                                                 <ReactMarkdown
                                                     remarkPlugins={[remarkGfm, remarkMath]}
                                                     rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
