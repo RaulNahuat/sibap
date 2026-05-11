@@ -96,7 +96,6 @@ const DocumentProcessorPage = () => {
                 <PageHeader 
                     title="Mis Documentos" 
                     description="Gestiona y procesa tus archivos para generar bancos de preguntas con inteligencia artificial." 
-                    className="mb-10"
                 />
                 <button
                     onClick={() => setShowUploadModal(true)}
@@ -221,35 +220,15 @@ const DocumentProcessorPage = () => {
                 handleViewDocument={handleViewDocument}
                 handleDelete={handleDelete}
                 searchTerm={searchTerm}
+                page={page}
+                totalPages={totalPages}
+                handlePageChange={handlePageChange}
+                loading={loading}
+                totalDocs={totalDocs}
             />
 
-            {/* Área de interacción (Paginación + Acciones) - Flujo Normal */}
+            {/* Área de interacción (Acciones masivas) */}
             <div className="mt-8 flex flex-col gap-6">
-                {/* Paginación */}
-                {totalPages > 1 && (
-                    <div className="px-6 py-3 bg-white border border-gray-200 rounded-2xl shadow-sm flex items-center justify-between transition-all">
-                        <div className="text-xs font-bold text-[#1a5276]">
-                            Página {page} de {totalPages}
-                        </div>
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => handlePageChange(page - 1)}
-                                disabled={page === 1 || loading}
-                                className="p-1.5 rounded-lg border border-gray-200 text-[#1a5276] hover:bg-[#eaf3f7] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronLeft className="w-5 h-5" />
-                            </button>
-                            <button
-                                onClick={() => handlePageChange(page + 1)}
-                                disabled={page === totalPages || loading}
-                                className="p-1.5 rounded-lg border border-gray-200 text-[#1a5276] hover:bg-[#eaf3f7] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                            >
-                                <ChevronRight className="w-5 h-5" />
-                            </button>
-                        </div>
-                    </div>
-                )}
-
                 {/* Acciones masivas */}
                 {selectedDocs.length > 0 && (
                     <div className="mt-4 bg-[#1a5276] text-white p-2.5 sm:p-3 rounded-xl shadow-md flex items-center justify-between gap-2 border border-blue-900/30 animate-in fade-in slide-in-from-top-2 duration-300">

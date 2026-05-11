@@ -27,6 +27,7 @@ export default function MyBanksPage() {
         handleDeleteBank,
         handleExport,
         toggleSelectBank,
+        toggleSelectAll,
         handleDeleteSelected,
         confirmDelete
     } = useMyBanks();
@@ -87,7 +88,33 @@ export default function MyBanksPage() {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 gap-5">
+                    <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm flex flex-col">
+                        {/* Header de tabla - Oculto en móvil */}
+                        <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-slate-50 border-b border-gray-200 shrink-0">
+                            <div className="col-span-1 flex items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={selectedBanks.length === filteredCount && filteredCount > 0}
+                                    onChange={toggleSelectAll}
+                                    className="w-5 h-5 rounded border-gray-300 text-[#1a5276] focus:ring-[#1a5276] transition-transform active:scale-90"
+                                />
+                            </div>
+                            <div className="col-span-4 text-xs font-medium text-[#7b8a8a]">
+                                Nombre del banco
+                            </div>
+                            <div className="col-span-2 text-xs font-medium text-[#7b8a8a]">
+                                Materia / Taxonomía
+                            </div>
+                            <div className="col-span-2 text-xs font-medium text-[#7b8a8a]">
+                                Estado / Validación
+                            </div>
+                            <div className="col-span-3 text-xs font-medium text-[#7b8a8a] text-right">
+                                Acciones
+                            </div>
+                        </div>
+
+                        {/* Filas de bancos */}
+                        <div className="flex flex-col">
                             {paginatedBanks.map((bank) => (
                                 <BankCard 
                                     key={bank.id}
@@ -100,10 +127,8 @@ export default function MyBanksPage() {
                                 />
                             ))}
                         </div>
-
                         {/* Paginación */}
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-between mt-10 bg-white border border-slate-100 rounded-3xl p-4 shadow-sm">
+                        <div className="flex items-center justify-between p-4 bg-white border-t border-gray-200">
                                 <span className="text-sm font-medium text-[#64748b] ml-2">
                                     Mostrando {paginatedBanks.length} de {filteredCount} bancos
                                 </span>
@@ -150,8 +175,8 @@ export default function MyBanksPage() {
                                     </button>
                                 </div>
                             </div>
-                        )}
-                    </>
+                        </div>
+                        </>
                 )}
             </div>
 

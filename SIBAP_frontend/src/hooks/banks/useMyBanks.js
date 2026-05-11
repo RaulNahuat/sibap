@@ -88,6 +88,15 @@ export function useMyBanks() {
         );
     };
 
+    // seleccionar todos los bancos filtrados
+    const toggleSelectAll = () => {
+        if (selectedBanks.length === filteredBanks.length && filteredBanks.length > 0) {
+            setSelectedBanks([]);
+        } else {
+            setSelectedBanks(filteredBanks.map(b => b.id));
+        }
+    };
+
     // eliminar bancos seleccionados
     const handleDeleteSelected = () => {
         if (selectedBanks.length === 0) return;
@@ -164,6 +173,7 @@ export function useMyBanks() {
         handleDeleteBank,
         handleExport,
         toggleSelectBank,
+        toggleSelectAll,
         handleDeleteSelected,
         confirmDelete
     };
