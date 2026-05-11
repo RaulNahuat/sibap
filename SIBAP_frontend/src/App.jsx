@@ -29,7 +29,7 @@ function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/manual_usuario_sibap.html" element={<ManualPage />} />
+            <Route path="/manual-de-usuario" element={<ManualPage />} />
             <Route
               path="/dashboard"
               element={

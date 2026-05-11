@@ -1,13 +1,6 @@
 import React, { useEffect } from 'react';
 
-const manualHtml = `
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manual de Usuario - SIBAP</title>
+const manualContent = `
     <style>
         :root {
             --primary: #1a5276;
@@ -19,21 +12,18 @@ const manualHtml = `
             --white: #ffffff;
         }
 
-        /* Tamaño y Márgenes (@page) */
         @page {
             size: letter;
             margin: 1in;
         }
 
-        /* Contención y Tipografía General */
         * {
             box-sizing: border-box;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
 
-        html,
-        body {
+        html, body {
             margin: 0;
             padding: 0;
             width: 100%;
@@ -50,7 +40,6 @@ const manualHtml = `
             align-items: center;
         }
 
-        /* Estenedor de página para visualización en pantalla */
         .page {
             width: 8.5in;
             min-height: 11in;
@@ -59,10 +48,8 @@ const manualHtml = `
             margin: 20px 0;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
             position: relative;
-            /* Paginación */
             page-break-after: always;
             break-after: page;
-            /* Contención del Contenido */
             overflow-wrap: break-word;
             word-wrap: break-word;
             word-break: normal;
@@ -74,27 +61,18 @@ const manualHtml = `
             margin-bottom: 40px;
         }
 
-        img,
-        table,
-        pre,
-        code {
+        img, table, pre, code {
             max-width: 100% !important;
             height: auto;
             overflow-wrap: break-word;
         }
 
-        p,
-        li,
-        .note,
-        img,
-        h3 {
+        p, li, .note, img, h3 {
             page-break-inside: avoid;
             break-inside: avoid;
         }
 
-        h1,
-        h2,
-        h3 {
+        h1, h2, h3 {
             page-break-after: avoid;
             break-after: avoid;
         }
@@ -140,8 +118,7 @@ const manualHtml = `
             text-align: justify;
         }
 
-        ul,
-        ol {
+        ul, ol {
             margin-bottom: 15px;
             padding-left: 25px;
         }
@@ -178,7 +155,6 @@ const manualHtml = `
             color: #94a3b8;
         }
 
-        /* Estilos de Impresión (@media print) */
         @media print {
             body {
                 background-color: transparent !important;
@@ -191,7 +167,6 @@ const manualHtml = `
                 box-shadow: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                /* El margen real lo da @page margin: 1in */
                 width: 100% !important;
                 height: auto !important;
                 min-height: auto !important;
@@ -204,22 +179,16 @@ const manualHtml = `
                 break-after: auto !important;
             }
 
-            .page-number,
-            footer {
+            .page-number, footer {
                 bottom: 0 !important;
                 position: absolute;
             }
 
-            /* Eliminar elementos innecesarios en papel (si hubiera botones) */
             .no-print {
                 display: none !important;
             }
         }
     </style>
-</head>
-
-<body>
-
     <!-- PÁGINA 1 -->
     <div class="page">
         <div class="header">
@@ -353,18 +322,51 @@ const manualHtml = `
         </footer>
         <div class="page-number">3</div>
     </div>
-
-</body>
-
-</html>
 `;
 
 export default function ManualPage() {
     useEffect(() => {
         document.title = "Manual de Usuario - SIBAP";
+
+        const originalBg = document.body.style.backgroundColor;
+        const originalDisplay = document.body.style.display;
+        const originalFlexDirection = document.body.style.flexDirection;
+        const originalAlignItems = document.body.style.alignItems;
+        const originalMargin = document.body.style.margin;
+        const originalPadding = document.body.style.padding;
+
+        document.body.style.backgroundColor = '#cbd5e1';
+        document.body.style.display = 'flex';
+        document.body.style.flexDirection = 'column';
+        document.body.style.alignItems = 'center';
+        document.body.style.margin = '0';
+        document.body.style.padding = '0';
+
+
+        const root = document.getElementById('root');
+        const originalRootOverflow = root ? root.style.overflow : null;
+        const originalRootHeight = root ? root.style.height : null;
+        if (root) {
+            root.style.overflow = 'auto';
+            root.style.height = 'auto';
+        }
+
+        return () => {
+            document.body.style.backgroundColor = originalBg;
+            document.body.style.display = originalDisplay;
+            document.body.style.flexDirection = originalFlexDirection;
+            document.body.style.alignItems = originalAlignItems;
+            document.body.style.margin = originalMargin;
+            document.body.style.padding = originalPadding;
+
+            if (root) {
+                root.style.overflow = originalRootOverflow || '';
+                root.style.height = originalRootHeight || '';
+            }
+        };
     }, []);
 
     return (
-        <div dangerouslySetInnerHTML={{ __html: manualHtml }} />
+        <div dangerouslySetInnerHTML={{ __html: manualContent }} />
     );
 }

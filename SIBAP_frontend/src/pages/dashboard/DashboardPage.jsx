@@ -111,7 +111,7 @@ export default function DashboardPage() {
         {/* Footer */}
         <div className="pt-5 border-t border-[#e2e8f0] mt-auto space-y-1">
           <Link
-            to="/manual_usuario_sibap.html"
+            to="/manual-de-usuario"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-all w-full text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#102129]"

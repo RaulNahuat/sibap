@@ -13,7 +13,7 @@ import {
     Book,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { getDashboardStats } from '../../api/dashboard';
 import PageHeader from '../../components/ui/PageHeader';
 
@@ -123,15 +123,15 @@ export default function DashboardHome() {
                     </p>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                    <a
-                        href="/manual_usuario_sibap.html"
+                    <Link
+                        to="/manual-de-usuario"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="bg-[#1a5276]/40 text-white border border-white/20 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#1a5276]/60 transition-colors"
                     >
                         <Book className="w-[18px] h-[18px]" />
                         Ver Manual
-                    </a>
+                    </Link>
                     <button
                         onClick={() => navigate('/dashboard/new-bank')}
                         className="bg-white text-[#1a5276] px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform shadow-md"
