@@ -1,10 +1,11 @@
-import { FolderOpen } from 'lucide-react';
+import { FolderOpen, ChevronLeft, ChevronRight } from 'lucide-react';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useMyBanks } from '../../hooks/banks/useMyBanks';
 import BankStatsCards from '../../components/banks/BankStatsCards';
 import BankFilters from '../../components/banks/BankFilters';
 import BankCard from '../../components/banks/BankCard';
 import BulkActionsBar from '../../components/banks/BulkActionsBar';
+import PageHeader from '../../components/ui/PageHeader';
 
 export default function MyBanksPage() {
     const {
@@ -16,7 +17,11 @@ export default function MyBanksPage() {
         setDeletingBank,
         loading,
         selectedBanks,
-        filteredBanks,
+        paginatedBanks,
+        currentPage,
+        setCurrentPage,
+        totalPages,
+        filteredCount,
         stats,
         handleOpenBank,
         handleDeleteBank,
@@ -27,16 +32,15 @@ export default function MyBanksPage() {
     } = useMyBanks();
 
     return (
-        <div className="max-w-6xl mx-auto pb-20">
+        <div className="max-w-6xl mx-auto pb-32">
             {/* Header */}
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-[#102129] mb-2">
-                    Mis Bancos de Preguntas
-                </h1>
-                <p className="text-[15px] text-[#64748b]">
-                    Gestiona y continúa trabajando en tus bancos guardados.
-                </p>
-            </div>
+            <PageHeader 
+                title="Mis Bancos de Preguntas" 
+                description="Gestiona, organiza y exporta tus bancos de preguntas. Todo tu progreso se guarda automáticamente para que nunca pierdas el hilo de tu trabajo." 
+            />
+
+            {/* Resumen de estadísticas */}
+            <BankStatsCards stats={stats} />
 
             {/* Filtros y búsqueda */}
             <BankFilters 
@@ -46,48 +50,111 @@ export default function MyBanksPage() {
                 setFilterStatus={setFilterStatus} 
             />
 
-            {/* Resumen de estadísticas */}
-            <BankStatsCards stats={stats} />
-
-            {/* Lista de bancos con scroll interno */}
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col max-h-[60vh] sm:max-h-[70vh]">
-                <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-thin scrollbar-thumb-slate-200">
-                    {loading ? (
-                        <div className="flex items-center justify-center py-12">
-                            <div className="text-center">
-                                <div className="w-10 h-10 border-4 border-[#1a5276] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                                <p className="text-sm text-[#64748b]">Cargando bancos...</p>
+            {/* Lista de bancos */}
+            <div className="space-y-6">
+                {loading ? (
+                    <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm p-20 flex flex-col items-center justify-center">
+                        <div className="relative">
+                            <div className="w-16 h-16 border-4 border-[#1a5276]/10 border-t-[#1a5276] rounded-full animate-spin"></div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="w-8 h-8 bg-white rounded-full shadow-sm"></div>
                             </div>
                         </div>
-                    ) : filteredBanks.length === 0 ? (
-                        <div className="p-12 text-center">
-                            <FolderOpen className="w-12 h-12 text-[#cbd5e1] mx-auto mb-3" />
-                            <h3 className="text-base font-semibold text-[#102129] mb-1">
-                                {searchTerm || filterStatus !== 'all' ? 'No se encontraron bancos' : 'No tienes bancos guardados'}
-                            </h3>
-                            <p className="text-sm text-[#64748b]">
-                                {searchTerm || filterStatus !== 'all'
-                                    ? 'Intenta ajustar tus filtros de búsqueda'
-                                    : 'Crea tu primer banco de preguntas para comenzar'}
-                            </p>
+                        <p className="mt-6 text-sm font-bold text-[#102129] uppercase tracking-widest">Sincronizando bancos...</p>
+                    </div>
+                ) : paginatedBanks.length === 0 ? (
+                    <div className="bg-white rounded-[40px] border-2 border-dashed border-slate-200 p-16 text-center shadow-sm">
+                        <div className="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                            <FolderOpen className="w-10 h-10 text-slate-300" />
                         </div>
-                    ) : (
-                        filteredBanks.map((bank) => (
-                            <BankCard 
-                                key={bank.id}
-                                bank={bank}
-                                isSelected={selectedBanks.includes(bank.id)}
-                                onToggleSelect={toggleSelectBank}
-                                onOpen={handleOpenBank}
-                                onExport={handleExport}
-                                onDelete={handleDeleteBank}
-                            />
-                        ))
-                    )}
-                </div>
+                        <h3 className="text-xl font-black text-[#102129] mb-2">
+                            {searchTerm || filterStatus !== 'all' ? 'Sin resultados' : 'Tu biblioteca está vacía'}
+                        </h3>
+                        <p className="text-[#64748b] text-[15px] max-w-sm mx-auto mb-8 font-medium">
+                            {searchTerm || filterStatus !== 'all'
+                                ? 'No encontramos ningún banco que coincida con tu búsqueda actual.'
+                                : 'Aún no has creado ningún banco de preguntas. ¡Comienza uno nuevo ahora!'}
+                        </p>
+                        {(searchTerm || filterStatus !== 'all') && (
+                            <button 
+                                onClick={() => { setSearchTerm(''); setFilterStatus('all'); }}
+                                className="px-6 py-3 bg-[#1a5276] text-white rounded-2xl font-bold text-sm hover:bg-[#2471a3] transition-all shadow-lg shadow-[#1a5276]/20 active:scale-95"
+                            >
+                                Limpiar filtros
+                            </button>
+                        )}
+                    </div>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-1 gap-5">
+                            {paginatedBanks.map((bank) => (
+                                <BankCard 
+                                    key={bank.id}
+                                    bank={bank}
+                                    isSelected={selectedBanks.includes(bank.id)}
+                                    onToggleSelect={toggleSelectBank}
+                                    onOpen={handleOpenBank}
+                                    onExport={handleExport}
+                                    onDelete={handleDeleteBank}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Paginación */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between mt-10 bg-white border border-slate-100 rounded-3xl p-4 shadow-sm">
+                                <span className="text-sm font-medium text-[#64748b] ml-2">
+                                    Mostrando {paginatedBanks.length} de {filteredCount} bancos
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                        className="p-2 rounded-xl text-[#1a5276] bg-slate-50 hover:bg-[#1a5276] hover:text-white disabled:opacity-30 disabled:hover:bg-slate-50 disabled:hover:text-[#1a5276] transition-all active:scale-90"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                    </button>
+                                    
+                                    <div className="flex items-center gap-1">
+                                        {[...Array(totalPages)].map((_, i) => {
+                                            const page = i + 1;
+                                            if (totalPages > 7) {
+                                                if (page !== 1 && page !== totalPages && Math.abs(page - currentPage) > 1) {
+                                                    if (page === currentPage - 2 || page === currentPage + 2) return <span key={page} className="px-1 text-slate-300">...</span>;
+                                                    return null;
+                                                }
+                                            }
+                                            return (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={`w-10 h-10 rounded-xl text-sm font-bold transition-all active:scale-90 ${
+                                                        currentPage === page 
+                                                            ? 'bg-[#1a5276] text-white shadow-lg shadow-[#1a5276]/20' 
+                                                            : 'text-[#64748b] hover:bg-slate-100'
+                                                    }`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                        className="p-2 rounded-xl text-[#1a5276] bg-slate-50 hover:bg-[#1a5276] hover:text-white disabled:opacity-30 disabled:hover:bg-slate-50 disabled:hover:text-[#1a5276] transition-all active:scale-90"
+                                    >
+                                        <ChevronRight className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
 
-            {/* Barra de acciones para bancos seleccionados*/}
+            {/* Barra de acciones para bancos seleccionados */}
             <BulkActionsBar 
                 selectedCount={selectedBanks.length} 
                 onDeleteSelected={handleDeleteSelected} 

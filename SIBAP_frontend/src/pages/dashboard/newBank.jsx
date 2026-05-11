@@ -18,6 +18,7 @@ import Step2AcademicParams from '../../components/newBank/Step2AcademicParams';
 import Step3AIConfig from '../../components/newBank/Step3AIConfig';
 import PromptPreviewModal from '../../components/newBank/PromptPreviewModal';
 import { getAIModels } from '../../api/config';
+import PageHeader from '../../components/ui/PageHeader';
 
 export default function NewBankPage() {
     const location = useLocation();
@@ -168,20 +169,16 @@ export default function NewBankPage() {
     };
 
     return (
-        <div className="max-w-5xl mx-auto pb-12 sm:pb-24 px-1 sm:px-0">
+        <div className="max-w-6xl mx-auto pb-12 sm:pb-24 px-1 sm:px-0">
             {/* Header */}
             <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-[#102129] mb-1 sm:mb-2">
-                        Nuevo Banco de Preguntas
-                    </h1>
-                    <p className="text-sm sm:text-[15px] text-[#64748b]">
-                        Completa los 3 pasos para generar tu examen.
-                    </p>
-                </div>
+                <PageHeader 
+                    title="Nuevo Banco de Preguntas" 
+                    description="Completa los 3 pasos para generar tu examen." 
+                />
                 <button
                     onClick={handleClearAll}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#64748b] hover:text-[#1a5276] hover:bg-white rounded-lg transition-all border border-transparent hover:border-[#e2e8f0] self-end sm:self-auto"
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#64748b] hover:text-[#1a5276] hover:bg-white rounded-lg transition-all border border-transparent hover:border-[#e2e8f0] self-end sm:self-auto mb-10"
                 >
                     <RotateCcw className="w-4 h-4" />
                     Limpiar

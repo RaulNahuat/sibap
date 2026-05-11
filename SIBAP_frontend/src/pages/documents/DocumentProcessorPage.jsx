@@ -15,6 +15,7 @@ import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useDocuments } from '../../hooks/documents/useDocuments';
 import DocumentUploadModal from '../../components/documents/DocumentUploadModal';
 import DocumentList from '../../components/documents/DocumentList';
+import PageHeader from '../../components/ui/PageHeader';
 
 const DocumentProcessorPage = () => {
     const navigate = useNavigate();
@@ -89,17 +90,13 @@ const DocumentProcessorPage = () => {
     };
 
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 pb-24">
+        <div className="max-w-6xl mx-auto pb-24">
             {/* Sección del header con el botón de subida */}
             <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                    <h1 className="text-3xl font-extrabold text-[#1a5276] tracking-tight mb-2">
-                        Mis Documentos
-                    </h1>
-                    <p className="text-[#64748b] text-[15px] max-w-lg">
-                        Gestiona y procesa tus archivos para generar bancos de preguntas con inteligencia artificial.
-                    </p>
-                </div>
+                <PageHeader 
+                    title="Mis Documentos" 
+                    description="Gestiona y procesa tus archivos para generar bancos de preguntas con inteligencia artificial." 
+                />
                 <button
                     onClick={() => setShowUploadModal(true)}
                     className="shrink-0 flex items-center justify-center gap-2 px-6 py-3 bg-[#1a5276] text-white rounded-xl hover:bg-[#154360] transition-all font-semibold shadow-md active:scale-95"

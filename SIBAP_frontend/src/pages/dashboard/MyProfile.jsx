@@ -3,6 +3,7 @@ import { useProfile } from '../../hooks/profile/useProfile';
 import ProfileInfoCard from '../../components/profile/ProfileInfoCard';
 import ProfileSecurityCard from '../../components/profile/ProfileSecurityCard';
 import ProfileDeleteCard from '../../components/profile/ProfileDeleteCard';
+import PageHeader from '../../components/ui/PageHeader';
 
 export default function MyProfile() {
     const {
@@ -27,7 +28,7 @@ export default function MyProfile() {
     } = useProfile();
 
     return (
-        <div className="max-w-[1000px] w-full mx-auto pb-24">
+        <div className="max-w-6xl mx-auto pb-24">
             {/* Estado de carga */}
             {loading ? (
                 <div className="flex items-center justify-center py-12">
@@ -39,14 +40,10 @@ export default function MyProfile() {
             ) : (
                 <>
                     {/* Encabezado de la sección */}
-                    <div className="mb-6">
-                        <h2 className="text-2xl font-bold text-[#1a5276] mb-2">
-                            Información Personal
-                        </h2>
-                        <p className="text-sm text-[#64748b]">
-                            Gestiona tu información de contacto y detalles académicos.
-                        </p>
-                    </div>
+                    <PageHeader 
+                        title="Mi Perfil" 
+                        description="Gestiona tu información de contacto y detalles académicos." 
+                    />
 
                     {/* Tarjeta de edición de perfil */}
                     <ProfileInfoCard

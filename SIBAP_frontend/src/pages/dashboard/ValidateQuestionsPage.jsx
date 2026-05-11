@@ -8,6 +8,7 @@ import RegenerateDialog from '../../components/questions/RegenerateDialog';
 import { useQuestionValidation } from '../../hooks/questions/useQuestionValidation';
 import BankInfoHeader from '../../components/questions/BankInfoHeader';
 import ExportSection from '../../components/questions/ExportSection';
+import PageHeader from '../../components/ui/PageHeader';
 
 export default function ValidateQuestionsPage() {
     const navigate = useNavigate();
@@ -63,14 +64,10 @@ export default function ValidateQuestionsPage() {
             </div>
 
             {/* Header */}
-            <div className="mb-6 sm:mb-8">
-                <h1 className="text-xl sm:text-2xl font-bold text-[#102129] mb-1 sm:mb-2">
-                    Validación de Reactivos
-                </h1>
-                <p className="text-sm sm:text-[15px] text-[#64748b]">
-                    Revise y edite las preguntas generadas antes de exportar.
-                </p>
-            </div>
+            <PageHeader 
+                title="Validación de Reactivos" 
+                description="Revise y edite las preguntas generadas antes de exportar." 
+            />
 
             {/* Tarjeta de información del banco */}
             <BankInfoHeader

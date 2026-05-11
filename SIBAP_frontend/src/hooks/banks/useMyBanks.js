@@ -12,10 +12,19 @@ export function useMyBanks() {
     const [deletingBank, setDeletingBank] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedBanks, setSelectedBanks] = useState([]);
+    
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 8;
 
     useEffect(() => {
         loadBanks();
     }, []);
+
+    // Reset pagination when searching or filtering
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, filterStatus]);
 
     // cargar bancos
     const loadBanks = async () => {
@@ -122,6 +131,12 @@ export function useMyBanks() {
         return matchesSearch && matchesFilter;
     });
 
+    // Pagination logic
+    const totalPages = Math.ceil(filteredBanks.length / itemsPerPage);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const paginatedBanks = filteredBanks.slice(indexOfFirstItem, indexOfLastItem);
+
     // estadísticas de los bancos
     const stats = {
         total: banks.length,
@@ -139,7 +154,11 @@ export function useMyBanks() {
         setDeletingBank,
         loading,
         selectedBanks,
-        filteredBanks,
+        paginatedBanks,
+        filteredCount: filteredBanks.length,
+        currentPage,
+        setCurrentPage,
+        totalPages,
         stats,
         handleOpenBank,
         handleDeleteBank,

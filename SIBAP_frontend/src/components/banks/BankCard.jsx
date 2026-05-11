@@ -1,13 +1,13 @@
 import { CheckCircle, Clock, Calendar, Download, FolderOpen, Edit3, Trash2 } from 'lucide-react';
 import { formatDate } from '../../utils/dateUtils';
 
-export default function BankCard({ 
-    bank, 
-    isSelected, 
-    onToggleSelect, 
-    onOpen, 
-    onExport, 
-    onDelete 
+export default function BankCard({
+    bank,
+    isSelected,
+    onToggleSelect,
+    onOpen,
+    onExport,
+    onDelete
 }) {
     return (
         <div
@@ -61,7 +61,7 @@ export default function BankCard({
                         {formatDate(bank.lastModified)}
                     </span>
                 </div>
-                
+
                 {/* Barra de progreso dentro de la tarjeta */}
                 <div className="mt-4">
                     <div className="flex items-center justify-between mb-1.5 px-1">

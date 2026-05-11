@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { getDashboardStats } from '../../api/dashboard';
+import PageHeader from '../../components/ui/PageHeader';
 
 export default function DashboardHome() {
     const { user } = useAuth();
@@ -64,16 +65,12 @@ export default function DashboardHome() {
     const recentActivity = dashboardData?.recent_activity || [];
 
     return (
-        <>
+        <div className="max-w-6xl mx-auto w-full">
             {/* Encabezado de bienvenida */}
-            <div className="mb-8">
-                <h1 className="text-2xl font-bold text-[#102129] mb-2">
-                    Hola, {user.name} 👋
-                </h1>
-                <p className="text-[15px] text-[#64748b]">
-                    Bienvenido a SIBAP. Aquí tienes un resumen de tu actividad y bancos de preguntas.
-                </p>
-            </div>
+            <PageHeader 
+                title={`Hola, ${user.name} 👋`} 
+                description="Bienvenido a SIBAP. Aquí tienes un resumen de tu actividad y bancos de preguntas." 
+            />
 
 
             {/* Grid de estadísticas */}
@@ -238,6 +235,6 @@ export default function DashboardHome() {
                     </tbody>
                 </table>
             </div>
-        </>
+        </div>
     );
 }

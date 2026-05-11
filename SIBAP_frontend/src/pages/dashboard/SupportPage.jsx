@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Mail, FileText, Send, Download } from 'lucide-react';
 import toast from 'react-hot-toast';
+import PageHeader from '../../components/ui/PageHeader';
 
 export default function SupportPage() {
     const [subject, setSubject] = useState('');
@@ -25,15 +26,11 @@ export default function SupportPage() {
     };
 
     return (
-        <div className="max-w-[1000px] w-full mx-auto pb-24">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-[#1a5276] mb-2">
-                    Centro de Soporte
-                </h1>
-                <p className="text-base text-[#64748b]">
-                    ¿Tienes dudas o necesitas ayuda con SIBAP? Estamos aquí para ayudarte.
-                </p>
-            </div>
+        <div className="max-w-6xl mx-auto pb-24">
+            <PageHeader 
+                title="Centro de Soporte" 
+                description="¿Tienes dudas o necesitas ayuda con SIBAP? Estamos aquí para ayudarte." 
+            />
 
             <div className="flex justify-center">
                 {/* Formulario de Contacto */}
