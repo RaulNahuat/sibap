@@ -14,6 +14,7 @@ import MyProfile from './pages/dashboard/MyProfile';
 import ValidateQuestionsPage from './pages/dashboard/ValidateQuestionsPage';
 import DocumentProcessorPage from './pages/documents/DocumentProcessorPage';
 import DocumentViewerPage from './pages/documents/DocumentViewerPage';
+import SupportPage from './pages/dashboard/SupportPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
               <Route path="validate" element={<ValidateQuestionsPage />} />
               <Route path="documents" element={<DocumentProcessorPage />} />
               <Route path="documents/:id" element={<DocumentViewerPage />} />
+              <Route path="support" element={<SupportPage />} />
             </Route>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -15,6 +15,7 @@ import {
   FileText,
   Menu,
   X,
+  Book,
 } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -49,6 +50,9 @@ export default function DashboardPage() {
   const getPageTitle = () => {
     if (location.pathname.includes('/dashboard/validate')) {
       return 'Validación de Reactivos';
+    }
+    if (location.pathname.includes('/dashboard/support')) {
+      return 'Soporte y Ayuda';
     }
     const currentNav = navItems.find(item => {
       if (item.end) {
@@ -105,11 +109,27 @@ export default function DashboardPage() {
         </nav>
 
         {/* Footer */}
-        <div className="pt-5 border-t border-[#e2e8f0] mt-auto">
-          <button className="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#102129] w-full transition-all">
+        <div className="pt-5 border-t border-[#e2e8f0] mt-auto space-y-1">
+          <a
+            href="/manual_usuario_sibap.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-all w-full text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#102129]"
+          >
+            <Book className="w-[18px] h-[18px]" />
+            Manual de Usuario
+          </a>
+          <NavLink
+            to="/dashboard/support"
+            onClick={closeSidebar}
+            className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-all w-full ${isActive
+              ? 'bg-[#e9f5f8] text-[#1a5276]'
+              : 'text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#102129]'
+              }`}
+          >
             <LifeBuoy className="w-[18px] h-[18px]" />
             Soporte
-          </button>
+          </NavLink>
         </div>
       </aside>
 

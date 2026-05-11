@@ -10,6 +10,7 @@ import {
     Edit3,
     Play,
     Trash2,
+    Book,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -120,16 +121,27 @@ export default function DashboardHome() {
                         Crear un Nuevo Banco de Preguntas
                     </h3>
                     <p className="text-xs sm:text-[15px] text-blue-100">
-                        Sube tus materiales (PDF, DOCX. TXT, PPTX) y deja que la IA genere tus reactivos personalizados.
+                        Sube tus materiales (PDF, DOCX, TXT, PPTX) y deja que la IA genere tus reactivos personalizados.
                     </p>
                 </div>
-                <button
-                    onClick={() => navigate('/dashboard/new-bank')}
-                    className="w-full sm:w-auto bg-white text-[#1a5276] px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform shadow-md"
-                >
-                    <Sparkles className="w-[18px] h-[18px]" />
-                    Comenzar ahora
-                </button>
+                <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                    <a
+                        href="/manual_usuario_sibap.html"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-[#1a5276]/40 text-white border border-white/20 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#1a5276]/60 transition-colors"
+                    >
+                        <Book className="w-[18px] h-[18px]" />
+                        Ver Manual
+                    </a>
+                    <button
+                        onClick={() => navigate('/dashboard/new-bank')}
+                        className="bg-white text-[#1a5276] px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:-translate-y-0.5 transition-transform shadow-md"
+                    >
+                        <Sparkles className="w-[18px] h-[18px]" />
+                        Comenzar ahora
+                    </button>
+                </div>
             </div>
 
             {/* Actividad reciente */}
