@@ -74,7 +74,12 @@ export function useQuestionValidation(bankData) {
                                     })
                                 };
                             });
-                            setQuestions(mergedQuestions);
+
+                            // Agregar preguntas del servidor que no están en el caché local
+                            const cachedIds = new Set(questions.map(q => q.id));
+                            const newFromServer = mappedQuestions.filter(sq => !cachedIds.has(sq.id));
+
+                            setQuestions([...mergedQuestions, ...newFromServer]);
                         }
                     }
                 } catch (error) {
