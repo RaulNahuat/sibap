@@ -45,6 +45,11 @@ export const addManualQuestion = async (configId, data) => {
 };
 
 
+export const deleteQuestion = async (questionId) => {
+    await apiClient.delete(`/api/questions/${questionId}`);
+};
+
+
 export const checkGenerationStatus = async (configId) => {
     const response = await apiClient.get(`/api/questions/status/${configId}`);
     return response.data;

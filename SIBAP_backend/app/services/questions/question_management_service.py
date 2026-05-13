@@ -46,6 +46,16 @@ def add_manual_question(db: Session, config_id: int, user_id: int, question_text
     return reactivo
 
 
+def delete_question(db: Session, question_id: int, user_id: int) -> bool:
+    q_repo = QuestionRepository(db)
+    reactivo = q_repo.get_question_by_id(question_id)
+    if not reactivo or reactivo.configuracion.documento.user_id != user_id:
+        return False
+    db.delete(reactivo)
+    db.commit()
+    return True
+
+
 def update_questions_batch(db: Session, updates: List[dict], user_id: int):
     q_repo = QuestionRepository(db)
     results = []

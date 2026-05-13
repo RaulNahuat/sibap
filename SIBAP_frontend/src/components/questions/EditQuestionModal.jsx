@@ -222,8 +222,8 @@ export default function EditQuestionModal({
 
                             {/* Cabecera de columnas */}
                             <div className="grid grid-cols-[1fr_1fr_auto] gap-2 px-1">
-                                <span className="text-[9px] font-bold text-[#64748b] uppercase tracking-widest">Columna A — Término</span>
-                                <span className="text-[9px] font-bold text-[#64748b] uppercase tracking-widest">Columna B — Definición</span>
+                                <span className="text-[9px] font-bold text-[#64748b] uppercase tracking-widest">Columna A — Definición / Concepto</span>
+                                <span className="text-[9px] font-bold text-[#64748b] uppercase tracking-widest">Columna B — Término</span>
                                 <span className="w-7" />
                             </div>
 

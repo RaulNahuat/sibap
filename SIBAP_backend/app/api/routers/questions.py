@@ -236,6 +236,27 @@ def add_manual_question(
     return reactivo
 
 
+@router.delete(
+    "/{question_id}",
+    status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_question(
+    question_id: int,
+    current_user: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    deleted = question_service.delete_question(
+        db=db,
+        question_id=question_id,
+        user_id=current_user.id
+    )
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Pregunta no encontrada o no autorizada"
+        )
+
+
 @router.get("/bank/{config_id}/export/gift", response_class=PlainTextResponse)
 def export_questions_gift(
     config_id: int,

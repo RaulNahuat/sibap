@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import useLocalStorage from '../useLocalStorage';
 import { useAuth } from '../../context/AuthContext';
-import { getBankQuestions, regenerateQuestion, updateBank, addManualQuestion } from '../../api/questions';
+import { getBankQuestions, regenerateQuestion, updateBank, addManualQuestion, deleteQuestion } from '../../api/questions';
 import apiClient from '../../api/client';
 
 export function useQuestionValidation(bankData) {
@@ -137,9 +137,17 @@ export function useQuestionValidation(bankData) {
 
     const handleDelete = (question) => setDeletingQuestion(question);
 
-    const confirmDelete = () => {
-        setQuestions(questions.filter((q) => q.id !== deletingQuestion.id));
+    const confirmDelete = async () => {
+        const questionToDelete = deletingQuestion;
+        setQuestions(questions.filter((q) => q.id !== questionToDelete.id));
         setDeletingQuestion(null);
+
+        try {
+            await deleteQuestion(questionToDelete.id);
+        } catch (error) {
+            console.error('Error al eliminar la pregunta:', error);
+            toast.error('No se pudo eliminar la pregunta del servidor. Intenta de nuevo.');
+        }
     };
 
     const handleRegenerateClick = (question) => {

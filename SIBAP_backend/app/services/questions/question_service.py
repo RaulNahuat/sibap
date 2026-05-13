@@ -53,5 +53,8 @@ def add_manual_question(db: Session, config_id: int, user_id: int, question_text
         feedback_incorrect=feedback_incorrect, question_type=question_type
     )
 
+def delete_question(db: Session, question_id: int, user_id: int) -> bool:
+    return question_management_service.delete_question(db, question_id, user_id)
+
 def update_questions_batch(db: Session, updates: List[dict], user_id: int):
     return question_management_service.update_questions_batch(db, updates, user_id)

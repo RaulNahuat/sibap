@@ -167,10 +167,10 @@ export default function QuestionCard({
                             <thead>
                                 <tr className="bg-[#f8fafc]">
                                     <th className="px-6 py-4 text-left text-[13px] font-semibold text-[#64748b] uppercase tracking-wider w-1/2 border-r border-[#e2e8f0]">
-                                        Columna A — Término
+                                        Columna A — Definición / Concepto
                                     </th>
                                     <th className="px-6 py-4 text-left text-[13px] font-semibold text-[#64748b] uppercase tracking-wider w-1/2">
-                                        Columna B — Definición / Concepto
+                                        Columna B — Término
                                     </th>
                                 </tr>
                             </thead>
