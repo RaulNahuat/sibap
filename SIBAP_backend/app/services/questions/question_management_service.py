@@ -14,7 +14,9 @@ def get_questions_by_config(db: Session, config_id: int, user_id: int):
     return q_repo.get_reactivos_by_config(config_id)
 
 
-def add_manual_question(db: Session, config_id: int, user_id: int, question_text: str, options: list):
+def add_manual_question(db: Session, config_id: int, user_id: int, question_text: str, options: list,
+                        name: str = None, feedback_correct: str = None,
+                        feedback_incorrect: str = None, question_type=None):
     q_repo = QuestionRepository(db)
     config = q_repo.get_config_by_id(config_id)
     if not config or config.documento.user_id != user_id:
@@ -23,6 +25,10 @@ def add_manual_question(db: Session, config_id: int, user_id: int, question_text
     reactivo = q_repo.create_question(Reactivo(
         config_id=config_id,
         question_text=question_text,
+        name=name,
+        feedback_correct=feedback_correct,
+        feedback_incorrect=feedback_incorrect,
+        question_type=question_type,
         is_validated=True
     ))
 
@@ -34,7 +40,9 @@ def add_manual_question(db: Session, config_id: int, user_id: int, question_text
             feedback=getattr(opt, "feedback", None)
         )
         db.add(nueva_opcion)
-    
+
+    db.commit()
+    db.refresh(reactivo)
     return reactivo
 
 

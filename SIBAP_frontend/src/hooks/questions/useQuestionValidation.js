@@ -33,6 +33,8 @@ export function useQuestionValidation(bankData) {
                             id: q.id,
                             name: q.name,
                             questionText: q.question_text,
+                            question_type: q.question_type,
+                            questionType: q.question_type,
                             feedback_correct: q.feedback_correct,
                             feedback_incorrect: q.feedback_incorrect,
                             answers: q.opciones.map(opt => ({
@@ -58,6 +60,9 @@ export function useQuestionValidation(bankData) {
                                 if (!serverQ) return q;
                                 return {
                                     ...q,
+                                    // Siempre tomar el tipo del servidor (fuente autoritativa)
+                                    question_type: serverQ.question_type,
+                                    questionType: serverQ.question_type,
                                     feedback_correct: q.feedback_correct || serverQ.feedback_correct,
                                     feedback_incorrect: q.feedback_incorrect || serverQ.feedback_incorrect,
                                     answers: q.answers.map(ans => {
@@ -210,12 +215,15 @@ export function useQuestionValidation(bankData) {
     const handleAddQuestion = async (newQuestionData) => {
         try {
             const payload = {
-                name: newQuestionData.name,
+                name: newQuestionData.name || null,
                 question_text: newQuestionData.questionText,
+                feedback_correct: newQuestionData.feedback_correct || null,
+                feedback_incorrect: newQuestionData.feedback_incorrect || null,
+                question_type: newQuestionData.question_type || 'MCQ',
                 options: newQuestionData.answers.map(ans => ({
                     text: ans.text,
                     is_correct: ans.id === newQuestionData.correctAnswerId,
-                    feedback: ans.feedback
+                    feedback: ans.feedback || null
                 }))
             };
             const created = await addManualQuestion(bankData.configId, payload);
@@ -223,6 +231,8 @@ export function useQuestionValidation(bankData) {
                 id: created.id,
                 name: created.name,
                 questionText: created.question_text,
+                question_type: created.question_type,
+                questionType: created.question_type,
                 feedback_correct: created.feedback_correct,
                 feedback_incorrect: created.feedback_incorrect,
                 answers: created.opciones.map(opt => ({

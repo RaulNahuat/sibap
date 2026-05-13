@@ -44,8 +44,14 @@ def _simulate_generation(
 def get_questions_by_config(db: Session, config_id: int, user_id: int):
     return question_management_service.get_questions_by_config(db, config_id, user_id)
 
-def add_manual_question(db: Session, config_id: int, user_id: int, question_text: str, options: list):
-    return question_management_service.add_manual_question(db, config_id, user_id, question_text, options)
+def add_manual_question(db: Session, config_id: int, user_id: int, question_text: str, options: list,
+                        name: str = None, feedback_correct: str = None,
+                        feedback_incorrect: str = None, question_type=None):
+    return question_management_service.add_manual_question(
+        db, config_id, user_id, question_text, options,
+        name=name, feedback_correct=feedback_correct,
+        feedback_incorrect=feedback_incorrect, question_type=question_type
+    )
 
 def update_questions_batch(db: Session, updates: List[dict], user_id: int):
     return question_management_service.update_questions_batch(db, updates, user_id)

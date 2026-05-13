@@ -76,6 +76,10 @@ class ManualOptionRequest(BaseModel):
 
 class ManualQuestionRequest(BaseModel):
     question_text: str
+    name: Optional[str] = None
+    feedback_correct: Optional[str] = None
+    feedback_incorrect: Optional[str] = None
+    question_type: Optional[QuestionType] = QuestionType.MCQ
     options: List[ManualOptionRequest]
 
 class BatchUpdateResponse(BaseModel):

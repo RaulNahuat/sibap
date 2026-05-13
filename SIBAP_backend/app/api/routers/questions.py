@@ -220,6 +220,10 @@ def add_manual_question(
         config_id=config_id,
         user_id=current_user.id,
         question_text=request.question_text,
+        name=request.name,
+        feedback_correct=request.feedback_correct,
+        feedback_incorrect=request.feedback_incorrect,
+        question_type=request.question_type,
         options=request.options
     )
     
