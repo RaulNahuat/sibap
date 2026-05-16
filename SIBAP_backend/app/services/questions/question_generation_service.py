@@ -161,7 +161,7 @@ async def process_question_generation_task(config_id: int, request_data: dict, u
                 for q_data in res.get("questions", []):
                     if not q_data or "text" not in q_data: continue
 
-                    if q_type is None:
+                    if q_type is None or q_type == QuestionType.MIXED:
                         type_str = q_data.get("type", "mcq").lower()
                         effective_type = PromptBuilderService.get_type_from_str(type_str)
                     else:

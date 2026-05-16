@@ -155,13 +155,17 @@ export default function QuestionCard({
             {/* Respuestas — layout dinámico por tipo */}
             <div className="mb-6">
                 <label className="block text-xs font-medium text-[#64748b] mb-3">
-                    {question.questionType === 'MATCHING' ? 'Pares a Relacionar' :
+                    {(question.questionType === 'MATCHING' || (question.questionType === 'MIXED' && question.answers.every(a => a.text?.includes('|')))) ? 'Pares a Relacionar' :
                      question.questionType === 'CALCULATED' ? 'Opciones de Respuesta' :
                      'Respuestas'}
                 </label>
 
-                {/* ── MATCHING: tabla de dos columnas ── */}
-                {question.questionType === 'MATCHING' ? (
+                {/* ── MATCHING / MIXED (con formato matching): tabla de dos columnas ── */}
+                {question.questionType === 'MATCHING' || (
+                    question.questionType === 'MIXED' && 
+                    question.answers.every(a => a.text?.includes('|')) && 
+                    question.answers.every(a => a.isCorrect)
+                ) ? (
                     <div className="overflow-hidden rounded-lg border border-[#e2e8f0]">
                         <table className="w-full text-sm">
                             <thead>

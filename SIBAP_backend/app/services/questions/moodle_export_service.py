@@ -44,6 +44,14 @@ def export_to_xml(db: Session, config_id: int) -> str:
     for reactivo in config.reactivos:
         r_type = reactivo.question_type or config.question_type
 
+        if r_type == QuestionType.MIXED:
+            # Detección heurística para preguntas MIXED: si todas las opciones tienen '|', es MATCHING
+            is_matching_format = all("|" in opt.option_text for opt in reactivo.opciones) if reactivo.opciones else False
+            if is_matching_format and len(reactivo.opciones) >= 2:
+                r_type = QuestionType.MATCHING
+            else:
+                r_type = QuestionType.MCQ
+
         if r_type == QuestionType.MCQ:
             q_type_str = "multichoice"
         elif r_type == QuestionType.TF:

@@ -62,7 +62,10 @@ export default function EditQuestionModal({
         });
     };
 
-    const isMatching = editedQuestion.question_type === 'MATCHING';
+    const isMatching = editedQuestion.question_type === 'MATCHING' || (
+        editedQuestion.question_type === 'MIXED' && 
+        editedQuestion.answers.every(a => a.text?.includes('|'))
+    );
 
     const handleSave = () => {
         if (!editedQuestion.questionText.trim()) {
