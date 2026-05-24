@@ -43,23 +43,25 @@ def export_to_xml(db: Session, config_id: int) -> str:
 
     for reactivo in config.reactivos:
         r_type = reactivo.question_type or config.question_type
+        # Obtener el valor en cadena para evitar discrepancias de tipo (Enum vs String de la BD)
+        r_type_val = r_type.value if hasattr(r_type, "value") else str(r_type)
+        if isinstance(r_type_val, str):
+            r_type_val = r_type_val.upper()
 
-        if r_type == QuestionType.MIXED:
+        if r_type_val == "MIXED":
             # Detección heurística para preguntas MIXED: si todas las opciones tienen '|', es MATCHING
             is_matching_format = all("|" in opt.option_text for opt in reactivo.opciones) if reactivo.opciones else False
             if is_matching_format and len(reactivo.opciones) >= 2:
-                r_type = QuestionType.MATCHING
+                r_type_val = "MATCHING"
             else:
-                r_type = QuestionType.MCQ
+                r_type_val = "MCQ"
 
-        if r_type == QuestionType.MCQ:
+        if r_type_val == "MCQ" or r_type_val == "CALCULATED":
             q_type_str = "multichoice"
-        elif r_type == QuestionType.TF:
+        elif r_type_val == "TF":
             q_type_str = "truefalse"
-        elif r_type == QuestionType.MATCHING:
+        elif r_type_val == "MATCHING":
             q_type_str = "matching"
-        elif r_type == QuestionType.CALCULATED:
-            q_type_str = "calculated"
         else:
             q_type_str = "essay"
         
@@ -76,7 +78,7 @@ def export_to_xml(db: Session, config_id: int) -> str:
         text.text = f"<![CDATA[{format_moodle_text(reactivo.question_text)}]]>"
         
         # Opciones por tipo
-        if r_type == QuestionType.MCQ:
+        if r_type_val == "MCQ" or r_type_val == "CALCULATED":
             ET.SubElement(q, "single").text = "true"
             ET.SubElement(q, "shuffleanswers").text = "true"
             ET.SubElement(q, "answernumbering").text = "abc"
@@ -92,7 +94,7 @@ def export_to_xml(db: Session, config_id: int) -> str:
                     fb_text = ET.SubElement(fb, "text")
                     fb_text.text = f"<![CDATA[{format_moodle_text(opcion.feedback)}]]>"
 
-        elif r_type == QuestionType.TF:
+        elif r_type_val == "TF":
             correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
             is_true_correct = correct_opt and "verdadero" in correct_opt.option_text.lower()
             
@@ -106,7 +108,7 @@ def export_to_xml(db: Session, config_id: int) -> str:
                 fb_text = ET.SubElement(fb, "text")
                 fb_text.text = f"<![CDATA[{label}]]>"
 
-        elif r_type == QuestionType.MATCHING:
+        elif r_type_val == "MATCHING":
             ET.SubElement(q, "shuffleanswers").text = "true"
             for opcion in reactivo.opciones:
                 parts = opcion.option_text.split("|", 1)
@@ -121,17 +123,6 @@ def export_to_xml(db: Session, config_id: int) -> str:
                 ans = ET.SubElement(subq, "answer")
                 ans_text = ET.SubElement(ans, "text")
                 ans_text.text = f"<![CDATA[{format_moodle_text(right)}]]>"
-
-        elif r_type == QuestionType.CALCULATED:
-            correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
-            if correct_opt:
-                ans = ET.SubElement(q, "answer", fraction="100", format="html")
-                ans_text = ET.SubElement(ans, "text")
-                ans_text.text = f"<![CDATA[{format_moodle_text(correct_opt.option_text)}]]>"
-                if correct_opt.feedback:
-                    fb = ET.SubElement(ans, "feedback", format="html")
-                    fb_text = ET.SubElement(fb, "text")
-                    fb_text.text = f"<![CDATA[{format_moodle_text(correct_opt.feedback)}]]>"
 
         # Feedback General (Correcto/Incorrecto)
         if reactivo.feedback_correct:
