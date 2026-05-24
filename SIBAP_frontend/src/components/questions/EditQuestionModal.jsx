@@ -67,36 +67,70 @@ export default function EditQuestionModal({
         editedQuestion.answers.every(a => a.text?.includes('|'))
     );
 
+    const isCalculated = editedQuestion.question_type === 'CALCULATED';
+
     const handleSave = () => {
         if (!editedQuestion.questionText.trim()) {
             toast.error('La pregunta no puede estar vacía');
             return;
         }
-        if (editedQuestion.answers.some((ans) => !ans.text.trim())) {
-            toast.error('Todos los pares / respuestas deben tener texto');
-            return;
-        }
-        if (!isMatching && !editedQuestion.correctAnswerId) {
-            toast.error('Debe seleccionar una respuesta correcta');
-            return;
+
+        const correctAns = editedQuestion.answers.find(a => a.id === editedQuestion.correctAnswerId) || 
+                           editedQuestion.answers.find(a => a.isCorrect) || 
+                           editedQuestion.answers[0];
+
+        if (isCalculated) {
+            if (!correctAns || !correctAns.text.trim()) {
+                toast.error('Debe ingresar un valor numérico para la respuesta');
+                return;
+            }
+        } else if (isMatching) {
+            if (editedQuestion.answers.some((ans) => !ans.text.trim())) {
+                toast.error('Todos los pares deben tener texto');
+                return;
+            }
+        } else {
+            if (editedQuestion.answers.some((ans) => !ans.text.trim())) {
+                toast.error('Todas las opciones de respuesta deben tener texto');
+                return;
+            }
+            if (!editedQuestion.correctAnswerId) {
+                toast.error('Debe seleccionar una respuesta correcta');
+                return;
+            }
         }
 
-        const finalAnswers = isMatching
-            ? editedQuestion.answers.map((ans) => ({
+        let finalAnswers = [];
+        let finalCorrectAnswerId = editedQuestion.correctAnswerId;
+
+        if (isMatching) {
+            finalAnswers = editedQuestion.answers.map((ans) => ({
                 ...ans,
                 is_correct: true,
                 isCorrect: true,
-            }))
-            : editedQuestion.answers.map((ans) => ({
+            }));
+        } else if (isCalculated) {
+            finalAnswers = [
+                {
+                    ...(correctAns || { id: `a_${Date.now()}_1`, text: '', feedback: '' }),
+                    is_correct: true,
+                    isCorrect: true,
+                }
+            ];
+            finalCorrectAnswerId = finalAnswers[0].id;
+        } else {
+            finalAnswers = editedQuestion.answers.map((ans) => ({
                 ...ans,
                 is_correct: ans.id === editedQuestion.correctAnswerId,
                 isCorrect: ans.id === editedQuestion.correctAnswerId,
             }));
+        }
 
         onSave({ 
             ...question, 
             ...editedQuestion, 
-            answers: finalAnswers 
+            answers: finalAnswers,
+            correctAnswerId: finalCorrectAnswerId
         });
         onClose();
     };
@@ -281,8 +315,105 @@ export default function EditQuestionModal({
                             </div>
                         </>
 
+                    ) : isCalculated ? (
+                        /* ── CALCULATED: editor numérico de respuesta única ── */
+                        <>
+                            <div className="flex items-center justify-between px-1">
+                                <h3 className="text-xs font-bold text-[#64748b] uppercase tracking-widest flex items-center gap-1.5">
+                                    <CheckCircle className="w-4 h-4 text-green-600 animate-pulse" />
+                                    Configuración de Respuesta Calculada
+                                </h3>
+                                <span className="text-[10px] font-medium text-[#94a3b8] bg-[#f1f5f9] px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                    Numérica Única
+                                </span>
+                            </div>
+
+                            <div className="space-y-4">
+                                {(() => {
+                                    const correctAns = editedQuestion.answers.find(a => a.id === editedQuestion.correctAnswerId) ||
+                                                       editedQuestion.answers.find(a => a.isCorrect) ||
+                                                       editedQuestion.answers[0] ||
+                                                       { id: `a_${Date.now()}_1`, text: '', feedback: '' };
+
+                                    const updateCalculatedText = (val) => {
+                                        setEditedQuestion(prev => {
+                                            const targetId = correctAns.id;
+                                            const exists = prev.answers.some(a => a.id === targetId);
+                                            const updatedAnswers = exists
+                                                ? prev.answers.map(ans => ans.id === targetId ? { ...ans, text: val, isCorrect: true, is_correct: true } : { ...ans, isCorrect: false, is_correct: false })
+                                                : [{ ...correctAns, text: val, isCorrect: true, is_correct: true }];
+                                            return {
+                                                ...prev,
+                                                correctAnswerId: targetId,
+                                                answers: updatedAnswers
+                                            };
+                                        });
+                                    };
+
+                                    const updateCalculatedFeedback = (val) => {
+                                        setEditedQuestion(prev => {
+                                            const targetId = correctAns.id;
+                                            const exists = prev.answers.some(a => a.id === targetId);
+                                            const updatedAnswers = exists
+                                                ? prev.answers.map(ans => ans.id === targetId ? { ...ans, feedback: val, isCorrect: true, is_correct: true } : { ...ans, isCorrect: false, is_correct: false })
+                                                : [{ ...correctAns, feedback: val, isCorrect: true, is_correct: true }];
+                                            return {
+                                                ...prev,
+                                                correctAnswerId: targetId,
+                                                answers: updatedAnswers
+                                            };
+                                        });
+                                    };
+
+                                    return (
+                                        <div className="bg-[#fafdfb] border-2 border-[#a7f3d0]/30 rounded-2xl p-5 sm:p-6 space-y-4 shadow-sm hover:border-[#a7f3d0] transition-all duration-300">
+                                            <div className="space-y-2">
+                                                <label className="block text-[10px] font-bold text-[#64748b] uppercase tracking-widest ml-1">
+                                                    Valor Numérico Correcto
+                                                </label>
+                                                <div className="relative max-w-md">
+                                                    <input
+                                                        type="text"
+                                                        value={correctAns.text}
+                                                        onChange={(e) => updateCalculatedText(e.target.value)}
+                                                        className="w-full px-4 py-3 bg-white border border-[#e2e8f0] focus:ring-2 focus:ring-[#10b981]/10 focus:border-[#10b981] rounded-xl text-sm font-semibold font-mono text-[#065f46] transition-all shadow-sm"
+                                                        placeholder="Ej: 19 o 15.5"
+                                                    />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-bold text-[#065f46] bg-[#d1fae5] px-2.5 py-1 rounded-md uppercase tracking-wider">
+                                                        Correcto
+                                                    </span>
+                                                </div>
+                                                <p className="text-[10px] text-[#94a3b8] italic ml-1">
+                                                    * El sistema exportará este valor exacto a Moodle. Se aplicará una tolerancia de ±0.01 automáticamente.
+                                                </p>
+                                            </div>
+
+                                            <div className="space-y-2 pt-2">
+                                                <div className="flex items-center gap-1.5 ml-1 text-[#b45309]">
+                                                    <Info className="w-4 h-4 shrink-0 text-[#d97706]" />
+                                                    <label className="block text-[10px] font-bold uppercase tracking-widest">
+                                                        Procedimiento de Resolución / Fórmula
+                                                    </label>
+                                                </div>
+                                                <textarea
+                                                    value={correctAns.feedback || ''}
+                                                    onChange={(e) => updateCalculatedFeedback(e.target.value)}
+                                                    rows={4}
+                                                    className="w-full px-4 py-3 bg-white border border-[#e2e8f0] focus:ring-2 focus:ring-[#d97706]/10 focus:border-[#d97706] rounded-xl text-xs text-[#78350f] font-medium leading-relaxed transition-all shadow-sm resize-none"
+                                                    placeholder="Escribe el desarrollo paso a paso, fórmula utilizada o explicación del cálculo aquí..."
+                                                />
+                                                <p className="text-[10px] text-[#94a3b8] italic ml-1">
+                                                    * Esta explicación se mostrará al estudiante para que comprenda cómo se llegó al resultado.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        </>
+
                     ) : (
-                    /* ── MCQ / CALCULATED: editor con radio de correcta ── */
+                    /* ── MCQ: editor con radio de correcta ── */
                         <>
                             <div className="flex items-center justify-between px-1">
                                 <h3 className="text-xs font-bold text-[#64748b] uppercase tracking-widest">Opciones de Respuesta</h3>

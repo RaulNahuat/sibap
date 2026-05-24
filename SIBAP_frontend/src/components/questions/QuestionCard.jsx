@@ -210,57 +210,66 @@ export default function QuestionCard({
                         </table>
                     </div>
 
-                /* ── CALCULATED: tarjetas de opción con fórmula destacada ── */
+                /* ── CALCULATED: Mockup de entrada numérica ── */
                 ) : question.questionType === 'CALCULATED' ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {question.answers.map((answer) => {
-                            const isCorrect = answer.id === question.correctAnswerId;
+                    <div className="space-y-4">
+                        {(() => {
+                            const correctAns = question.answers.find(a => a.id === question.correctAnswerId) || 
+                                               question.answers.find(a => a.isCorrect) || 
+                                               question.answers[0];
+                            
+                            // Extraer el número de la respuesta
+                            const match = correctAns ? correctAns.text.match(/[-+]?\d*\.?\d+/) : null;
+                            const numericVal = match ? match[0] : (correctAns ? correctAns.text : '');
+
                             return (
-                                <div key={answer.id} className="space-y-1">
-                                    <div className={`flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
-                                        isCorrect
-                                            ? 'bg-green-50 border-green-300 shadow-sm'
-                                            : 'bg-[#f8fafc] border-[#e2e8f0]'
-                                    }`}>
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                                            isCorrect ? 'border-green-600 bg-green-600' : 'border-[#cbd5e1]'
-                                        }`}>
-                                            {isCorrect && <div className="w-2 h-2 rounded-full bg-white" />}
-                                        </div>
-                                        <div className={`text-sm font-mono font-semibold flex-1 prose prose-sm max-w-none prose-p:m-0 prose-p:inline ${
-                                            isCorrect ? 'text-green-900' : 'text-[#475569]'
-                                        }`}>
-                                            <ReactMarkdown
-                                                remarkPlugins={[remarkGfm, remarkMath]}
-                                                rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
-                                                components={{ p: ({ node, ...props }) => <span {...props} /> }}
-                                            >
-                                                {cleanText(answer.text)}
-                                            </ReactMarkdown>
-                                        </div>
-                                        {isCorrect && (
-                                            <span className="text-[10px] font-bold text-green-700 uppercase tracking-wider bg-green-100 px-2 py-0.5 rounded-full shrink-0">
-                                                Correcto
+                                <div className="space-y-4">
+                                    {/* Mock del Campo de Texto de Moodle */}
+                                    <div className="bg-[#f8fafc] border border-[#e2e8f0] rounded-xl p-4 sm:p-5">
+                                        <p className="text-[10px] font-bold text-[#64748b] mb-2.5 uppercase tracking-wider">
+                                            Casilla de Respuesta (Vista en Moodle)
+                                        </p>
+                                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                                            <div className="relative flex-1 max-w-xs">
+                                                <input
+                                                    type="text"
+                                                    value={numericVal}
+                                                    disabled
+                                                    className="w-full bg-green-50 border-2 border-green-300 text-green-800 font-mono font-bold text-sm px-4 py-2.5 rounded-lg shadow-sm focus:outline-none"
+                                                />
+                                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-green-700 bg-green-100 px-1.5 py-0.5 rounded-md uppercase tracking-wider">
+                                                    Correcto
+                                                </span>
+                                            </div>
+                                            <span className="text-[11px] text-[#94a3b8] italic">
+                                                * El alumno deberá ingresar el valor numérico exacto en esta casilla.
                                             </span>
-                                        )}
+                                        </div>
                                     </div>
-                                    {answer.feedback && isCorrect && (
-                                        <div className="ml-8 px-3 py-2 bg-amber-50/70 border-l-2 border-amber-300 rounded-r-md">
-                                            <p className="text-[11px] text-amber-800 font-medium mb-1 uppercase tracking-wider">Procedimiento:</p>
-                                            <div className="text-xs text-amber-900 prose prose-sm max-w-none prose-p:m-0">
+
+                                    {/* Retroalimentación y Procedimiento */}
+                                    {correctAns && correctAns.feedback && (
+                                        <div className="bg-amber-50/50 border border-amber-200 rounded-xl p-4 sm:p-5">
+                                            <div className="flex items-center gap-2 mb-2 text-amber-800">
+                                                <Info className="w-4 h-4 shrink-0" />
+                                                <h5 className="text-[11px] font-bold uppercase tracking-wider">
+                                                    Procedimiento de Resolución / Fórmula
+                                                </h5>
+                                            </div>
+                                            <div className="text-xs text-amber-950 prose prose-slate leading-relaxed max-w-none">
                                                 <ReactMarkdown
                                                     remarkPlugins={[remarkGfm, remarkMath]}
                                                     rehypePlugins={[rehypeRaw, [rehypeKatex, { throwOnError: false, strict: false }]]}
                                                     components={{ p: ({ node, ...props }) => <span {...props} /> }}
                                                 >
-                                                    {cleanText(answer.feedback)}
+                                                    {cleanText(correctAns.feedback)}
                                                 </ReactMarkdown>
                                             </div>
                                         </div>
                                     )}
                                 </div>
                             );
-                        })}
+                        })()}
                     </div>
 
                 /* ── MCQ / TF / DEFAULT: lista con radio genérico ── */
