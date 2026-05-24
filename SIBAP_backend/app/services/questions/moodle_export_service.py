@@ -56,12 +56,14 @@ def export_to_xml(db: Session, config_id: int) -> str:
             else:
                 r_type_val = "MCQ"
 
-        if r_type_val == "MCQ" or r_type_val == "CALCULATED":
+        if r_type_val == "MCQ":
             q_type_str = "multichoice"
         elif r_type_val == "TF":
             q_type_str = "truefalse"
         elif r_type_val == "MATCHING":
             q_type_str = "matching"
+        elif r_type_val == "CALCULATED":
+            q_type_str = "numerical"
         else:
             q_type_str = "essay"
         
@@ -78,7 +80,7 @@ def export_to_xml(db: Session, config_id: int) -> str:
         text.text = f"<![CDATA[{format_moodle_text(reactivo.question_text)}]]>"
         
         # Opciones por tipo
-        if r_type_val == "MCQ" or r_type_val == "CALCULATED":
+        if r_type_val == "MCQ":
             ET.SubElement(q, "single").text = "true"
             ET.SubElement(q, "shuffleanswers").text = "true"
             ET.SubElement(q, "answernumbering").text = "abc"
@@ -123,6 +125,24 @@ def export_to_xml(db: Session, config_id: int) -> str:
                 ans = ET.SubElement(subq, "answer")
                 ans_text = ET.SubElement(ans, "text")
                 ans_text.text = f"<![CDATA[{format_moodle_text(right)}]]>"
+
+        elif r_type_val == "CALCULATED":
+            correct_opt = next((o for o in reactivo.opciones if o.is_correct), None)
+            if correct_opt:
+                match = re.search(r"[-+]?\d*\.?\d+", correct_opt.option_text)
+                numeric_val = match.group(0) if match else correct_opt.option_text.strip()
+                
+                ans = ET.SubElement(q, "answer", fraction="100", format="moodle_auto_format")
+                ans_text = ET.SubElement(ans, "text")
+                ans_text.text = numeric_val
+                
+                # Tolerancia
+                ET.SubElement(ans, "tolerance").text = "0.01"
+                
+                if correct_opt.feedback:
+                    fb = ET.SubElement(ans, "feedback", format="html")
+                    fb_text = ET.SubElement(fb, "text")
+                    fb_text.text = f"<![CDATA[{format_moodle_text(correct_opt.feedback)}]]>"
 
         # Feedback General (Correcto/Incorrecto)
         if reactivo.feedback_correct:
