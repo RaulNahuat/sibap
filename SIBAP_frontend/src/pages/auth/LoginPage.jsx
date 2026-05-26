@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { login as loginApi } from '../../api/auth';
 import { getErrorMessage } from '../../utils/errorHandler';
+import CreditsModal from '../../components/ui/showCreditsModal';
 import {
   Wand2,
   FileCheck,
@@ -24,6 +25,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
 
   const handleChange = (e) =>
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -282,10 +284,30 @@ export default function LoginPage() {
                 </ul>
               </div>
             </div>
-            <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)' }}>© 2026 SIBAP · Plataforma exclusiva para personal docente.</p>
+            <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '0.5rem' }}>
+              © 2026 SIBAP · Plataforma exclusiva para personal docente.
+                <button
+                  type="button"
+                  onClick={() => setShowCredits(true)}
+                  className="
+                    rounded-md
+                    px-2 py-1
+                    text-white/60
+                    transition-colors duration-200
+                    hover:bg-white/10
+                    hover:text-white
+                  "
+                >
+                  Créditos
+                </button>
+            </p>
           </div>
         </section>
       </div>
+      <CreditsModal
+        isOpen={showCredits}
+        onClose={() => setShowCredits(false)}
+      />
     </>
   );
 }

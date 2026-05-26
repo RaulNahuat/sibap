@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import ConfirmModal from '../../components/ui/ConfirmModal';
 import { useNavigate, NavLink, Link, Outlet, useLocation } from 'react-router-dom';
 import { logout as logoutApi } from '../../api/auth';
+import CreditsModal from '../../components/ui/showCreditsModal';
 import {
   LayoutDashboard,
   PlusCircle,
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const location = useLocation();
   const { user, logout } = useAuth();
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showCreditsModal, setShowCreditsModal] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
@@ -110,6 +112,13 @@ export default function DashboardPage() {
 
         {/* Footer */}
         <div className="pt-5 border-t border-[#e2e8f0] mt-auto space-y-1">
+          <button
+            onClick={() => setShowCreditsModal(true)}
+            className="flex items-center gap-3 px-3 py-3 rounded-md text-sm font-medium transition-all w-full text-[#64748b] hover:bg-[#f1f5f9] hover:text-[#102129]"
+          >
+            <GraduationCap className="w-[18px] h-[18px]" />
+            Créditos
+          </button>
           <Link
             to="/manual-de-usuario"
             target="_blank"
@@ -190,6 +199,12 @@ export default function DashboardPage() {
         confirmText="Sí, cerrar sesión"
         cancelText="Cancelar"
         danger
+      />
+
+      {/* Modal de Créditos */}
+      <CreditsModal
+        isOpen={showCreditsModal}
+        onClose={() => setShowCreditsModal(false)}
       />
     </div>
   );
