@@ -1,0 +1,5 @@
+# Guía de despliegue (solo para uso interno, no subir al repositorio)
+GUIA_DESPLIEGUE.md
+
+# Archivo SQL de la base de datos (se comparte aparte de forma segura)
+db_sibap.sql
