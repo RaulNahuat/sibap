@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  #1. Base de datos MySQL
+  db:
+    image: mysql:8.0
+    container_name: sibap_db
+    restart: always
+    environment:
+      MYSQL_DATABASE: db_sibap
+      MYSQL_USER: root #Cambiar por un usuario real de producción
+      MYSQL_PASSWORD: TuClaveSeguraAqui # Cambiar por una contraseña real en producción
+      MYSQL_ROOT_PASSWORD: RootClaveSeguraAqui # Cambiar por contraseña root real
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # Inicializar la base de datos automáticamente con el archivo SQL provisto:
+      - ./db_sibap.sql:/docker-entrypoint-initdb.d/db_sibap.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "sibap_user", "-pTuClaveSeguraAqui"]
+      timeout: 10s
+      retries: 5
+
+  # 2. Servidor Backend (FastAPI)
+  backend:
+    build:
+      context: ./SIBAP_backend
+      dockerfile: Dockerfile
+    container_name: sibap_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    # Cargar automáticamente las variables de entorno desde el .env existente provisto
+    env_file:
+      - ./SIBAP_backend/.env
+    environment:
+      # Sobrescribimos SOLAMENTE la URL de conexión para que apunte al contenedor de base de datos 'db' en lugar de 'localhost'
+      DATABASE_URL: mysql+pymysql://TuUsuario:TuClaveSeguraAqui@db:3306/db_sibap
+    volumes:
+      - backend_uploads:/app/uploads
+      - backend_chroma:/app/chroma_db
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 3. Servidor Frontend (React + Nginx)
+  frontend:
+    build:
+      context: ./SIBAP_frontend
+      dockerfile: Dockerfile
+      args:
+        # Pasa la URL de la API pública que se usará en producción.
+        # Puede ser la IP de tu servidor (ej. http://192.168.1.50:8000) o un dominio (ej. https://api.tudominio.com)
+        VITE_API_BASE_URL: http://localhost:8000
+        # Correo de contacto visible en el frontend
+        VITE_EMAIL_ADRESS_CONTACT: correo@ejemplo.com
+    container_name: sibap_frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  backend_uploads:
+  backend_chroma:
