@@ -3,3 +3,10 @@ GUIA_DESPLIEGUE.md
 
 # Archivo SQL de la base de datos (se comparte aparte de forma segura)
 db_sibap.sql
+
+# VS Code IDE Settings
+.vscode/
+
+# OS-specific files
+Thumbs.db
+.DS_Store
