@@ -19,6 +19,10 @@ COPY . .
 
 RUN mkdir -p uploads chroma_db
 
-EXPOSE 8000
+#EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+#CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+EXPOSE 10000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000", "--workers", "4"]
