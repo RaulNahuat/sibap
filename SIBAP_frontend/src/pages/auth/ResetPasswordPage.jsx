@@ -7,6 +7,41 @@ import {
   KeyRound, CheckCircle2, AlertCircle, ShieldCheck,
 } from 'lucide-react';
 
+const styleTag = (
+  <style>{`
+    @keyframes orb1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(24px,-32px) scale(1.08); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+
+    .orb-1 { animation: orb1 10s ease-in-out infinite; }
+    .rp-input { width: 100%; border: 1.5px solid #dde3ec; border-radius: 12px; padding: 11px 42px 11px 14px; font-size: 14px; outline: none; transition: all 0.18s ease; }
+    .rp-input:focus { border-color: #1a5276; box-shadow: 0 0 0 3px rgba(26,82,118,0.10); }
+    .rp-btn { width: 100%; background: #1a5276; color: #fff; border-radius: 12px; padding: 13px 20px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(26,82,118,0.32); transition: all 0.18s ease; }
+    .rp-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,82,118,0.38); }
+    .rp-btn:disabled { opacity: 0.58; }
+    .spinner { width: 17px; height: 17px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+  `}</style>
+);
+
+const Layout = ({ content, panelContent }) => (
+  <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'Inter, sans-serif' }}>
+    {styleTag}
+    <section className="w-full lg:w-[42%] flex items-center justify-center px-6 pt-24 pb-10 lg:pt-0 lg:pb-0" style={{ background: 'linear-gradient(160deg, #f4f7fa 0%, #eef2f7 100%)' }}>
+      <div style={{ background: '#fff', borderRadius: 20, padding: '36px 32px 32px', boxShadow: '0 20px 48px -8px rgba(26,82,118,0.12)', border: '1px solid rgba(26,82,118,0.07)', width: '100%', maxWidth: 400 }}>{content}</div>
+    </section>
+    <section className="hidden lg:flex w-[58%] px-16 py-16 text-white relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #1a5276 0%, #154360 60%, #0d2d42 100%)' }}>
+      <div className="orb-1" style={{ position: 'absolute', width: 620, height: 620, background: 'radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)', borderRadius: '50%', top: -120, right: -100 }} />
+      <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%' }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 22, fontWeight: 700 }}><GraduationCap />SIBAP</div>
+          <div style={{ marginTop: 80, maxWidth: 500 }}>{panelContent}</div>
+        </div>
+        <p style={{ fontSize: 12, opacity: 0.5 }}>© 2026 SIBAP</p>
+      </div>
+    </section>
+  </div>
+);
+
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -62,41 +97,6 @@ export default function ResetPasswordPage() {
     }
   };
 
-  const styleTag = (
-    <style>{`
-      @keyframes orb1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(24px,-32px) scale(1.08); } }
-      @keyframes spin { to { transform: rotate(360deg); } }
-      @keyframes shake { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
-
-      .orb-1 { animation: orb1 10s ease-in-out infinite; }
-      .rp-input { width: 100%; border: 1.5px solid #dde3ec; border-radius: 12px; padding: 11px 42px 11px 14px; font-size: 14px; outline: none; transition: all 0.18s ease; }
-      .rp-input:focus { border-color: #1a5276; box-shadow: 0 0 0 3px rgba(26,82,118,0.10); }
-      .rp-btn { width: 100%; background: #1a5276; color: #fff; border-radius: 12px; padding: 13px 20px; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(26,82,118,0.32); transition: all 0.18s ease; }
-      .rp-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,82,118,0.38); }
-      .rp-btn:disabled { opacity: 0.58; }
-      .spinner { width: 17px; height: 17px; border: 2.5px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
-    `}</style>
-  );
-
-  const Layout = ({ content, panelContent }) => (
-    <div style={{ minHeight: '100vh', display: 'flex', fontFamily: 'Inter, sans-serif' }}>
-      {styleTag}
-      <section className="w-full lg:w-[42%] flex items-center justify-center px-6 pt-24 pb-10 lg:pt-0 lg:pb-0" style={{ background: 'linear-gradient(160deg, #f4f7fa 0%, #eef2f7 100%)' }}>
-        <div style={{ background: '#fff', borderRadius: 20, padding: '36px 32px 32px', boxShadow: '0 20px 48px -8px rgba(26,82,118,0.12)', border: '1px solid rgba(26,82,118,0.07)', width: '100%', maxWidth: 400 }}>{content}</div>
-      </section>
-      <section className="hidden lg:flex w-[58%] px-16 py-16 text-white relative overflow-hidden" style={{ background: 'linear-gradient(145deg, #1a5276 0%, #154360 60%, #0d2d42 100%)' }}>
-        <div className="orb-1" style={{ position: 'absolute', width: 620, height: 620, background: 'radial-gradient(circle, rgba(255,255,255,0.07) 0%, transparent 70%)', borderRadius: '50%', top: -120, right: -100 }} />
-        <div style={{ position: 'relative', zIndex: 10, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', width: '100%' }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 22, fontWeight: 700 }}><GraduationCap />SIBAP</div>
-            <div style={{ marginTop: 80, maxWidth: 500 }}>{panelContent}</div>
-          </div>
-          <p style={{ fontSize: 12, opacity: 0.5 }}>© 2026 SIBAP</p>
-        </div>
-      </section>
-    </div>
-  );
-
   if (verifying) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Verificando...</div>;
 
   if (!tokenValid) return (
@@ -136,13 +136,25 @@ export default function ResetPasswordPage() {
             <h2 style={{ fontSize: 22, fontWeight: 700, color: '#1a5276' }}>Nueva contraseña</h2>
             <p style={{ color: '#7a8b9a' }}>Crea una nueva contraseña para {userEmail}</p>
           </div>
+          {error && (
+            <div style={{
+              marginBottom: 18, padding: '10px 12px', fontSize: 13, color: '#b91c1c',
+              background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10,
+              display: 'flex', gap: 8, animation: 'shake 0.4s ease',
+            }}>
+              <svg style={{ width: 15, height: 15, flexShrink: 0, marginTop: 2 }} fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-9V7a1 1 0 10-2 0v2H7a1 1 0 000 2h2v2a1 1 0 102 0v-2h2a1 1 0 000-2h-2z" clipRule="evenodd"/>
+              </svg>
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div style={{ position: 'relative' }}>
-              <input type={showPassword ? 'text' : 'password'} required className="rp-input" placeholder="Contraseña" onChange={e => setNewPassword(e.target.value)} />
+              <input type={showPassword ? 'text' : 'password'} required className="rp-input" placeholder="Contraseña" value={newPassword} onChange={e => setNewPassword(e.target.value)} />
               <button type="button" style={{ position: 'absolute', right: 13, top: 12, background: 'none', border: 'none', color: '#b8c4cc' }} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff /> : <Eye />}</button>
             </div>
             <div style={{ position: 'relative' }}>
-              <input type={showConfirmPassword ? 'text' : 'password'} required className="rp-input" placeholder="Confirmar" onChange={e => setConfirmPassword(e.target.value)} />
+              <input type={showConfirmPassword ? 'text' : 'password'} required className="rp-input" placeholder="Confirmar" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
               <button type="button" style={{ position: 'absolute', right: 13, top: 12, background: 'none', border: 'none', color: '#b8c4cc' }} onClick={() => setShowConfirmPassword(!showConfirmPassword)}>{showConfirmPassword ? <EyeOff /> : <Eye />}</button>
             </div>
             <button type="submit" disabled={loading} className="rp-btn">{loading ? <span className="spinner" /> : 'Actualizar'}</button>

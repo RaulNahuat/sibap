@@ -12,7 +12,7 @@ def validate_password_strength(password: str) -> str:
         (r"[A-Z]", "al menos una letra mayúscula"),
         (r"[a-z]", "al menos una letra minúscula"),
         (r"\d", "al menos un número"),
-        (r"[!@#$%^&*(),.?\":{}|<>]", "al menos un carácter especial")
+        (r"[!@#$%^&*(),.?\":{}|<>\-_]", "al menos un carácter especial")
     ]
 
     for pattern, message in rules:
