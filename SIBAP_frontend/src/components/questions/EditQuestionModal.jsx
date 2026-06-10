@@ -40,7 +40,11 @@ export default function EditQuestionModal({
     };
 
     const handleAddAnswer = () => {
-        const newAnswer = { id: `answer_${Date.now()}`, text: '', isCorrect: false };
+        const newAnswer = { 
+            id: `answer_${Date.now()}`, 
+            text: isMatching ? '|' : '', 
+            isCorrect: false 
+        };
         setEditedQuestion({
             ...editedQuestion,
             answers: [...editedQuestion.answers, newAnswer],
@@ -85,8 +89,11 @@ export default function EditQuestionModal({
                 return;
             }
         } else if (isMatching) {
-            if (editedQuestion.answers.some((ans) => !ans.text.trim())) {
-                toast.error('Todos los pares deben tener texto');
+            if (editedQuestion.answers.some((ans) => {
+                const parts = ans.text.split('|');
+                return !parts[0]?.trim() || !parts[1]?.trim();
+            })) {
+                toast.error('Todos los pares deben tener texto en ambas columnas');
                 return;
             }
         } else {
