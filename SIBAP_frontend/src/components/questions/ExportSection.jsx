@@ -1,5 +1,7 @@
 import { FileText, Download } from 'lucide-react';
 
+import { toast } from 'react-hot-toast';
+
 const ExportSection = ({ isValidated, validatedCount, totalCount, handleExport }) => {
     return (
         <div className={`mt-8 p-4 sm:p-5 rounded-xl border-2 ${isValidated ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'} transition-all`}>
@@ -20,7 +22,9 @@ const ExportSection = ({ isValidated, validatedCount, totalCount, handleExport }
                 {/* Botones de exportación */}
                 <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
                     <button
-                        onClick={() => console.log("Exportando a GIFT")}
+                        onClick={() => toast('Estamos trabajando para implementar esta nueva funcionalidad.', {
+                            icon: '🔧',
+                        })}
                         disabled={!isValidated}
                         className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-md border font-medium text-xs sm:text-sm transition-all ${isValidated
                             ? 'border-[#e2e8f0] text-[#64748b] hover:bg-white hover:text-[#102129] hover:border-[#cbd5e1]'
