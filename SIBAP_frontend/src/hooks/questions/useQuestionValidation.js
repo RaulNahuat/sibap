@@ -134,6 +134,7 @@ export function useQuestionValidation(bankData) {
                 feedback_incorrect: updatedQuestion.feedback_incorrect,
                 answers: updatedQuestion.answers
             }]);
+            toast.success('Pregunta editada correctamente.');
         } catch (error) {
             console.error('Error al auto-guardar edición:', error);
             toast.error('No se pudo auto-guardar el cambio en el servidor.');
@@ -149,6 +150,7 @@ export function useQuestionValidation(bankData) {
 
         try {
             await deleteQuestion(questionToDelete.id);
+            toast.success('Pregunta eliminada correctamente.');
         } catch (error) {
             console.error('Error al eliminar la pregunta:', error);
             toast.error('No se pudo eliminar la pregunta del servidor. Intenta de nuevo.');
