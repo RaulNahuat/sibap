@@ -283,14 +283,14 @@ export default function EditQuestionModal({
                                                 value={termino}
                                                 onChange={(e) => handlePartChange('left', e.target.value)}
                                                 className="px-3 py-2 bg-white border border-[#e2e8f0] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#1a5276] transition-all"
-                                                placeholder={`Término ${index + 1}`}
+                                                placeholder={`Definición ${index + 1}`}
                                             />
                                             <input
                                                 type="text"
                                                 value={definicion}
                                                 onChange={(e) => handlePartChange('right', e.target.value)}
                                                 className="px-3 py-2 bg-white border border-[#e2e8f0] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#1a5276] transition-all"
-                                                placeholder={`Definición ${index + 1}`}
+                                                placeholder={`Término ${index + 1}`}
                                             />
                                             {editedQuestion.answers.length > 2 && (
                                                 <button
